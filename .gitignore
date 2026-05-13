@@ -1,0 +1,38 @@
+# MacOS
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/
+.env
+.env.staging
+.env.prod
+
+# IDE
+.vscode/
+.idea/
+
+# Python tooling
+.poetry/
+.mypy_cache/
+.pytype/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Local overrides
+*.local.*
+local/
+
+# Claude
+.claude/worktrees/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
