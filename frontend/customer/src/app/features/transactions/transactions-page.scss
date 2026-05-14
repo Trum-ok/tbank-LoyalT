@@ -1,0 +1,124 @@
+.transactions {
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    & + & {
+      margin-top: 8px;
+    }
+  }
+
+  &__group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 0 4px;
+  }
+
+  &__error {
+    padding: 16px;
+    background: rgba(255, 80, 80, 0.12);
+    border-radius: 14px;
+    color: #ff7676;
+  }
+
+  &__empty {
+    padding: 32px;
+    text-align: center;
+    border-radius: 20px;
+    background: var(--tbank-surface);
+    color: var(--tbank-text-muted);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--tbank-surface);
+    border-radius: 16px;
+    border: 1px solid var(--tbank-divider);
+
+    &.is-reversed {
+      opacity: 0.55;
+    }
+  }
+
+  &__row-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__row-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(255, 221, 45, 0.16);
+    color: var(--tbank-yellow);
+
+    &.is-redemption {
+      background: rgba(66, 139, 249, 0.16);
+      color: var(--tbank-blue);
+    }
+
+    &.is-reversal {
+      background: rgba(255, 80, 80, 0.16);
+      color: #ff7676;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__row-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+    color: var(--tbank-text-muted);
+    min-width: 0;
+  }
+
+  &__row-type {
+    color: var(--tbank-text);
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  &__row-tag {
+    color: #ff7676;
+    font-weight: 500;
+  }
+
+  &__row-points {
+    font-size: 16px;
+    font-weight: 700;
+    color: #4ac99b;
+    white-space: nowrap;
+
+    &.is-negative {
+      color: var(--tbank-text);
+    }
+  }
+}

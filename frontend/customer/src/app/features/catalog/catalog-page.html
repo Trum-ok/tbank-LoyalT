@@ -1,0 +1,135 @@
+<section class="page catalog">
+  @if (hero(); as h) {
+    <a
+      class="catalog__hero"
+      [routerLink]="['/catalog', h.program_id]"
+      [style.--brand]="h.partner_brand_color || '#ffdd2d'"
+    >
+      <div class="catalog__hero-meta">
+        <span class="catalog__hero-tag">Новое в каталоге</span>
+        <p class="catalog__hero-title">{{ h.program_name }}</p>
+        <p class="catalog__hero-partner">{{ h.partner_name }}</p>
+      </div>
+      <span class="catalog__hero-cta">
+        Подключить
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path
+            d="M9 6l6 6-6 6"
+            stroke="currentColor"
+            stroke-width="2.5"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+    </a>
+  }
+
+  <div class="catalog__filters">
+    <label class="catalog__search">
+      <svg
+        class="catalog__search-icon"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <circle
+          cx="11"
+          cy="11"
+          r="6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M16 16l4 4"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <input
+        class="catalog__search-input"
+        type="search"
+        placeholder="Поиск"
+        (input)="applyQuery($any($event.target).value)"
+      />
+    </label>
+
+    <div class="catalog__categories">
+      <button
+        type="button"
+        class="catalog__chip"
+        [class.is-active]="activeCategory() === null"
+        (click)="selectCategory(null)"
+      >
+        Все
+      </button>
+      @for (category of categories(); track category.code) {
+        <button
+          type="button"
+          class="catalog__chip"
+          [class.is-active]="activeCategory() === category.code"
+          (click)="selectCategory(category.code)"
+        >
+          {{ category.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <tui-loader />
+  } @else if (error()) {
+    <div class="catalog__error">{{ error() }}</div>
+  } @else if (programs().length === 0) {
+    <div class="catalog__empty">Пока пусто. Попробуйте поменять фильтр.</div>
+  } @else {
+    <div class="catalog__grid">
+      @for (program of restPrograms(); track program.program_id) {
+        <a
+          class="catalog__card"
+          [routerLink]="['/catalog', program.program_id]"
+          [style.--brand]="program.partner_brand_color || '#ffdd2d'"
+        >
+          <div class="catalog__card-head">
+            @if (program.partner_logo_url) {
+              <img
+                tuiAvatar
+                size="m"
+                [round]="true"
+                [src]="program.partner_logo_url"
+                alt=""
+              />
+            } @else {
+              <div tuiAvatar size="m" [round]="true">
+                {{ initials(program.partner_name) }}
+              </div>
+            }
+          </div>
+          <div class="catalog__card-title">
+            <span class="catalog__card-partner">{{ program.partner_name }}</span>
+            <span class="catalog__card-program">{{ program.program_name }}</span>
+          </div>
+          <div class="catalog__card-foot">
+            <span class="catalog__cashback">
+              <svg
+                viewBox="0 0 24 24"
+                class="catalog__cashback-crown"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2.5 9h13v2h-13v-2z"
+                  fill="currentColor"
+                />
+              </svg>
+              {{ typeShortLabel(program.type) }}
+            </span>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</section>

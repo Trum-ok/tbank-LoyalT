@@ -1,0 +1,65 @@
+<section class="page my-programs">
+  @if (store.loading()) {
+    <tui-loader />
+  } @else {
+    <div class="my-programs__total">
+      <div class="my-programs__total-row">
+        <span class="my-programs__total-label">Всего баллов</span>
+        <span class="my-programs__total-hint">
+          {{ store.items().length }} прогр.
+        </span>
+      </div>
+      <span class="my-programs__total-value">
+        {{ formatPoints(store.totalBalance()) }}
+      </span>
+
+      @if (store.topByBalance().length > 0) {
+        <div class="my-programs__avatars">
+          @for (e of store.topByBalance(); track e.id) {
+            <span
+              class="my-programs__avatar"
+              [attr.title]="e.display_name"
+            >
+              {{ initial(e.display_name) }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+
+    @if (store.error()) {
+      <div class="my-programs__error">{{ store.error() }}</div>
+    } @else if (store.items().length === 0) {
+      <div class="my-programs__empty">
+        <p>Вы пока не подключены ни к одной программе.</p>
+        <a routerLink="/catalog">Перейти в каталог</a>
+      </div>
+    } @else {
+      <ul class="my-programs__list">
+        @for (enrollment of store.items(); track enrollment.id) {
+          <li class="my-programs__card">
+            <div class="my-programs__card-main">
+              <div tuiAvatar size="m" [round]="true">
+                {{ initial(enrollment.display_name) }}
+              </div>
+              <div class="my-programs__card-text">
+                <span class="my-programs__card-name">
+                  {{ enrollment.display_name ?? 'Программа' }}
+                </span>
+                <span class="my-programs__card-since">
+                  с {{ formatDate(enrollment.created_at) }}
+                </span>
+              </div>
+            </div>
+            <div class="my-programs__card-balance">
+              <span class="my-programs__balance-value">
+                {{ formatPoints(enrollment.points_balance) }}
+              </span>
+              <span class="my-programs__balance-label">баллов</span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

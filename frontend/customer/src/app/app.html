@@ -1,0 +1,76 @@
+<tui-root>
+  <div class="page-shell">
+    <aside class="dev-bar">
+      <span class="dev-bar__badge">DEV</span>
+      <app-role-switcher />
+      <app-theme-toggle />
+    </aside>
+
+    <div class="phone">
+      <div class="phone__notch"></div>
+
+      <header class="phone__header">
+        <a routerLink="/catalog" class="phone__brand">
+          <span class="phone__brand-dot"></span>
+          <span class="phone__brand-text">Т-Лояльность</span>
+        </a>
+
+        <a routerLink="/my-programs" class="phone__balance">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path
+              d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2.5 9h13v2h-13v-2z"
+              fill="currentColor"
+            />
+          </svg>
+          <span class="phone__balance-value">
+            {{ formatPoints(enrollments.totalBalance()) }}
+          </span>
+        </a>
+      </header>
+
+      <main class="phone__main">
+        <router-outlet />
+      </main>
+
+      <nav class="phone__tabs">
+        <a routerLink="/catalog" routerLinkActive="is-active" class="phone__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
+            <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" />
+            <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" />
+            <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" />
+          </svg>
+          <span>Каталог</span>
+        </a>
+        <a routerLink="/my-programs" routerLinkActive="is-active" class="phone__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path
+              d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3h-7a2 2 0 0 0 0 4h7v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
+              fill="currentColor"
+            />
+            <circle cx="16" cy="12" r="1.4" fill="currentColor" />
+          </svg>
+          <span>Кошелёк</span>
+        </a>
+        <a routerLink="/transactions" routerLinkActive="is-active" class="phone__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path
+              d="M4 6h10l-2-2 1.4-1.4L17.8 7l-4.4 4.4L12 10l2-2H4V6zm16 12H10l2 2-1.4 1.4L6.2 17l4.4-4.4L12 14l-2 2h10v2z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>Операции</span>
+        </a>
+        <a routerLink="/notifications" routerLinkActive="is-active" class="phone__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path
+              d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6.5V11a7 7 0 1 0-14 0v4.5L3 18h18l-2-2.5z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>События</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+</tui-root>

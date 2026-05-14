@@ -1,0 +1,13 @@
+<label class="role-switcher">
+  <span class="role-switcher__label">Я вошёл как</span>
+  <select
+    class="role-switcher__select"
+    [ngModel]="currentId()"
+    (ngModelChange)="onChange($event)"
+  >
+    @for (profile of profiles(); track profile.id) {
+      <option [value]="profile.id">{{ profile.label }}</option>
+    }
+    <option value="__custom__">Другой UUID…</option>
+  </select>
+</label>

@@ -1,0 +1,120 @@
+.notifications {
+  &__group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    margin-top: 4px;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  &__group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0;
+  }
+
+  &__action {
+    border: none;
+    background: transparent;
+    color: var(--tbank-blue);
+    padding: 4px 0;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__error {
+    padding: 16px;
+    background: rgba(255, 80, 80, 0.12);
+    border-radius: 14px;
+    color: #ff7676;
+  }
+
+  &__empty {
+    padding: 32px;
+    text-align: center;
+    border-radius: 20px;
+    background: var(--tbank-surface);
+    color: var(--tbank-text-muted);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    background: var(--tbank-surface);
+    border-radius: 18px;
+    border: 1px solid var(--tbank-divider);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+
+    &.is-unread {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 221, 45, 0.08),
+        var(--tbank-surface)
+      );
+      border-color: rgba(255, 221, 45, 0.32);
+    }
+
+    &.is-unread::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      right: 16px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--tbank-yellow);
+    }
+
+    &:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    }
+  }
+
+  &__item-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    padding-right: 20px;
+  }
+
+  &__item-body {
+    margin: 0;
+    color: var(--tbank-text-muted);
+    line-height: 1.4;
+    font-size: 13px;
+  }
+
+  &__item-time {
+    font-size: 11px;
+    color: var(--tbank-text-muted);
+    text-transform: lowercase;
+  }
+}

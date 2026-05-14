@@ -1,0 +1,23 @@
+.role-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 221, 45, 0.16);
+  color: var(--tui-text-primary, #1c1c1e);
+  font-size: 14px;
+
+  &__label {
+    opacity: 0.7;
+  }
+
+  &__select {
+    border: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+}

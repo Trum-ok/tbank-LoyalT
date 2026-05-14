@@ -1,0 +1,63 @@
+<section class="page notifications">
+  @if (loading()) {
+    <tui-loader />
+  } @else if (error()) {
+    <div class="notifications__error">{{ error() }}</div>
+  } @else if (notifications().length === 0) {
+    <div class="notifications__empty">Уведомлений пока нет.</div>
+  } @else {
+    @if (unread().length > 0) {
+      <header class="notifications__group-head">
+        <h2 class="notifications__group-title">Новые · {{ unread().length }}</h2>
+        <button
+          type="button"
+          class="notifications__action"
+          [disabled]="markingAll()"
+          (click)="markAllRead()"
+        >
+          @if (markingAll()) {
+            Отмечаем…
+          } @else {
+            Прочитать все
+          }
+        </button>
+      </header>
+
+      <ul class="notifications__list">
+        @for (n of unread(); track n.id) {
+          <li
+            class="notifications__item is-unread"
+            (click)="markRead(n)"
+          >
+            <div class="notifications__item-head">{{ n.title }}</div>
+            @if (n.body) {
+              <p class="notifications__item-body">{{ n.body }}</p>
+            }
+            <span class="notifications__item-time">
+              {{ formatDateTime(n.created_at) }}
+            </span>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (read().length > 0) {
+      <header class="notifications__group-head">
+        <h2 class="notifications__group-title">Раньше</h2>
+      </header>
+      <ul class="notifications__list">
+        @for (n of read(); track n.id) {
+          <li class="notifications__item">
+            <div class="notifications__item-head">{{ n.title }}</div>
+            @if (n.body) {
+              <p class="notifications__item-body">{{ n.body }}</p>
+            }
+            <span class="notifications__item-time">
+              {{ formatDateTime(n.created_at) }}
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

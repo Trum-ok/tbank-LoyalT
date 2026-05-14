@@ -1,0 +1,149 @@
+<section class="page program">
+  @if (loading()) {
+    <tui-loader />
+  } @else if (error() && !program()) {
+    <div class="program__error">{{ error() }}</div>
+  } @else if (program(); as p) {
+    <header
+      class="program__hero"
+      [style.--brand]="p.partner_brand_color || '#ffdd2d'"
+    >
+      <div class="program__hero-top">
+        @if (p.partner_logo_url) {
+          <img
+            tuiAvatar
+            size="l"
+            [round]="true"
+            [src]="p.partner_logo_url"
+            alt=""
+          />
+        } @else {
+          <div tuiAvatar size="l" [round]="true">
+            {{ initials(p.partner_name) }}
+          </div>
+        }
+        <div class="program__hero-text">
+          <span class="program__hero-partner">{{ p.partner_name }}</span>
+          <span class="program__hero-name">{{ p.program_name }}</span>
+        </div>
+      </div>
+
+      @if (highlight(); as h) {
+        <div class="program__hero-figure">
+          <span class="program__hero-value">{{ h.value }}</span>
+          <span class="program__hero-unit">
+            {{ h.unit }}
+            <br />
+            {{ typeLabel() }}
+          </span>
+        </div>
+      }
+    </header>
+
+    @if (p.description) {
+      <section class="program__section">
+        <h2 class="program__section-title">О программе</h2>
+        <p class="program__text">{{ p.description }}</p>
+      </section>
+    }
+
+    <section class="program__section">
+      <h2 class="program__section-title">Условия</h2>
+      <ul class="program__terms">
+        @if (highlight(); as h) {
+          <li class="program__term">
+            <span class="program__term-icon program__term-icon--yellow">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M19 5L5 19M9 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            <div class="program__term-meta">
+              <span class="program__term-label">Начисление</span>
+              <span class="program__term-value">
+                {{ h.value }} · {{ h.unit }}
+              </span>
+            </div>
+          </li>
+        }
+        <li class="program__term">
+          <span class="program__term-icon program__term-icon--blue">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 3v18m-7-7l7 7 7-7"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <div class="program__term-meta">
+            <span class="program__term-label">Минимум для списания</span>
+            <span class="program__term-value">
+              {{ p.min_redemption }} баллов
+            </span>
+          </div>
+        </li>
+        @if (p.points_ttl_days; as ttl) {
+          <li class="program__term">
+            <span class="program__term-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                />
+                <path
+                  d="M12 7v5l3 2"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            <div class="program__term-meta">
+              <span class="program__term-label">Срок жизни баллов</span>
+              <span class="program__term-value">{{ ttl }} дней</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    @if (error()) {
+      <div class="program__error">{{ error() }}</div>
+    }
+
+    <div class="program__cta">
+      @if (existingEnrollment(); as e) {
+        <button type="button" class="program__cta-secondary" disabled>
+          Уже подключено · баланс {{ e.points_balance }}
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="program__cta-primary"
+          [disabled]="enrolling()"
+          (click)="enroll()"
+        >
+          @if (enrolling()) {
+            Подключаем…
+          } @else {
+            Подключиться
+          }
+        </button>
+      }
+    </div>
+  }
+</section>
