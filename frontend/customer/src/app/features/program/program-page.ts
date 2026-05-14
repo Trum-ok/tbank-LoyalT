@@ -1,7 +1,10 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TuiLoader } from '@taiga-ui/core';
 import { TuiAvatar } from '@taiga-ui/kit';
+
+const DISPLAY_NAME_MAX = 20;
 import {
   CatalogProgramDetail,
   EnrollmentRead,
@@ -23,7 +26,7 @@ interface Highlight {
 @Component({
   selector: 'app-program-page',
   standalone: true,
-  imports: [TuiAvatar, TuiLoader],
+  imports: [FormsModule, TuiAvatar, TuiLoader],
   templateUrl: './program-page.html',
   styleUrl: './program-page.scss',
 })
@@ -44,6 +47,9 @@ export class ProgramPage {
   readonly enrolling = signal(false);
   readonly mutating = signal(false);
   readonly qrOpen = signal(false);
+  readonly renameOpen = signal(false);
+  readonly renameDraft = signal('');
+  readonly nameMaxLength = DISPLAY_NAME_MAX;
 
   readonly existingEnrollment = computed(() => {
     const p = this.program();
@@ -177,15 +183,31 @@ export class ProgramPage {
     this.qrOpen.set(false);
   }
 
-  rename(): void {
+  openRename(): void {
     const e = this.existingEnrollment();
     const p = this.program();
     if (!e || !p) return;
-    const current = e.display_name ?? p.program_name;
-    const next = prompt('Как назвать программу у себя?', current);
-    if (next === null) return;
-    const trimmed = next.trim();
-    if (trimmed === (e.display_name ?? '').trim()) return;
+    const current = e.display_name ?? p.program_name ?? '';
+    this.renameDraft.set(current.slice(0, DISPLAY_NAME_MAX));
+    this.renameOpen.set(true);
+  }
+
+  closeRename(): void {
+    this.renameOpen.set(false);
+  }
+
+  updateRenameDraft(value: string): void {
+    this.renameDraft.set(value.slice(0, DISPLAY_NAME_MAX));
+  }
+
+  confirmRename(): void {
+    const e = this.existingEnrollment();
+    if (!e) return;
+    const trimmed = this.renameDraft().trim();
+    if (trimmed === (e.display_name ?? '').trim()) {
+      this.closeRename();
+      return;
+    }
     this.mutating.set(true);
     this.error.set(null);
     this.enrollmentsApi
@@ -196,6 +218,7 @@ export class ProgramPage {
           this.store.refresh();
           this.refresh(this.id());
           this.notify.success('Название обновлено');
+          this.closeRename();
         },
         error: err => {
           const msg = err?.error?.detail ?? 'Не удалось переименовать';

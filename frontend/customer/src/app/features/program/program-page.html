@@ -31,7 +31,7 @@
                 type="button"
                 class="program__hero-edit"
                 [disabled]="mutating()"
-                (click)="rename()"
+                (click)="openRename()"
                 aria-label="Переименовать"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -209,6 +209,68 @@
         </button>
       }
     </div>
+
+    @if (renameOpen()) {
+      <div class="program__modal" (click)="closeRename()">
+        <form
+          class="program__modal-card"
+          (click)="$event.stopPropagation()"
+          (ngSubmit)="confirmRename(); $event.preventDefault()"
+        >
+          <button
+            type="button"
+            class="program__modal-close"
+            (click)="closeRename()"
+            aria-label="Закрыть"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2.4"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <h2 class="program__modal-title">Название программы</h2>
+          <p class="program__modal-sub">
+            Только для вас. На стороне партнёра имя не меняется.
+          </p>
+          <label class="program__rename-field">
+            <input
+              class="program__rename-input"
+              type="text"
+              [ngModel]="renameDraft()"
+              (ngModelChange)="updateRenameDraft($event)"
+              [maxlength]="nameMaxLength"
+              name="display_name"
+              autocomplete="off"
+              autofocus
+            />
+            <span class="program__rename-counter">
+              {{ renameDraft().length }}/{{ nameMaxLength }}
+            </span>
+          </label>
+          <div class="program__modal-actions">
+            <button
+              type="button"
+              class="program__modal-secondary"
+              (click)="closeRename()"
+            >
+              Отмена
+            </button>
+            <button
+              type="submit"
+              class="program__modal-primary"
+              [disabled]="mutating()"
+            >
+              Сохранить
+            </button>
+          </div>
+        </form>
+      </div>
+    }
 
     @if (qrOpen() && existingEnrollment(); as e) {
       <div class="program__qr" (click)="closeQr()">
