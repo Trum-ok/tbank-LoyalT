@@ -10,20 +10,21 @@ export class EnrollmentsStore {
   private readonly api = inject(EnrollmentsApi);
   private readonly customer = inject(CustomerIdService);
 
-  private readonly _items = signal<EnrollmentRead[]>([]);
+  private readonly _all = signal<EnrollmentRead[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
 
-  readonly items = this._items.asReadonly();
+  readonly items = computed(() => this._all().filter(e => !e.is_archived));
+  readonly archived = computed(() => this._all().filter(e => e.is_archived));
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
   readonly totalBalance = computed(() =>
-    this._items().reduce((sum, e) => sum + e.points_balance, 0),
+    this.items().reduce((sum, e) => sum + e.points_balance, 0),
   );
 
   readonly topByBalance = computed(() =>
-    [...this._items()]
+    [...this.items()]
       .sort((a, b) => b.points_balance - a.points_balance)
       .slice(0, 4),
   );
@@ -39,7 +40,7 @@ export class EnrollmentsStore {
     this._loading.set(true);
     this._error.set(null);
     this.api
-      .list(false)
+      .list(true)
       .pipe(
         catchError(err => {
           this._error.set(err?.message ?? 'Не удалось загрузить программы');
@@ -47,6 +48,6 @@ export class EnrollmentsStore {
         }),
         finalize(() => this._loading.set(false)),
       )
-      .subscribe(items => this._items.set(items));
+      .subscribe(items => this._all.set(items));
   }
 }

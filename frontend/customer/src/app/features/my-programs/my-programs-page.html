@@ -29,42 +29,85 @@
 
     @if (store.error()) {
       <div class="my-programs__error">{{ store.error() }}</div>
-    } @else if (store.items().length === 0) {
+    } @else if (store.items().length === 0 && store.archived().length === 0) {
       <div class="my-programs__empty">
         <p>Вы пока не подключены ни к одной программе.</p>
         <a routerLink="/catalog">Перейти в каталог</a>
       </div>
     } @else {
-      <ul class="my-programs__list">
-        @for (enrollment of store.items(); track enrollment.id) {
-          <li>
-            <a
-              class="my-programs__card"
-              [routerLink]="['/catalog', enrollment.program_id]"
-            >
-              <div class="my-programs__card-main">
-                <div tuiAvatar size="m" [round]="true">
-                  {{ initial(enrollment.display_name) }}
+      @if (store.items().length > 0) {
+        <ul class="my-programs__list">
+          @for (enrollment of store.items(); track enrollment.id) {
+            <li>
+              <a
+                class="my-programs__card"
+                [routerLink]="['/catalog', enrollment.program_id]"
+              >
+                <div class="my-programs__card-main">
+                  <div tuiAvatar size="m" [round]="true">
+                    {{ initial(enrollment.display_name) }}
+                  </div>
+                  <div class="my-programs__card-text">
+                    <span class="my-programs__card-name">
+                      {{ enrollment.display_name ?? 'Программа' }}
+                    </span>
+                    <span class="my-programs__card-since">
+                      с {{ formatDate(enrollment.created_at) }}
+                    </span>
+                  </div>
                 </div>
-                <div class="my-programs__card-text">
-                  <span class="my-programs__card-name">
-                    {{ enrollment.display_name ?? 'Программа' }}
+                <div class="my-programs__card-balance">
+                  <span class="my-programs__balance-value">
+                    {{ formatPoints(enrollment.points_balance) }}
                   </span>
-                  <span class="my-programs__card-since">
-                    с {{ formatDate(enrollment.created_at) }}
-                  </span>
+                  <span class="my-programs__balance-label">баллов</span>
                 </div>
-              </div>
-              <div class="my-programs__card-balance">
-                <span class="my-programs__balance-value">
-                  {{ formatPoints(enrollment.points_balance) }}
-                </span>
-                <span class="my-programs__balance-label">баллов</span>
-              </div>
-            </a>
-          </li>
-        }
-      </ul>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (store.archived().length > 0) {
+        <details class="my-programs__archive">
+          <summary class="my-programs__archive-summary">
+            <span>В архиве</span>
+            <span class="my-programs__archive-count">
+              {{ store.archived().length }}
+            </span>
+          </summary>
+          <ul class="my-programs__list my-programs__list--archived">
+            @for (enrollment of store.archived(); track enrollment.id) {
+              <li>
+                <a
+                  class="my-programs__card my-programs__card--archived"
+                  [routerLink]="['/catalog', enrollment.program_id]"
+                >
+                  <div class="my-programs__card-main">
+                    <div tuiAvatar size="m" [round]="true">
+                      {{ initial(enrollment.display_name) }}
+                    </div>
+                    <div class="my-programs__card-text">
+                      <span class="my-programs__card-name">
+                        {{ enrollment.display_name ?? 'Программа' }}
+                      </span>
+                      <span class="my-programs__card-since">
+                        в архиве с {{ formatDate(enrollment.updated_at) }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="my-programs__card-balance">
+                    <span class="my-programs__balance-value">
+                      {{ formatPoints(enrollment.points_balance) }}
+                    </span>
+                    <span class="my-programs__balance-label">баллов</span>
+                  </div>
+                </a>
+              </li>
+            }
+          </ul>
+        </details>
+      }
     }
   }
 </section>
