@@ -1,8 +1,10 @@
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.partners.models import Partner
 from app.domains.programs.models import Program, ProgramStatus
 from app.domains.programs.schemas import ProgramCreate, ProgramUpdate
 from app.errors import BadRequestError, ForbiddenError, NotFoundError
@@ -11,9 +13,18 @@ from app.errors import BadRequestError, ForbiddenError, NotFoundError
 async def create_program(
     session: AsyncSession, partner_id: UUID, data: ProgramCreate
 ) -> Program:
+    # Партнёр должен существовать в локальной реплике core-service — иначе
+    # FK-violation превратится в 500 с потерей CORS-заголовков.
+    if await session.get(Partner, partner_id) is None:
+        raise NotFoundError("Partner not found")
+
     program = Program(partner_id=partner_id, **data.model_dump())
     session.add(program)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise NotFoundError("Partner not found") from exc
     await session.refresh(program)
     return program
 
