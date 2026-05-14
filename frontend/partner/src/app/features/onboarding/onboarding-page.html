@@ -39,7 +39,18 @@
 
   @if (!hasAccount()) {
     <form class="card" (ngSubmit)="submitAccount(); $event.preventDefault()">
-      <h2 class="card__title">Шаг 1 · Аккаунт владельца</h2>
+      <div class="card__head">
+        <h2 class="card__title">Шаг 1 · Аккаунт владельца</h2>
+        @if (identity.isDemo()) {
+          <button
+            type="button"
+            class="btn btn--ghost btn--small"
+            (click)="fillAccountDemo()"
+          >
+            Заполнить демо-данными
+          </button>
+        }
+      </div>
 
       <div class="row row--2">
         <label class="field">
@@ -83,9 +94,57 @@
         </button>
       </div>
     </form>
+  } @else if (!hasPartner() && pendingApp() && !isEditingApplication()) {
+    @if (pendingApp(); as app) {
+      <div class="card submitted">
+        <span class="submitted__pill">Заявка отправлена</span>
+        <h2 class="submitted__title">{{ app.business_name }}</h2>
+        <p class="submitted__sub">
+          ИНН {{ app.inn }} · {{ partnerCategoryLabel(app.category) }}
+        </p>
+        <p class="submitted__hint">
+          <span>Ждём решения модератора Т-Банка.</span>
+          <span>Обычно меньше суток.</span>
+        </p>
+        <div class="card__actions">
+          <button
+            type="button"
+            class="btn btn--primary"
+            (click)="editApplication(app)"
+          >
+            Редактировать
+          </button>
+          <button
+            type="button"
+            class="btn btn--ghost"
+            [disabled]="loading()"
+            (click)="withdrawApplication()"
+          >
+            Отозвать
+          </button>
+        </div>
+      </div>
+    }
   } @else if (!hasPartner()) {
     <form class="card" (ngSubmit)="submitApplication(); $event.preventDefault()">
-      <h2 class="card__title">Шаг 2 · Заявка на бизнес</h2>
+      <div class="card__head">
+        <h2 class="card__title">
+          @if (isEditingApplication()) {
+            Редактирование заявки
+          } @else {
+            Шаг 2 · Заявка на бизнес
+          }
+        </h2>
+        @if (identity.isDemo() && !isEditingApplication()) {
+          <button
+            type="button"
+            class="btn btn--ghost btn--small"
+            (click)="fillApplicationDemo()"
+          >
+            Заполнить демо-данными
+          </button>
+        }
+      </div>
 
       <div class="row row--2">
         <label class="field">
@@ -130,6 +189,7 @@
           <input
             class="field__input"
             type="email"
+            placeholder="contact@example.com"
             [value]="applicationForm().contact_email"
             (input)="patchApplication('contact_email', $any($event.target).value)"
             required
@@ -140,6 +200,7 @@
           <input
             class="field__input"
             type="tel"
+            placeholder="+7 (000) 000-00-00"
             [value]="applicationForm().contact_phone"
             (input)="patchApplication('contact_phone', $any($event.target).value)"
           />
@@ -159,8 +220,22 @@
 
       <div class="card__actions">
         <button type="submit" class="btn btn--primary" [disabled]="loading()">
-          {{ loading() ? 'Отправляем…' : 'Отправить заявку' }}
+          @if (loading()) {
+            {{ isEditingApplication() ? 'Сохраняем…' : 'Отправляем…' }}
+          } @else {
+            {{ isEditingApplication() ? 'Сохранить' : 'Отправить заявку' }}
+          }
         </button>
+        @if (isEditingApplication()) {
+          <button
+            type="button"
+            class="btn btn--ghost"
+            [disabled]="loading()"
+            (click)="cancelEdit()"
+          >
+            Отмена
+          </button>
+        }
       </div>
     </form>
   } @else {
@@ -177,6 +252,7 @@
   }
 
   @if (latestApp(); as app) {
+    @if (!(pendingApp() && !isEditingApplication())) {
     <article class="card application">
       <div class="application__head">
         <div>
@@ -209,5 +285,6 @@
         </p>
       }
     </article>
+    }
   }
 </section>

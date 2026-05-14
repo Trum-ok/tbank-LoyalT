@@ -9,6 +9,7 @@ from app.domains.applications.schemas import (
     ApplicationCreate,
     ApplicationDecision,
     ApplicationRead,
+    ApplicationUpdate,
 )
 from app.domains.partners import service as partners_service
 from app.domains.partners.schemas import PartnerRead
@@ -33,6 +34,26 @@ async def list_my_applications(
 ) -> list[ApplicationRead]:
     applications = await service.list_my_applications(session, account_id)
     return [ApplicationRead.model_validate(a) for a in applications]
+
+
+@partner_router.patch("/me/{application_id}", response_model=ApplicationRead)
+async def update_my_application(
+    application_id: UUID,
+    data: ApplicationUpdate,
+    account_id: CurrentAccountId,
+    session: SessionDep,
+) -> ApplicationRead:
+    application = await service.update_my_pending(
+        session, account_id, application_id, data
+    )
+    return ApplicationRead.model_validate(application)
+
+
+@partner_router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def withdraw_my_application(
+    account_id: CurrentAccountId, session: SessionDep
+) -> None:
+    await service.withdraw_my_pending(session, account_id)
 
 
 @admin_router.get("", response_model=list[ApplicationRead])

@@ -4,6 +4,7 @@ export interface PartnerIdentity {
   account_id: string | null;
   partner_id: string | null;
   label: string;
+  is_demo?: boolean;
 }
 
 const STORAGE_KEY = 'tbank-loyalt-partner:identity';
@@ -16,11 +17,13 @@ const DEMO_IDENTITIES: PartnerIdentity[] = [
     account_id: '11111111-1111-1111-1111-111111111111',
     partner_id: '1f6ea13f-7ddb-4a0a-82e9-6308a2616267',
     label: 'Кофе Хауз (демо)',
+    is_demo: true,
   },
   {
     account_id: null,
     partner_id: null,
     label: 'Свежий партнёр (онбординг)',
+    is_demo: true,
   },
 ];
 
@@ -39,6 +42,7 @@ export class IdentityService {
   readonly current = this.state.asReadonly();
   readonly accountId = computed(() => this.state().account_id);
   readonly partnerId = computed(() => this.state().partner_id);
+  readonly isDemo = computed(() => this.state().is_demo === true);
 
   set(identity: PartnerIdentity): void {
     this.state.set(identity);

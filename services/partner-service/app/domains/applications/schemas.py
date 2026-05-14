@@ -15,6 +15,15 @@ class ApplicationCreate(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
 
 
+class ApplicationUpdate(BaseModel):
+    business_name: str | None = Field(default=None, min_length=1, max_length=255)
+    inn: str | None = Field(default=None, min_length=10, max_length=12)
+    category: PartnerCategory | None = None
+    contact_email: EmailStr | None = None
+    contact_phone: str | None = Field(default=None, max_length=32)
+    description: str | None = Field(default=None, max_length=2000)
+
+
 class ApplicationDecision(BaseModel):
     comment: str | None = Field(default=None, max_length=2000)
 

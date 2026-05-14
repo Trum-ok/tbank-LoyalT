@@ -138,6 +138,15 @@ export interface ApplicationCreate {
   description?: string | null;
 }
 
+export interface ApplicationUpdate {
+  business_name?: string | null;
+  inn?: string | null;
+  category?: PartnerCategory | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  description?: string | null;
+}
+
 export type PartnerStatus = 'active' | 'suspended' | 'blocked';
 
 export interface PartnerRead {

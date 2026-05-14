@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.accounts.service import get_account
 from app.domains.applications.models import Application, ApplicationStatus
-from app.domains.applications.schemas import ApplicationCreate
-from app.errors import BadRequestError, ConflictError, NotFoundError
+from app.domains.applications.schemas import ApplicationCreate, ApplicationUpdate
+from app.errors import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 
 
 async def submit_application(
@@ -114,6 +114,45 @@ async def reject(
 ) -> Application:
     application = await get_application(session, application_id)
     _decide(application, ApplicationStatus.REJECTED, admin_id, comment)
+    await session.commit()
+    await session.refresh(application)
+    return application
+
+
+async def withdraw_my_pending(
+    session: AsyncSession, account_id: UUID
+) -> None:
+    result = await session.execute(
+        select(Application).where(
+            Application.account_id == account_id,
+            Application.status == ApplicationStatus.PENDING,
+        )
+    )
+    for app in result.scalars().all():
+        await session.delete(app)
+    await session.commit()
+
+
+async def update_my_pending(
+    session: AsyncSession,
+    account_id: UUID,
+    application_id: UUID,
+    data: ApplicationUpdate,
+) -> Application:
+    application = await get_application(session, application_id)
+    if application.account_id != account_id:
+        raise ForbiddenError("Application does not belong to this account")
+    if application.status != ApplicationStatus.PENDING:
+        raise BadRequestError(
+            f"Application is {application.status}, cannot edit"
+        )
+
+    payload = data.model_dump(exclude_unset=True)
+    if "contact_email" in payload and payload["contact_email"] is not None:
+        payload["contact_email"] = str(payload["contact_email"]).lower()
+    for key, value in payload.items():
+        setattr(application, key, value)
+
     await session.commit()
     await session.refresh(application)
     return application

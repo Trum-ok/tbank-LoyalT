@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import {
   ApplicationCreate,
   ApplicationRead,
+  ApplicationUpdate,
 } from '@tbank-loyalt/shared';
 import { Observable } from 'rxjs';
 
@@ -19,5 +20,16 @@ export class ApplicationsApi {
 
   listMine(): Observable<ApplicationRead[]> {
     return this.http.get<ApplicationRead[]>(`${this.base}/applications/me`);
+  }
+
+  updateMine(id: string, body: ApplicationUpdate): Observable<ApplicationRead> {
+    return this.http.patch<ApplicationRead>(
+      `${this.base}/applications/me/${id}`,
+      body,
+    );
+  }
+
+  withdrawMine(): Observable<void> {
+    return this.http.delete<void>(`${this.base}/applications/me`);
   }
 }
