@@ -129,6 +129,13 @@ export class ProgramPage {
       }
       this.pageActions.set([
         {
+          id: 'rename',
+          icon: 'edit',
+          label: 'Переименовать',
+          disabled: this.mutating(),
+          handler: () => this.openRename(),
+        },
+        {
           id: 'archive',
           icon: e.is_archived ? 'unarchive' : 'archive',
           label: e.is_archived ? 'Разархивировать' : 'В архив',

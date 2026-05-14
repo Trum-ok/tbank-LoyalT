@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type PageActionIcon = 'archive' | 'unarchive' | 'trash';
+export type PageActionIcon = 'edit' | 'archive' | 'unarchive' | 'trash';
 
 export interface PageAction {
   id: string;
