@@ -40,8 +40,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Фронтенд
 
 - **TypeScript**
-- **React**
-- **Vite**
+- **Angular** (CLI на esbuild, standalone-компоненты, signals по умолчанию)
+- **Taiga UI** (`@taiga-ui/core`, `@taiga-ui/kit`, `@taiga-ui/layout`, `@taiga-ui/icons`) — банковский UI-кит Т-Банка
+- **pnpm workspaces** — фронт-приложения и общий пакет лежат под `frontend/`
 
 ### Брокер сообщений
 
