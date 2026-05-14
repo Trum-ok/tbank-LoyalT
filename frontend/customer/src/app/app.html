@@ -6,32 +6,48 @@
       <app-theme-toggle />
     </aside>
 
-    <div class="phone">
+    <div class="phone" [class.phone--detail]="isDetail()">
       <div class="phone__notch"></div>
 
       <header class="phone__header">
-        <a routerLink="/catalog" class="phone__brand">
-          <span class="phone__brand-dot"></span>
-          <span class="phone__brand-text">Т-Лояльность</span>
-        </a>
+        @if (isDetail()) {
+          <a routerLink="/catalog" class="phone__back" aria-label="Назад">
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path
+                d="M19 12H5M12 5l-7 7 7 7"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+        } @else {
+          <a routerLink="/catalog" class="phone__brand">
+            <span class="phone__brand-dot"></span>
+            <span class="phone__brand-text">Т-Лояльность</span>
+          </a>
 
-        <a routerLink="/my-programs" class="phone__balance">
-          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-            <path
-              d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2.5 9h13v2h-13v-2z"
-              fill="currentColor"
-            />
-          </svg>
-          <span class="phone__balance-value">
-            {{ formatPoints(enrollments.totalBalance()) }}
-          </span>
-        </a>
+          <a routerLink="/my-programs" class="phone__balance">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path
+                d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2.5 9h13v2h-13v-2z"
+                fill="currentColor"
+              />
+            </svg>
+            <span class="phone__balance-value">
+              {{ formatPoints(enrollments.totalBalance()) }}
+            </span>
+          </a>
+        }
       </header>
 
       <main class="phone__main">
         <router-outlet />
       </main>
 
+      @if (!isDetail()) {
       <nav class="phone__tabs">
         <a routerLink="/catalog" routerLinkActive="is-active" class="phone__tab">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
@@ -71,6 +87,7 @@
           <span>События</span>
         </a>
       </nav>
+      }
     </div>
   </div>
 </tui-root>

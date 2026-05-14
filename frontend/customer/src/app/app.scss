@@ -83,6 +83,25 @@
     background: var(--tbank-yellow);
   }
 
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: -6px;
+    color: var(--tbank-text);
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  &--detail .phone__main {
+    padding-bottom: 0;
+  }
+
   &__balance {
     display: inline-flex;
     align-items: center;

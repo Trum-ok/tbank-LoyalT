@@ -1,4 +1,6 @@
 .program {
+  padding-bottom: 96px;
+
   &__hero {
     border-radius: var(--tbank-radius-lg);
     padding: 22px 22px 26px;
@@ -137,10 +139,23 @@
   }
 
   &__cta {
-    position: sticky;
-    bottom: 84px;
-    padding: 4px 0 0;
-    margin-top: auto;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 40px 16px 16px;
+    background: linear-gradient(
+      to top,
+      var(--tbank-bg) 55%,
+      color-mix(in srgb, var(--tbank-bg) 60%, transparent) 78%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  &__cta > * {
+    pointer-events: auto;
   }
 
   &__cta button,
