@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -18,6 +19,12 @@ class CatalogProgram(BaseModel):
     program_name: str
     description: str | None
     type: ProgramType
+
+
+class CatalogProgramDetail(CatalogProgram):
+    accrual_rule: dict[str, Any]
+    points_ttl_days: int | None
+    min_redemption: int
 
 
 class CatalogCategory(BaseModel):

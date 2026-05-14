@@ -1,7 +1,13 @@
+from uuid import UUID
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.catalog.schemas import CatalogCategory, CatalogProgram
+from app.domains.catalog.schemas import (
+    CatalogCategory,
+    CatalogProgram,
+    CatalogProgramDetail,
+)
 from app.domains.partners.models import Partner, PartnerCategory, PartnerStatus
 from app.domains.programs.models import Program, ProgramStatus
 
@@ -14,25 +20,53 @@ _CATEGORY_LABELS: dict[PartnerCategory, str] = {
 }
 
 
+_BASE_COLUMNS = (
+    Program.id.label("program_id"),
+    Partner.id.label("partner_id"),
+    Partner.name.label("partner_name"),
+    Partner.logo_url.label("partner_logo_url"),
+    Partner.brand_color.label("partner_brand_color"),
+    Partner.category.label("category"),
+    Program.name.label("program_name"),
+    Program.description.label("description"),
+    Program.type.label("type"),
+)
+
+_DETAIL_COLUMNS = (
+    *_BASE_COLUMNS,
+    Program.accrual_rule.label("accrual_rule"),
+    Program.points_ttl_days.label("points_ttl_days"),
+    Program.min_redemption.label("min_redemption"),
+)
+
+
 def _base_query():
     return (
-        select(
-            Program.id.label("program_id"),
-            Partner.id.label("partner_id"),
-            Partner.name.label("partner_name"),
-            Partner.logo_url.label("partner_logo_url"),
-            Partner.brand_color.label("partner_brand_color"),
-            Partner.category.label("category"),
-            Program.name.label("program_name"),
-            Program.description.label("description"),
-            Program.type.label("type"),
-        )
+        select(*_BASE_COLUMNS)
         .join(Partner, Partner.id == Program.partner_id)
         .where(
             Program.status == ProgramStatus.PUBLISHED,
             Partner.status == PartnerStatus.ACTIVE,
         )
     )
+
+
+async def get_catalog_program(
+    session: AsyncSession, program_id: UUID
+) -> CatalogProgramDetail | None:
+    stmt = (
+        select(*_DETAIL_COLUMNS)
+        .join(Partner, Partner.id == Program.partner_id)
+        .where(
+            Program.id == program_id,
+            Program.status == ProgramStatus.PUBLISHED,
+            Partner.status == PartnerStatus.ACTIVE,
+        )
+    )
+    row = (await session.execute(stmt)).first()
+    if row is None:
+        return None
+    return CatalogProgramDetail.model_validate(row, from_attributes=True)
 
 
 async def search_catalog(

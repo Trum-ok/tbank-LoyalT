@@ -1,8 +1,14 @@
-from fastapi import APIRouter, Query
+from uuid import UUID
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.deps import SessionDep
 from app.domains.catalog import service
-from app.domains.catalog.schemas import CatalogCategory, CatalogProgram
+from app.domains.catalog.schemas import (
+    CatalogCategory,
+    CatalogProgram,
+    CatalogProgramDetail,
+)
 from app.domains.partners.models import PartnerCategory
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
@@ -19,6 +25,18 @@ async def search_programs(
     return await service.search_catalog(
         session, category=category, query=q, limit=limit, offset=offset
     )
+
+
+@router.get("/programs/{program_id}", response_model=CatalogProgramDetail)
+async def get_program(
+    session: SessionDep, program_id: UUID
+) -> CatalogProgramDetail:
+    program = await service.get_catalog_program(session, program_id)
+    if program is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="program not found"
+        )
+    return program
 
 
 @router.get("/categories", response_model=list[CatalogCategory])
