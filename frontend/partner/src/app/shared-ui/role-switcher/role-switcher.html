@@ -1,0 +1,12 @@
+<label class="role-switcher">
+  <span class="role-switcher__caption">Личность</span>
+  <select
+    class="role-switcher__select"
+    [value]="key(identity.current())"
+    (change)="switchTo($any($event.target).value)"
+  >
+    @for (i of identity.identities(); track key(i)) {
+      <option [value]="key(i)">{{ i.label }}</option>
+    }
+  </select>
+</label>

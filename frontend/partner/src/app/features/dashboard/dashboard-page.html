@@ -1,0 +1,145 @@
+<section class="page dashboard">
+  @if (!hasAccount()) {
+    <header class="page-head">
+      <div>
+        <h1 class="page-title">Добро пожаловать в Т-Лояльность</h1>
+        <p class="page-subtitle">
+          Чтобы начать настраивать программы и начислять баллы клиентам,
+          подключите бизнес — это занимает 2 шага и не требует приложений.
+        </p>
+      </div>
+    </header>
+
+    <div class="dashboard__cta-card">
+      <div>
+        <h2 class="dashboard__cta-title">Подключение партнёра</h2>
+        <p class="dashboard__cta-sub">
+          Регистрация владельца и заявка на бизнес. Решение модерации — обычно
+          меньше суток.
+        </p>
+      </div>
+      <a routerLink="/onboarding" class="btn btn--primary">Начать</a>
+    </div>
+  } @else if (!hasPartner()) {
+    <header class="page-head">
+      <div>
+        <h1 class="page-title">Заявка на рассмотрении</h1>
+        <p class="page-subtitle">
+          После одобрения модерацией откроется конструктор программ и
+          журнал транзакций. Можно проверить статус на странице онбординга.
+        </p>
+      </div>
+      <a routerLink="/onboarding" class="btn btn--ghost">Открыть заявку</a>
+    </header>
+
+    <div class="empty-box">
+      Пока что доступны только онбординг и профиль. Программы появятся после
+      одобрения.
+    </div>
+  } @else {
+    <header class="page-head">
+      <div>
+        <h1 class="page-title">Дашборд</h1>
+        <p class="page-subtitle">
+          {{ partnerName() ?? 'Партнёр' }} · общая картина по программам и
+          активности клиентов.
+        </p>
+      </div>
+      <a routerLink="/programs" class="btn btn--primary">Новая программа</a>
+    </header>
+
+    @if (loading()) {
+      <div class="card">Считаем метрики…</div>
+    } @else {
+      <div class="dashboard__metrics">
+        <div class="metric metric--accent">
+          <span class="metric__label">Активные клиенты</span>
+          <span class="metric__value">{{ stats().customers }}</span>
+          <span class="metric__hint">за период журнала</span>
+        </div>
+        <div class="metric metric--green">
+          <span class="metric__label">Начислено баллов</span>
+          <span class="metric__value">+{{ stats().accrued }}</span>
+          <span class="metric__hint">{{ stats().published }} программ опубликовано</span>
+        </div>
+        <div class="metric metric--red">
+          <span class="metric__label">Списано баллов</span>
+          <span class="metric__value">−{{ stats().redeemed }}</span>
+          <span class="metric__hint">обмен на награды</span>
+        </div>
+        <div class="metric">
+          <span class="metric__label">Средний чек</span>
+          <span class="metric__value">{{ formatAmount(stats().averageCheck) }}</span>
+          <span class="metric__hint">по операциям с чеком</span>
+        </div>
+      </div>
+
+      <section class="card chart">
+        <header class="card__head">
+          <div>
+            <h2 class="card__title">Начисления за 14 дней</h2>
+            <p class="card__sub">Сколько баллов суммарно выдано клиентам по дням.</p>
+          </div>
+        </header>
+        <div class="chart__grid">
+          @for (b of daySeries(); track b.day) {
+            <div class="chart__bar" [title]="b.day + ' · ' + b.value">
+              <span class="chart__bar-fill" [style.height.%]="b.ratio * 100"></span>
+              <span class="chart__bar-label">{{ b.label }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <div class="dashboard__split">
+        <section class="card">
+          <h2 class="card__title">Топ программ</h2>
+          @if (topPrograms().length === 0) {
+            <p class="card__sub">Программ пока нет.</p>
+          } @else {
+            <ul class="top-programs">
+              @for (row of topPrograms(); track row.program.id) {
+                <li class="top-programs__item">
+                  <a [routerLink]="['/programs', row.program.id]" class="top-programs__link">
+                    <div class="top-programs__main">
+                      <span class="top-programs__name">{{ row.program.name }}</span>
+                      <span class="top-programs__sub">
+                        {{ programTypeLabel(row.program.type) }} ·
+                        {{ programStatusLabel(row.program.status) }}
+                      </span>
+                    </div>
+                    <span class="top-programs__points">+{{ row.accrued }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="card">
+          <h2 class="card__title">Последние транзакции</h2>
+          @if (recent().length === 0) {
+            <p class="card__sub">Пока не было операций.</p>
+          } @else {
+            <ul class="recent">
+              @for (tx of recent(); track tx.id) {
+                <li class="recent__item" [class]="'recent__item--' + tx.type">
+                  <span class="recent__type">{{ transactionTypeLabel(tx.type) }}</span>
+                  <span class="recent__points">
+                    @if (tx.type === 'accrual') {+{{ tx.points }}}
+                    @else if (tx.type === 'redemption') {−{{ tx.points }}}
+                    @else {{{ tx.points }}}
+                  </span>
+                  <span class="recent__time">{{ formatDateTime(tx.created_at) }}</span>
+                </li>
+              }
+            </ul>
+            <a routerLink="/transactions" class="btn btn--ghost btn--full">
+              Открыть весь журнал
+            </a>
+          }
+        </section>
+      </div>
+    }
+  }
+</section>

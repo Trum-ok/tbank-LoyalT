@@ -1,0 +1,147 @@
+<section class="page profile">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Профиль партнёра</h1>
+      <p class="page-subtitle">
+        Видимые клиентам имя, логотип и контакты. ИНН и категория задаются один
+        раз при регистрации и редактируются только через поддержку.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="card">Загружаем…</div>
+  } @else if (!partner()) {
+    <div class="empty-box">
+      Профиль партнёра ещё не создан.
+      <br />
+      <a routerLink="/onboarding" class="btn btn--primary" style="margin-top: 14px">
+        Пройти онбординг
+      </a>
+    </div>
+  } @else if (partner(); as p) {
+    @if (error()) {
+      <div class="error-box">{{ error() }}</div>
+    }
+
+    <section class="profile__hero card" [style.--brand]="p.brand_color || '#ffdd2d'">
+      <div class="profile__hero-left">
+        @if (p.logo_url) {
+          <img class="profile__avatar" [src]="p.logo_url" [alt]="p.name" />
+        } @else {
+          <span class="profile__avatar profile__avatar--initials">
+            {{ p.name.slice(0, 2).toUpperCase() }}
+          </span>
+        }
+        <div>
+          <h2 class="profile__name">{{ p.name }}</h2>
+          <p class="profile__sub">
+            {{ partnerCategoryLabel(p.category) }} · ИНН {{ p.inn }}
+          </p>
+        </div>
+      </div>
+      <span class="status-pill" [class]="'status-pill--' + p.status">
+        {{ p.status }}
+      </span>
+    </section>
+
+    <form class="card" (ngSubmit)="save(); $event.preventDefault()">
+      <h3 class="card__title">Публичный профиль</h3>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Название</span>
+          <input
+            class="field__input"
+            [value]="form().name ?? ''"
+            (input)="patch('name', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Брендовый цвет</span>
+          <div class="profile__color">
+            <input
+              class="profile__color-pick"
+              type="color"
+              [value]="form().brand_color || '#ffdd2d'"
+              (input)="patch('brand_color', $any($event.target).value)"
+              aria-label="Брендовый цвет"
+            />
+            <input
+              class="field__input"
+              placeholder="#ffdd2d"
+              [value]="form().brand_color ?? ''"
+              (input)="patch('brand_color', $any($event.target).value)"
+            />
+          </div>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Ссылка на логотип</span>
+        <input
+          class="field__input"
+          type="url"
+          placeholder="https://..."
+          [value]="form().logo_url ?? ''"
+          (input)="patch('logo_url', $any($event.target).value)"
+        />
+        <span class="field__hint">
+          Квадратный PNG или SVG, желательно прозрачный фон.
+        </span>
+      </label>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Контактный email</span>
+          <input
+            class="field__input"
+            type="email"
+            [value]="form().contact_email ?? ''"
+            (input)="patch('contact_email', $any($event.target).value)"
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">Телефон</span>
+          <input
+            class="field__input"
+            type="tel"
+            [value]="form().contact_phone ?? ''"
+            (input)="patch('contact_phone', $any($event.target).value)"
+          />
+        </label>
+      </div>
+
+      <div class="card__actions">
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Сохраняем…' : 'Сохранить' }}
+        </button>
+      </div>
+    </form>
+
+    @if (account(); as a) {
+      <section class="card card--soft profile__account">
+        <h3 class="card__title">Владелец аккаунта</h3>
+        <dl class="profile__kv">
+          <div>
+            <dt>Email</dt>
+            <dd>{{ a.email }}</dd>
+          </div>
+          <div>
+            <dt>Имя</dt>
+            <dd>{{ a.full_name || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Телефон</dt>
+            <dd>{{ a.phone || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Создан</dt>
+            <dd>{{ formatDateTime(a.created_at) }}</dd>
+          </div>
+        </dl>
+      </section>
+    }
+  }
+</section>

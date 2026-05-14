@@ -1,0 +1,213 @@
+<section class="page onboarding">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Подключение к Т-Лояльности</h1>
+      <p class="page-subtitle">
+        Два шага: создаёте аккаунт владельца, потом подаёте заявку на бизнес.
+        Модерация со стороны Т-Банка — обычно меньше суток.
+      </p>
+    </div>
+  </header>
+
+  <ol class="steps">
+    <li class="steps__item" [class.is-done]="hasAccount()" [class.is-current]="!hasAccount()">
+      <span class="steps__bullet">1</span>
+      <div class="steps__body">
+        <h3 class="steps__title">Аккаунт владельца</h3>
+        <p class="steps__sub">Email и контактные данные ответственного.</p>
+      </div>
+    </li>
+    <li class="steps__item" [class.is-done]="hasPartner()" [class.is-current]="hasAccount() && !hasPartner()" [class.is-locked]="!hasAccount()">
+      <span class="steps__bullet">2</span>
+      <div class="steps__body">
+        <h3 class="steps__title">Заявка на бизнес</h3>
+        <p class="steps__sub">ИНН, категория и контакты. Решение придёт сюда.</p>
+      </div>
+    </li>
+    <li class="steps__item" [class.is-done]="hasPartner()" [class.is-locked]="!hasPartner()">
+      <span class="steps__bullet">3</span>
+      <div class="steps__body">
+        <h3 class="steps__title">Запуск программы</h3>
+        <p class="steps__sub">После одобрения откроется конструктор программ.</p>
+      </div>
+    </li>
+  </ol>
+
+  @if (error()) {
+    <div class="error-box">{{ error() }}</div>
+  }
+
+  @if (!hasAccount()) {
+    <form class="card" (ngSubmit)="submitAccount(); $event.preventDefault()">
+      <h2 class="card__title">Шаг 1 · Аккаунт владельца</h2>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Email *</span>
+          <input
+            class="field__input"
+            type="email"
+            placeholder="owner@example.com"
+            [value]="accountForm().email"
+            (input)="patchAccount('email', $any($event.target).value)"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Полное имя</span>
+          <input
+            class="field__input"
+            type="text"
+            placeholder="Иван Петров"
+            [value]="accountForm().full_name"
+            (input)="patchAccount('full_name', $any($event.target).value)"
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Телефон</span>
+        <input
+          class="field__input"
+          type="tel"
+          placeholder="+7 (000) 000-00-00"
+          [value]="accountForm().phone"
+          (input)="patchAccount('phone', $any($event.target).value)"
+        />
+      </label>
+
+      <div class="card__actions">
+        <button type="submit" class="btn btn--primary" [disabled]="loading()">
+          {{ loading() ? 'Создаём…' : 'Создать аккаунт' }}
+        </button>
+      </div>
+    </form>
+  } @else if (!hasPartner()) {
+    <form class="card" (ngSubmit)="submitApplication(); $event.preventDefault()">
+      <h2 class="card__title">Шаг 2 · Заявка на бизнес</h2>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Название бизнеса *</span>
+          <input
+            class="field__input"
+            placeholder='ООО "Кофейня Утро"'
+            [value]="applicationForm().business_name"
+            (input)="patchApplication('business_name', $any($event.target).value)"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">ИНН *</span>
+          <input
+            class="field__input"
+            placeholder="10–12 цифр"
+            [value]="applicationForm().inn"
+            (input)="patchApplication('inn', $any($event.target).value)"
+            required
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Категория</span>
+        <select
+          class="field__select"
+          [value]="applicationForm().category"
+          (change)="patchApplication('category', $any($event.target).value)"
+        >
+          @for (c of categories; track c.code) {
+            <option [value]="c.code">{{ c.label }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Контактный email *</span>
+          <input
+            class="field__input"
+            type="email"
+            [value]="applicationForm().contact_email"
+            (input)="patchApplication('contact_email', $any($event.target).value)"
+            required
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">Контактный телефон</span>
+          <input
+            class="field__input"
+            type="tel"
+            [value]="applicationForm().contact_phone"
+            (input)="patchApplication('contact_phone', $any($event.target).value)"
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Чем занимаетесь</span>
+        <textarea
+          class="field__textarea"
+          rows="3"
+          placeholder="Кратко расскажите о бизнесе и почему хотите подключиться"
+          [value]="applicationForm().description"
+          (input)="patchApplication('description', $any($event.target).value)"
+        ></textarea>
+      </label>
+
+      <div class="card__actions">
+        <button type="submit" class="btn btn--primary" [disabled]="loading()">
+          {{ loading() ? 'Отправляем…' : 'Отправить заявку' }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    <div class="card success">
+      <span class="success__pill">Готово</span>
+      <h2 class="success__title">Партнёр подключён</h2>
+      <p class="success__sub">
+        Можно настраивать программы и начислять баллы клиентам.
+      </p>
+      <div class="card__actions">
+        <a routerLink="/programs" class="btn btn--primary">Перейти к программам</a>
+      </div>
+    </div>
+  }
+
+  @if (latestApp(); as app) {
+    <article class="card application">
+      <div class="application__head">
+        <div>
+          <h3 class="application__title">{{ app.business_name }}</h3>
+          <p class="application__sub">
+            ИНН {{ app.inn }} · {{ partnerCategoryLabel(app.category) }}
+          </p>
+        </div>
+        <span class="status-pill" [class]="'status-pill--' + app.status">
+          {{ applicationStatusLabel(app.status) }}
+        </span>
+      </div>
+
+      <dl class="application__meta">
+        <div>
+          <dt>Отправлена</dt>
+          <dd>{{ formatDateTime(app.created_at) }}</dd>
+        </div>
+        @if (app.decided_at) {
+          <div>
+            <dt>Решение</dt>
+            <dd>{{ formatDateTime(app.decided_at) }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (app.decision_comment) {
+        <p class="application__comment">
+          <strong>Комментарий модератора:</strong> {{ app.decision_comment }}
+        </p>
+      }
+    </article>
+  }
+</section>

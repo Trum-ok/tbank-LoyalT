@@ -1,0 +1,352 @@
+<section class="page program-detail">
+  <a routerLink="/programs" class="program-detail__back">
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+      <path
+        d="M15 6l-6 6 6 6"
+        stroke="currentColor"
+        stroke-width="2.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+      />
+    </svg>
+    К списку программ
+  </a>
+
+  @if (loading()) {
+    <div class="card">Загружаем программу…</div>
+  } @else if (!program()) {
+    <div class="empty-box">Программа не найдена.</div>
+  } @else if (program(); as p) {
+    @if (error()) {
+      <div class="error-box">{{ error() }}</div>
+    }
+
+    <header class="program-detail__hero card">
+      <div class="program-detail__hero-left">
+        <span class="program-detail__type">{{ programTypeLabel(p.type) }}</span>
+        <h1 class="page-title">{{ p.name }}</h1>
+        @if (p.description) {
+          <p class="page-subtitle">{{ p.description }}</p>
+        }
+      </div>
+      <div class="program-detail__hero-right">
+        <span class="status-pill" [class]="'status-pill--' + p.status">
+          {{ programStatusLabel(p.status) }}
+        </span>
+        <div class="program-detail__actions">
+          @if (canPublish()) {
+            <button
+              type="button"
+              class="btn btn--primary"
+              [disabled]="transitionPending() !== null"
+              (click)="publish()"
+            >
+              Опубликовать
+            </button>
+          }
+          @if (canPause()) {
+            <button
+              type="button"
+              class="btn btn--ghost"
+              [disabled]="transitionPending() !== null"
+              (click)="pause()"
+            >
+              На паузу
+            </button>
+          }
+          @if (canArchive()) {
+            <button
+              type="button"
+              class="btn btn--danger"
+              [disabled]="transitionPending() !== null"
+              (click)="archive()"
+            >
+              В архив
+            </button>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (form(); as f) {
+      <form class="card" (ngSubmit)="save(); $event.preventDefault()">
+        <h2 class="card__title">Настройки программы</h2>
+
+        <label class="field">
+          <span class="field__label">Название</span>
+          <input
+            class="field__input"
+            [value]="f.name"
+            (input)="patch('name', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Описание для клиентов</span>
+          <textarea
+            class="field__textarea"
+            rows="2"
+            [value]="f.description"
+            (input)="patch('description', $any($event.target).value)"
+          ></textarea>
+        </label>
+
+        <div class="row row--3">
+          @switch (p.type) {
+            @case ('accrual') {
+              <label class="field">
+                <span class="field__label">% с чека</span>
+                <input
+                  class="field__input"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  [value]="f.percent ?? 0"
+                  (input)="patch('percent', +$any($event.target).value)"
+                />
+              </label>
+            }
+            @case ('visit') {
+              <label class="field">
+                <span class="field__label">Баллов за визит</span>
+                <input
+                  class="field__input"
+                  type="number"
+                  min="1"
+                  [value]="f.points_per_visit ?? 0"
+                  (input)="patch('points_per_visit', +$any($event.target).value)"
+                />
+              </label>
+            }
+            @case ('stamps') {
+              <label class="field">
+                <span class="field__label">Визитов до награды</span>
+                <input
+                  class="field__input"
+                  type="number"
+                  min="2"
+                  [value]="f.visits_required ?? 0"
+                  (input)="patch('visits_required', +$any($event.target).value)"
+                />
+              </label>
+            }
+          }
+
+          <label class="field">
+            <span class="field__label">TTL баллов, дней</span>
+            <input
+              class="field__input"
+              type="number"
+              min="0"
+              placeholder="пусто = бессрочно"
+              [value]="f.points_ttl_days ?? ''"
+              (input)="patch('points_ttl_days', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Мин. для списания</span>
+            <input
+              class="field__input"
+              type="number"
+              min="0"
+              [value]="f.min_redemption"
+              (input)="patch('min_redemption', +$any($event.target).value)"
+            />
+          </label>
+        </div>
+
+        <div class="card__actions">
+          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+            {{ saving() ? 'Сохраняем…' : 'Сохранить' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <section class="card">
+      <header class="card__title-row">
+        <div>
+          <h2 class="card__title">Награды</h2>
+          <p class="card__sub">
+            Что клиент получит за списание баллов. Можно временно отключать без
+            удаления.
+          </p>
+        </div>
+        <button type="button" class="btn btn--ghost" (click)="openRewardCreator()">
+          + Награда
+        </button>
+      </header>
+
+      @if (rewards().length === 0) {
+        <div class="empty-box empty-box--soft">
+          Ещё нет наград. Без них клиенты не смогут списывать баллы.
+        </div>
+      } @else {
+        <ul class="rewards">
+          @for (r of rewards(); track r.id) {
+            <li class="rewards__item" [class.is-inactive]="!r.is_active">
+              <div class="rewards__main">
+                <div class="rewards__head">
+                  <span class="rewards__type">{{ rewardTypeLabel(r.type) }}</span>
+                  @if (!r.is_active) {
+                    <span class="rewards__off">отключена</span>
+                  }
+                </div>
+                <h3 class="rewards__title">{{ r.title }}</h3>
+                @if (r.description) {
+                  <p class="rewards__desc">{{ r.description }}</p>
+                }
+                <p class="rewards__summary">{{ rewardValueSummary(r) }}</p>
+              </div>
+              <div class="rewards__right">
+                <span class="rewards__cost">{{ r.cost_points }} баллов</span>
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--small"
+                  (click)="toggleReward(r)"
+                >
+                  {{ r.is_active ? 'Отключить' : 'Включить' }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</section>
+
+@if (rewardCreatorOpen()) {
+  <div class="modal" (click)="closeRewardCreator()">
+    <form
+      class="modal__panel"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="createReward(); $event.preventDefault()"
+    >
+      <header class="modal__head">
+        <h2 class="modal__title">Новая награда</h2>
+        <button
+          type="button"
+          class="modal__close"
+          (click)="closeRewardCreator()"
+          aria-label="Закрыть"
+        >
+          ✕
+        </button>
+      </header>
+
+      <label class="field">
+        <span class="field__label">Название *</span>
+        <input
+          class="field__input"
+          placeholder='"Скидка 10% на кофе"'
+          [value]="rewardDraft().title"
+          (input)="patchReward('title', $any($event.target).value)"
+          required
+        />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Описание</span>
+        <textarea
+          class="field__textarea"
+          rows="2"
+          [value]="rewardDraft().description"
+          (input)="patchReward('description', $any($event.target).value)"
+        ></textarea>
+      </label>
+
+      <div class="field">
+        <span class="field__label">Тип</span>
+        <div class="type-grid type-grid--rewards">
+          @for (t of rewardTypeOptions; track t.code) {
+            <button
+              type="button"
+              class="type-grid__item"
+              [class.is-active]="rewardDraft().type === t.code"
+              (click)="patchReward('type', t.code)"
+            >
+              <span class="type-grid__name">{{ t.label }}</span>
+              <span class="type-grid__hint">{{ t.hint }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Стоимость, баллов *</span>
+          <input
+            class="field__input"
+            type="number"
+            min="1"
+            [value]="rewardDraft().cost_points"
+            (input)="patchReward('cost_points', +$any($event.target).value)"
+          />
+        </label>
+
+        @switch (rewardDraft().type) {
+          @case ('discount_percent') {
+            <label class="field">
+              <span class="field__label">Процент скидки, %</span>
+              <input
+                class="field__input"
+                type="number"
+                min="1"
+                max="100"
+                [value]="rewardDraft().amount"
+                (input)="patchReward('amount', +$any($event.target).value)"
+              />
+            </label>
+          }
+          @case ('cashback_boost') {
+            <label class="field">
+              <span class="field__label">Boost, %</span>
+              <input
+                class="field__input"
+                type="number"
+                min="1"
+                [value]="rewardDraft().amount"
+                (input)="patchReward('amount', +$any($event.target).value)"
+              />
+            </label>
+          }
+          @case ('discount_fixed') {
+            <label class="field">
+              <span class="field__label">Скидка, ₽</span>
+              <input
+                class="field__input"
+                type="number"
+                min="1"
+                [value]="rewardDraft().amount"
+                (input)="patchReward('amount', +$any($event.target).value)"
+              />
+            </label>
+          }
+          @case ('free_item') {
+            <label class="field">
+              <span class="field__label">Что в подарок</span>
+              <input
+                class="field__input"
+                placeholder="Капучино 250 мл"
+                [value]="rewardDraft().item"
+                (input)="patchReward('item', $any($event.target).value)"
+              />
+            </label>
+          }
+        }
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" (click)="closeRewardCreator()">
+          Отмена
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="creatingReward()">
+          {{ creatingReward() ? 'Создаём…' : 'Создать' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+}

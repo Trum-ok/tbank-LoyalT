@@ -1,0 +1,132 @@
+<section class="page transactions">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Транзакции</h1>
+      <p class="page-subtitle">
+        Все начисления, списания и отмены по программам. Источник истины — этот
+        журнал; отсюда же можно отслеживать нагрузку и анализировать активность.
+      </p>
+    </div>
+  </header>
+
+  <div class="transactions__summary">
+    <div class="transactions__metric">
+      <span class="transactions__metric-label">Всего операций</span>
+      <span class="transactions__metric-value">{{ summary().total }}</span>
+    </div>
+    <div class="transactions__metric transactions__metric--pos">
+      <span class="transactions__metric-label">Начислено баллов</span>
+      <span class="transactions__metric-value">+{{ summary().accrued }}</span>
+    </div>
+    <div class="transactions__metric transactions__metric--neg">
+      <span class="transactions__metric-label">Списано баллов</span>
+      <span class="transactions__metric-value">−{{ summary().redeemed }}</span>
+    </div>
+    <div class="transactions__metric">
+      <span class="transactions__metric-label">Отмены</span>
+      <span class="transactions__metric-value">{{ summary().reversals }}</span>
+    </div>
+  </div>
+
+  <div class="transactions__filters">
+    <button
+      type="button"
+      class="programs__chip"
+      [class.is-active]="programFilter() === null"
+      (click)="setProgramFilter(null)"
+    >
+      Все программы
+    </button>
+    @for (p of programs(); track p.id) {
+      <button
+        type="button"
+        class="programs__chip"
+        [class.is-active]="programFilter() === p.id"
+        (click)="setProgramFilter(p.id)"
+      >
+        {{ p.name }}
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="error-box">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="card">Загружаем журнал…</div>
+  } @else if (transactions().length === 0) {
+    <div class="empty-box">
+      По выбранному фильтру операций пока нет.
+    </div>
+  } @else {
+    @for (g of groups(); track g.day) {
+      <section class="transactions__group">
+        <h2 class="transactions__group-title">{{ g.day }}</h2>
+        <ul class="transactions__list">
+          @for (tx of g.items; track tx.id) {
+            <li
+              class="transactions__item"
+              [class]="'transactions__item--' + tx.type"
+              [class.is-reversed]="tx.is_reversed"
+            >
+              <div class="transactions__item-icon">
+                @if (tx.type === 'accrual') {
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+                  </svg>
+                } @else if (tx.type === 'redemption') {
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                    <path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                    <path
+                      d="M9 5l-4 4 4 4M5 9h14"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      fill="none"
+                    />
+                  </svg>
+                }
+              </div>
+
+              <div class="transactions__item-main">
+                <div class="transactions__item-head">
+                  <span class="transactions__item-type">
+                    {{ transactionTypeLabel(tx.type) }}
+                  </span>
+                  @if (tx.is_reversed) {
+                    <span class="transactions__item-flag">отменена</span>
+                  }
+                </div>
+                <p class="transactions__item-desc">
+                  {{ tx.description || 'без комментария' }}
+                </p>
+                <p class="transactions__item-meta">
+                  {{ programName(tx.program_id) }} · клиент {{ tx.customer_id.slice(0, 8) }} ·
+                  {{ formatDateTime(tx.created_at) }}
+                </p>
+              </div>
+
+              <div class="transactions__item-right">
+                <span class="transactions__item-points">
+                  @if (tx.type === 'accrual') {+{{ tx.points }}}
+                  @else if (tx.type === 'redemption') {−{{ tx.points }}}
+                  @else {{{ tx.points >= 0 ? '+' : '' }}{{ tx.points }}}
+                </span>
+                @if (tx.purchase_amount) {
+                  <span class="transactions__item-amount">
+                    чек · {{ formatAmount(tx.purchase_amount) }}
+                  </span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</section>

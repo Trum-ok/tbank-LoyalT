@@ -1,0 +1,85 @@
+<tui-root>
+  <app-toast-host />
+  <div class="layout">
+    <aside class="layout__sidebar">
+      <a routerLink="/dashboard" class="layout__brand">
+        <span class="layout__brand-mark">Т</span>
+        <span class="layout__brand-text">
+          <span class="layout__brand-name">Т-Лояльность</span>
+          <span class="layout__brand-sub">кабинет партнёра</span>
+        </span>
+      </a>
+
+      <nav class="layout__nav">
+        <a routerLink="/dashboard" routerLinkActive="is-active" class="layout__nav-link">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="10" rx="2" fill="currentColor" />
+            <rect x="13" y="3" width="8" height="6" rx="2" fill="currentColor" />
+            <rect x="3" y="15" width="8" height="6" rx="2" fill="currentColor" />
+            <rect x="13" y="11" width="8" height="10" rx="2" fill="currentColor" />
+          </svg>
+          <span>Дашборд</span>
+        </a>
+        <a routerLink="/programs" routerLinkActive="is-active" class="layout__nav-link">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5zm10 0v4h4l-4-4z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>Программы</span>
+        </a>
+        <a routerLink="/transactions" routerLinkActive="is-active" class="layout__nav-link">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              d="M4 6h10l-2-2 1.4-1.4L17.8 7l-4.4 4.4L12 10l2-2H4V6zm16 12H10l2 2-1.4 1.4L6.2 17l4.4-4.4L12 14l-2 2h10v2z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>Транзакции</span>
+        </a>
+        <a routerLink="/profile" routerLinkActive="is-active" class="layout__nav-link">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" fill="currentColor" />
+            <path
+              d="M4 21a8 8 0 0 1 16 0v1H4v-1z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>Профиль</span>
+        </a>
+      </nav>
+
+      @if (!hasPartner()) {
+        <a routerLink="/onboarding" class="layout__cta">
+          <span class="layout__cta-title">Подключиться</span>
+          <span class="layout__cta-sub">регистрация и заявка</span>
+        </a>
+      } @else {
+        <div class="layout__partner" [style.--brand]="partnerBrand() || '#ffdd2d'">
+          <span class="layout__partner-avatar">{{ partnerInitials() }}</span>
+          <span class="layout__partner-meta">
+            <span class="layout__partner-name">{{ partnerName() ?? 'Партнёр' }}</span>
+            <span class="layout__partner-id">id · {{ identity.partnerId()?.slice(0, 8) }}</span>
+          </span>
+        </div>
+      }
+    </aside>
+
+    <div class="layout__body">
+      <header class="layout__topbar">
+        <div class="layout__topbar-left">
+          <span class="layout__env">DEV</span>
+          <app-role-switcher />
+        </div>
+        <div class="layout__topbar-right">
+          <app-theme-toggle />
+        </div>
+      </header>
+
+      <main class="layout__main">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+</tui-root>

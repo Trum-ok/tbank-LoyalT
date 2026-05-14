@@ -1,0 +1,250 @@
+<section class="page programs">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Программы лояльности</h1>
+      <p class="page-subtitle">
+        Конструктор no-code: выбираете шаблон, задаёте правила начисления, и
+        клиенты сразу видят программу в каталоге.
+      </p>
+    </div>
+    <button type="button" class="btn btn--primary" (click)="openCreator()">
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M12 5v14M5 12h14"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+        />
+      </svg>
+      Новая программа
+    </button>
+  </header>
+
+  <div class="programs__filters">
+    <button
+      type="button"
+      class="programs__chip"
+      [class.is-active]="filter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      Все <span class="programs__chip-num">{{ counts().all }}</span>
+    </button>
+    <button
+      type="button"
+      class="programs__chip"
+      [class.is-active]="filter() === 'published'"
+      (click)="setFilter('published')"
+    >
+      Опубликованные <span class="programs__chip-num">{{ counts().published }}</span>
+    </button>
+    <button
+      type="button"
+      class="programs__chip"
+      [class.is-active]="filter() === 'draft'"
+      (click)="setFilter('draft')"
+    >
+      Черновики <span class="programs__chip-num">{{ counts().draft }}</span>
+    </button>
+    <button
+      type="button"
+      class="programs__chip"
+      [class.is-active]="filter() === 'paused'"
+      (click)="setFilter('paused')"
+    >
+      Пауза <span class="programs__chip-num">{{ counts().paused }}</span>
+    </button>
+    <button
+      type="button"
+      class="programs__chip"
+      [class.is-active]="filter() === 'archived'"
+      (click)="setFilter('archived')"
+    >
+      Архив <span class="programs__chip-num">{{ counts().archived }}</span>
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="error-box">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="card">Загружаем программы…</div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-box">
+      Пока нет программ.
+      <br />
+      <button type="button" class="btn btn--primary" (click)="openCreator()" style="margin-top: 14px">
+        Создать первую
+      </button>
+    </div>
+  } @else {
+    <div class="programs__grid">
+      @for (p of filtered(); track p.id) {
+        <a
+          class="programs__card"
+          [routerLink]="['/programs', p.id]"
+        >
+          <header class="programs__card-head">
+            <span class="programs__type">{{ programTypeLabel(p.type) }}</span>
+            <span class="status-pill" [class]="'status-pill--' + p.status">
+              {{ programStatusLabel(p.status) }}
+            </span>
+          </header>
+          <h3 class="programs__card-title">{{ p.name }}</h3>
+          @if (p.description) {
+            <p class="programs__card-desc">{{ p.description }}</p>
+          }
+
+          <dl class="programs__card-meta">
+            <div>
+              <dt>Правило</dt>
+              <dd>{{ ruleSummary(p) }}</dd>
+            </div>
+            <div>
+              <dt>TTL баллов</dt>
+              <dd>{{ p.points_ttl_days ? p.points_ttl_days + ' дн.' : 'бессрочно' }}</dd>
+            </div>
+            <div>
+              <dt>Создана</dt>
+              <dd>{{ formatDate(p.created_at) }}</dd>
+            </div>
+          </dl>
+        </a>
+      }
+    </div>
+  }
+</section>
+
+@if (creatorOpen()) {
+  <div class="modal" (click)="closeCreator()">
+    <form
+      class="modal__panel"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="create(); $event.preventDefault()"
+    >
+      <header class="modal__head">
+        <h2 class="modal__title">Новая программа</h2>
+        <button
+          type="button"
+          class="modal__close"
+          (click)="closeCreator()"
+          aria-label="Закрыть"
+        >
+          ✕
+        </button>
+      </header>
+
+      <label class="field">
+        <span class="field__label">Название *</span>
+        <input
+          class="field__input"
+          placeholder='"Утренний кофе — 5%"'
+          [value]="draft().name"
+          (input)="patchDraft('name', $any($event.target).value)"
+          required
+        />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Описание</span>
+        <textarea
+          class="field__textarea"
+          rows="2"
+          [value]="draft().description"
+          (input)="patchDraft('description', $any($event.target).value)"
+        ></textarea>
+      </label>
+
+      <div class="field">
+        <span class="field__label">Тип программы</span>
+        <div class="type-grid">
+          @for (t of typeOptions; track t.code) {
+            <button
+              type="button"
+              class="type-grid__item"
+              [class.is-active]="draft().type === t.code"
+              (click)="patchDraft('type', t.code)"
+            >
+              <span class="type-grid__name">{{ t.label }}</span>
+              <span class="type-grid__hint">{{ t.hint }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      @switch (draft().type) {
+        @case ('accrual') {
+          <label class="field">
+            <span class="field__label">Процент с чека, %</span>
+            <input
+              class="field__input"
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              [value]="draft().percent"
+              (input)="patchDraft('percent', +$any($event.target).value)"
+            />
+          </label>
+        }
+        @case ('visit') {
+          <label class="field">
+            <span class="field__label">Баллов за визит</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              [value]="draft().points_per_visit"
+              (input)="patchDraft('points_per_visit', +$any($event.target).value)"
+            />
+          </label>
+        }
+        @case ('stamps') {
+          <label class="field">
+            <span class="field__label">Визитов до награды</span>
+            <input
+              class="field__input"
+              type="number"
+              min="2"
+              [value]="draft().visits_required"
+              (input)="patchDraft('visits_required', +$any($event.target).value)"
+            />
+          </label>
+        }
+      }
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">TTL баллов, дней</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0"
+            placeholder="пусто = бессрочно"
+            [value]="draft().points_ttl_days ?? ''"
+            (input)="patchDraft('points_ttl_days', $any($event.target).value ? +$any($event.target).value : null)"
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">Мин. баллов для списания</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0"
+            [value]="draft().min_redemption"
+            (input)="patchDraft('min_redemption', +$any($event.target).value)"
+          />
+        </label>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" (click)="closeCreator()">
+          Отмена
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="creating()">
+          {{ creating() ? 'Создаём…' : 'Создать черновик' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+}

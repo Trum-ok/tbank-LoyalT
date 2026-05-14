@@ -1,0 +1,145 @@
+.profile {
+  max-width: 880px;
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .card__actions {
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+  }
+
+  &__hero {
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    --brand: var(--tbank-yellow);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: auto -60px -60px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: var(--brand);
+      opacity: 0.16;
+      pointer-events: none;
+    }
+  }
+
+  &__hero-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--brand);
+    object-fit: cover;
+    flex-shrink: 0;
+
+    &--initials {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #1c1c1e;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  &__sub {
+    margin: 4px 0 0;
+    color: var(--tbank-text-muted);
+    font-size: 13px;
+  }
+
+  &__color {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__color-pick {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--tbank-divider-strong);
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+
+  &__account {
+    background: var(--tbank-surface-2);
+  }
+
+  &__kv {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 24px;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    dt {
+      font-size: 11px;
+      color: var(--tbank-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .profile {
+    &__hero {
+      flex-direction: column !important;
+      align-items: flex-start;
+    }
+
+    &__kv {
+      grid-template-columns: 1fr;
+    }
+  }
+}

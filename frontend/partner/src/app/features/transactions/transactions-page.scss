@@ -1,0 +1,222 @@
+.transactions {
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  &__metric {
+    background: var(--tbank-surface);
+    border: 1px solid var(--tbank-divider);
+    border-radius: var(--tbank-radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &-label {
+      font-size: 11px;
+      color: var(--tbank-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    &-value {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    &--pos &-value {
+      color: var(--tbank-green);
+    }
+
+    &--neg &-value {
+      color: var(--tbank-red);
+    }
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__group-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-left: 4px;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--tbank-surface);
+    border: 1px solid var(--tbank-divider);
+    border-radius: var(--tbank-radius-sm);
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--tbank-surface-2);
+    }
+
+    &.is-reversed {
+      opacity: 0.6;
+
+      .transactions__item-points {
+        text-decoration: line-through;
+      }
+    }
+  }
+
+  &__item-icon {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tbank-surface-2);
+    color: var(--tbank-text-muted);
+  }
+
+  &__item--accrual &__item-icon {
+    background: rgba(62, 201, 140, 0.14);
+    color: var(--tbank-green);
+  }
+
+  &__item--redemption &__item-icon {
+    background: rgba(66, 139, 249, 0.14);
+    color: var(--tbank-blue);
+  }
+
+  &__item--reversal &__item-icon {
+    background: rgba(255, 98, 98, 0.14);
+    color: var(--tbank-red);
+  }
+
+  &__item-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__item-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__item-type {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__item-flag {
+    font-size: 11px;
+    color: var(--tbank-red);
+    background: rgba(255, 98, 98, 0.12);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  &__item-desc {
+    margin: 0;
+    font-size: 13px;
+    color: var(--tbank-text);
+  }
+
+  &__item-meta {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--tbank-text-muted);
+    font-family: 'SF Mono', 'Menlo', monospace;
+  }
+
+  &__item-right {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  &__item-points {
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__item--accrual &__item-points {
+    color: var(--tbank-green);
+  }
+
+  &__item--redemption &__item-points {
+    color: var(--tbank-red);
+  }
+
+  &__item-amount {
+    font-size: 11px;
+    color: var(--tbank-text-muted);
+    font-family: 'SF Mono', 'Menlo', monospace;
+  }
+}
+
+@media (max-width: 720px) {
+  .transactions__summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* копируем класс из programs-page для одинаковых чипов */
+.programs__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--tbank-surface);
+  border: 1px solid var(--tbank-divider);
+  color: var(--tbank-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--tbank-surface-2);
+  }
+
+  &.is-active {
+    background: var(--tbank-text);
+    color: var(--tbank-bg);
+    border-color: transparent;
+  }
+}
