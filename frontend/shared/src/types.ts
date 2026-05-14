@@ -49,6 +49,11 @@ export interface EnrollmentCreate {
   display_name?: string | null;
 }
 
+export interface EnrollmentUpdate {
+  display_name?: string | null;
+  is_archived?: boolean | null;
+}
+
 export type TransactionType = 'accrual' | 'redemption' | 'reversal';
 
 export interface TransactionRead {

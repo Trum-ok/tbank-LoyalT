@@ -129,6 +129,16 @@
     background: var(--tbank-surface);
     border-radius: 18px;
     border: 1px solid var(--tbank-divider);
+    color: inherit;
+    transition: background 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      background: var(--tbank-surface-2);
+    }
+
+    &:active {
+      transform: scale(0.99);
+    }
   }
 
   &__card-main {

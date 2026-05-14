@@ -127,9 +127,41 @@
 
     <div class="program__cta">
       @if (existingEnrollment(); as e) {
-        <button type="button" class="program__cta-secondary" disabled>
-          Уже подключено · баланс {{ e.points_balance }}
-        </button>
+        <div class="program__cta-stack">
+          <div class="program__cta-status">
+            @if (isArchived()) {
+              <span class="program__cta-status-pill program__cta-status-pill--muted">
+                В архиве
+              </span>
+            } @else {
+              <span class="program__cta-status-pill">
+                Подключено · баланс {{ e.points_balance }}
+              </span>
+            }
+          </div>
+          <div class="program__cta-actions">
+            <button
+              type="button"
+              class="program__cta-secondary"
+              [disabled]="mutating()"
+              (click)="toggleArchive()"
+            >
+              @if (isArchived()) {
+                Разархивировать
+              } @else {
+                Архивировать
+              }
+            </button>
+            <button
+              type="button"
+              class="program__cta-danger"
+              [disabled]="mutating()"
+              (click)="remove()"
+            >
+              Удалить
+            </button>
+          </div>
+        </div>
       } @else {
         <button
           type="button"

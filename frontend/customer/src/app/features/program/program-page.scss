@@ -188,6 +188,57 @@
     background: var(--tbank-surface);
     color: var(--tbank-text);
     border: 1px solid var(--tbank-divider);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__cta-danger {
+    background: transparent;
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.4);
+
+    &:hover {
+      background: rgba(255, 107, 107, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__cta-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__cta-status {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__cta-status-pill {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text);
+    background: var(--tbank-surface);
+    border: 1px solid var(--tbank-divider);
+    padding: 6px 12px;
+    border-radius: 999px;
+
+    &--muted {
+      color: var(--tbank-text-muted);
+    }
+  }
+
+  &__cta-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   &__error {

@@ -37,26 +37,31 @@
     } @else {
       <ul class="my-programs__list">
         @for (enrollment of store.items(); track enrollment.id) {
-          <li class="my-programs__card">
-            <div class="my-programs__card-main">
-              <div tuiAvatar size="m" [round]="true">
-                {{ initial(enrollment.display_name) }}
+          <li>
+            <a
+              class="my-programs__card"
+              [routerLink]="['/catalog', enrollment.program_id]"
+            >
+              <div class="my-programs__card-main">
+                <div tuiAvatar size="m" [round]="true">
+                  {{ initial(enrollment.display_name) }}
+                </div>
+                <div class="my-programs__card-text">
+                  <span class="my-programs__card-name">
+                    {{ enrollment.display_name ?? 'Программа' }}
+                  </span>
+                  <span class="my-programs__card-since">
+                    с {{ formatDate(enrollment.created_at) }}
+                  </span>
+                </div>
               </div>
-              <div class="my-programs__card-text">
-                <span class="my-programs__card-name">
-                  {{ enrollment.display_name ?? 'Программа' }}
+              <div class="my-programs__card-balance">
+                <span class="my-programs__balance-value">
+                  {{ formatPoints(enrollment.points_balance) }}
                 </span>
-                <span class="my-programs__card-since">
-                  с {{ formatDate(enrollment.created_at) }}
-                </span>
+                <span class="my-programs__balance-label">баллов</span>
               </div>
-            </div>
-            <div class="my-programs__card-balance">
-              <span class="my-programs__balance-value">
-                {{ formatPoints(enrollment.points_balance) }}
-              </span>
-              <span class="my-programs__balance-label">баллов</span>
-            </div>
+            </a>
           </li>
         }
       </ul>

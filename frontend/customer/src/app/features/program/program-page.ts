@@ -36,6 +36,7 @@ export class ProgramPage {
   readonly program = signal<CatalogProgramDetail | null>(null);
   readonly myEnrollments = signal<EnrollmentRead[]>([]);
   readonly enrolling = signal(false);
+  readonly mutating = signal(false);
 
   readonly existingEnrollment = computed(() => {
     const p = this.program();
@@ -43,11 +44,13 @@ export class ProgramPage {
       return null;
     }
     return (
-      this.myEnrollments().find(
-        e => e.program_id === p.program_id && !e.is_archived,
-      ) ?? null
+      this.myEnrollments().find(e => e.program_id === p.program_id) ?? null
     );
   });
+
+  readonly isArchived = computed(
+    () => this.existingEnrollment()?.is_archived ?? false,
+  );
 
   readonly highlight = computed<Highlight | null>(() => {
     const p = this.program();
@@ -116,6 +119,43 @@ export class ProgramPage {
       });
   }
 
+  toggleArchive(): void {
+    const e = this.existingEnrollment();
+    if (!e) return;
+    this.mutating.set(true);
+    this.error.set(null);
+    this.enrollmentsApi
+      .update(e.id, { is_archived: !e.is_archived })
+      .pipe(finalize(() => this.mutating.set(false)))
+      .subscribe({
+        next: () => {
+          this.store.refresh();
+          this.refresh(this.id());
+        },
+        error: err =>
+          this.error.set(err?.error?.detail ?? 'Не удалось изменить статус'),
+      });
+  }
+
+  remove(): void {
+    const e = this.existingEnrollment();
+    if (!e) return;
+    if (!confirm('Удалить программу из подключённых?')) return;
+    this.mutating.set(true);
+    this.error.set(null);
+    this.enrollmentsApi
+      .remove(e.id)
+      .pipe(finalize(() => this.mutating.set(false)))
+      .subscribe({
+        next: () => {
+          this.store.refresh();
+          this.router.navigateByUrl('/my-programs');
+        },
+        error: err =>
+          this.error.set(err?.error?.detail ?? 'Не удалось удалить'),
+      });
+  }
+
   private refresh(id: string): void {
     this.loading.set(true);
     this.error.set(null);
@@ -131,7 +171,7 @@ export class ProgramPage {
         }),
       ),
       enrollments: this.enrollmentsApi
-        .list(false)
+        .list(true)
         .pipe(catchError(() => of([] as EnrollmentRead[]))),
     })
       .pipe(finalize(() => this.loading.set(false)))
