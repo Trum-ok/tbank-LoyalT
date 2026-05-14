@@ -119,7 +119,6 @@ curl -X POST localhost:8002/admin/partners/$PARTNER_ID/block \
 
 - Реальная аутентификация (email/пароль + JWT либо OTP).
 - Несколько аккаунтов на одного партнёра (сотрудники ЛК).
-- В core-service — Kafka consumer для `partner.events`, обновляющий снэпшот.
 - Аналитика (дашборд для партнёра) — требует доступа к данным core.
 - Коммуникации (рассылки push-сегментам) — после notification-service.
 - Загрузка логотипа (S3/storage), а не только URL.

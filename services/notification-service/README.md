@@ -106,9 +106,7 @@ curl localhost:8003/notifications -H "X-Customer-Id: $CUSTOMER"
 
 ## TODO
 
-- Publisher событий в core (`points.accrued`/`points.redeemed`) — сейчас core
-  не публикует, тестируем через `/internal/events`.
-- Cron на сгорание баллов (генерация `points.expiring`).
+- Cron на сгорание баллов в core (генерация `points.expiring`).
 - Реальная отправка через FCM/APNs.
 - Подписка клиента на партнёра для fan-out по `partner.new_promotion`.
 - Массовые кампании от партнёров (POST /campaigns + сегментация).

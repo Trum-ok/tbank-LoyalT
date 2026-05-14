@@ -1,9 +1,11 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# noqa: F401 — импорт всех моделей для регистрации в Base.metadata
-from app import models  # noqa: F401
+from app import models  # noqa: F401 — регистрация моделей для Alembic
 from app.config import get_settings
+from app.consumer import consumer
 from app.domains.catalog.router import router as catalog_router
 from app.domains.enrollments.router import router as enrollments_router
 from app.domains.partners.router import router as partners_router
@@ -17,8 +19,21 @@ from app.domains.transactions.router import (
 from app.domains.transactions.router import (
     partner_router as tx_partner_router,
 )
+from app.events import publisher
+from app.internal_router import router as internal_router
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await publisher.start()
+    await consumer.start()
+    try:
+        yield
+    finally:
+        await consumer.stop()
+        await publisher.stop()
 
 
 def create_app() -> FastAPI:
@@ -26,6 +41,7 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version="0.1.0",
         debug=settings.debug,
+        lifespan=lifespan,
     )
     app.add_middleware(
         CORSMiddleware,
@@ -49,6 +65,7 @@ def create_app() -> FastAPI:
         balance_router,
         tx_customer_router,
         tx_partner_router,
+        internal_router,
     ):
         app.include_router(router)
 

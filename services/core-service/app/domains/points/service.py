@@ -10,12 +10,14 @@ from app.domains.enrollments.service import (
     ensure_customer,
     get_enrollment_by_pair,
 )
+from app.domains.partners.models import Partner
 from app.domains.points.schemas import AccrueRequest, RedeemRequest
 from app.domains.programs.models import Program, ProgramStatus, ProgramType
 from app.domains.programs.service import get_program
 from app.domains.rewards.service import get_reward
 from app.domains.transactions.models import Transaction, TransactionType
 from app.errors import BadRequestError, ConflictError, ForbiddenError, NotFoundError
+from app.events import publisher
 
 
 def _calculate_points(program: Program, req: AccrueRequest) -> int:
@@ -54,6 +56,11 @@ def _calculate_points(program: Program, req: AccrueRequest) -> int:
         return req.visits or 1
 
     raise BadRequestError(f"Unsupported program type: {program.type}")
+
+
+async def _partner_name(session: AsyncSession, partner_id: UUID) -> str | None:
+    partner = await session.get(Partner, partner_id)
+    return partner.name if partner else None
 
 
 async def _lock_enrollment(
@@ -118,6 +125,24 @@ async def accrue(
     await session.commit()
     await session.refresh(transaction)
     await session.refresh(enrollment)
+
+    await publisher.publish(
+        "points.accrued",
+        {
+            "transaction_id": transaction.id,
+            "customer_id": req.customer_id,
+            "program_id": req.program_id,
+            "partner_id": partner_id,
+            "partner_name": await _partner_name(session, partner_id),
+            "points": points,
+            "purchase_amount": (
+                str(req.purchase_amount) if req.purchase_amount is not None else None
+            ),
+            "balance_after": enrollment.points_balance,
+            "expires_at": expires_at,
+        },
+        key=str(req.customer_id),
+    )
     return transaction, enrollment.points_balance
 
 
@@ -158,6 +183,22 @@ async def redeem(
     await session.commit()
     await session.refresh(transaction)
     await session.refresh(enrollment)
+
+    await publisher.publish(
+        "points.redeemed",
+        {
+            "transaction_id": transaction.id,
+            "customer_id": req.customer_id,
+            "program_id": req.program_id,
+            "partner_id": partner_id,
+            "partner_name": await _partner_name(session, partner_id),
+            "reward_id": reward.id,
+            "reward_title": reward.title,
+            "points": reward.cost_points,
+            "balance_after": enrollment.points_balance,
+        },
+        key=str(req.customer_id),
+    )
     return transaction, enrollment.points_balance
 
 
@@ -212,6 +253,22 @@ async def reverse(
     await session.commit()
     await session.refresh(reversal)
     await session.refresh(enrollment)
+
+    await publisher.publish(
+        "points.reversed",
+        {
+            "transaction_id": reversal.id,
+            "reverses_id": original.id,
+            "original_type": original.type,
+            "customer_id": original.customer_id,
+            "program_id": original.program_id,
+            "partner_id": partner_id,
+            "partner_name": await _partner_name(session, partner_id),
+            "points": original.points,
+            "balance_after": enrollment.points_balance,
+        },
+        key=str(original.customer_id),
+    )
     return reversal, enrollment.points_balance
 
 

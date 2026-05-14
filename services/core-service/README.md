@@ -111,11 +111,48 @@ curl localhost:8001/balance/$PROGRAM_ID -H "X-Customer-Id: $CUSTOMER_ID"
   обновляется атомарно вместе с записью транзакции под `SELECT ... FOR UPDATE`
   на строке `enrollment`.
 
+## Kafka
+
+Publisher (`app/events.py`) и consumer (`app/consumer.py`) стартуют в
+`lifespan`. При `CORE_KAFKA_ENABLED=false` publisher логирует события,
+consumer не стартует — события можно эмулировать через
+`POST /internal/events`.
+
+**Публикуем** (топик `core.events`):
+
+| Тип | Когда | Слушает |
+|---|---|---|
+| `points.accrued` | после успешного `POST /points/accrue` | notification-service |
+| `points.redeemed` | после успешного `POST /points/redeem` | notification-service |
+| `points.reversed` | после `POST /points/transactions/{id}/reverse` | notification-service |
+
+**Слушаем** (топик `partner.events` от partner-service):
+
+| Тип | Действие |
+|---|---|
+| `partner.approved` | upsert локального снэпшота `core.partner` (id = partner_id из partner-service) |
+| `partner.updated` | то же — обновляются name/logo_url/brand_color/contact_* |
+| `partner.status_changed` | то же — обновляется status |
+
+Эмуляция входящего события без Kafka:
+```bash
+curl localhost:8001/internal/events -H 'content-type: application/json' -d '{
+  "type": "partner.approved",
+  "payload": {
+    "partner_id": "00000000-0000-0000-0000-000000000001",
+    "inn": "7707083893",
+    "name": "Кофе Хауз",
+    "category": "food",
+    "status": "active"
+  }
+}'
+```
+
 ## TODO
 
-- Сгорание баллов по `expires_at` (cron-job или Kafka-сигнал из таймера).
-- Публикация Kafka-событий: `points.accrued`, `points.redeemed` —
-  для `notification-service`.
+- Сгорание баллов по `expires_at` (cron-job или Kafka-сигнал из таймера) → событие `points.expiring`.
+- Событие `reward.available`, когда баланс впервые достиг стоимости награды.
 - Реальная авторизация (T-ID/JWT) вместо заголовков `X-Customer-Id`/`X-Partner-Id`.
+- Идемпотентность обработки входящих событий по `event_id` (Kafka даёт at-least-once).
 - Бонусные акции и геймификация (Streak, день рождения, реферальная программа).
 - Идемпотентность операций начисления/списания (`Idempotency-Key`).
