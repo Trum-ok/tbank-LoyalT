@@ -12,6 +12,7 @@ import { filter, map, startWith } from 'rxjs';
 
 import { EnrollmentsStore } from './core/enrollments.store';
 import { formatPoints } from './core/format';
+import { PageActionsService } from './core/page-actions.service';
 import { RoleSwitcher } from './shared-ui/role-switcher/role-switcher';
 import { ThemeToggle } from './shared-ui/theme-toggle/theme-toggle';
 import { ToastHost } from './shared-ui/toast-host/toast-host';
@@ -36,6 +37,7 @@ export class App {
 
   protected readonly enrollments = inject(EnrollmentsStore);
   protected readonly formatPoints = formatPoints;
+  protected readonly pageActions = inject(PageActionsService);
 
   private readonly currentUrl = toSignal(
     this.router.events.pipe(

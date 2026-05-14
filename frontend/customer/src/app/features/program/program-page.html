@@ -44,6 +44,7 @@
             }
           </div>
         </div>
+
       </div>
 
       @if (highlight(); as h) {
@@ -166,27 +167,32 @@
 
     <div class="program__cta">
       @if (existingEnrollment()) {
-        <div class="program__cta-actions">
-          <button
-            type="button"
-            class="program__cta-secondary"
-            [disabled]="mutating()"
-            (click)="toggleArchive()"
-          >
-            @if (isArchived()) {
+        <div class="program__cta-stack">
+          @if (!isArchived()) {
+            <button
+              type="button"
+              class="program__cta-primary"
+              [disabled]="mutating()"
+              (click)="openQr()"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path
+                  d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z"
+                  fill="currentColor"
+                />
+              </svg>
+              Показать QR
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="program__cta-primary"
+              [disabled]="mutating()"
+              (click)="toggleArchive()"
+            >
               Разархивировать
-            } @else {
-              Архивировать
-            }
-          </button>
-          <button
-            type="button"
-            class="program__cta-danger"
-            [disabled]="mutating()"
-            (click)="remove()"
-          >
-            Удалить
-          </button>
+            </button>
+          }
         </div>
       } @else {
         <button
@@ -203,5 +209,38 @@
         </button>
       }
     </div>
+
+    @if (qrOpen() && existingEnrollment(); as e) {
+      <div class="program__qr" (click)="closeQr()">
+        <div class="program__qr-card" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="program__qr-close"
+            (click)="closeQr()"
+            aria-label="Закрыть"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2.4"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <span class="program__qr-label">Покажите на кассе</span>
+          <h2 class="program__qr-title">{{ displayName() }}</h2>
+          @if (qrUrl(); as url) {
+            <div class="program__qr-frame">
+              <img class="program__qr-image" [src]="url" alt="QR-код" />
+            </div>
+          }
+          <span class="program__qr-balance">
+            Баланс: {{ formatPoints(e.points_balance) }} баллов
+          </span>
+        </div>
+      </div>
+    }
   }
 </section>

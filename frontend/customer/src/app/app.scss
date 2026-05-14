@@ -98,6 +98,44 @@
     }
   }
 
+  &__actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--tbank-text);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--tbank-surface);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--danger {
+      color: #ff6b6b;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 107, 107, 0.14);
+      }
+    }
+  }
+
   &--detail .phone__main {
     padding-bottom: 0;
   }

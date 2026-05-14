@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TuiLoader } from '@taiga-ui/core';
 import { TuiAvatar } from '@taiga-ui/kit';
@@ -13,6 +13,7 @@ import { EnrollmentsApi } from '../../core/api/enrollments-api.service';
 import { EnrollmentsStore } from '../../core/enrollments.store';
 import { formatPoints } from '../../core/format';
 import { NotifyService } from '../../core/notify.service';
+import { PageActionsService } from '../../core/page-actions.service';
 
 interface Highlight {
   value: string;
@@ -32,6 +33,8 @@ export class ProgramPage {
   private readonly store = inject(EnrollmentsStore);
   private readonly router = inject(Router);
   private readonly notify = inject(NotifyService);
+  private readonly pageActions = inject(PageActionsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
   readonly loading = signal(true);
@@ -40,6 +43,7 @@ export class ProgramPage {
   readonly myEnrollments = signal<EnrollmentRead[]>([]);
   readonly enrolling = signal(false);
   readonly mutating = signal(false);
+  readonly qrOpen = signal(false);
 
   readonly existingEnrollment = computed(() => {
     const p = this.program();
@@ -59,6 +63,13 @@ export class ProgramPage {
     const e = this.existingEnrollment();
     const p = this.program();
     return e?.display_name?.trim() || p?.program_name || '';
+  });
+
+  readonly qrUrl = computed(() => {
+    const e = this.existingEnrollment();
+    if (!e) return null;
+    const payload = `tbank-loyalt:enrollment:${e.id}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(payload)}`;
   });
 
   readonly formatPoints = formatPoints;
@@ -103,6 +114,33 @@ export class ProgramPage {
       const id = this.id();
       this.refresh(id);
     });
+
+    effect(() => {
+      const e = this.existingEnrollment();
+      if (!e) {
+        this.pageActions.set([]);
+        return;
+      }
+      this.pageActions.set([
+        {
+          id: 'archive',
+          icon: e.is_archived ? 'unarchive' : 'archive',
+          label: e.is_archived ? 'Разархивировать' : 'В архив',
+          disabled: this.mutating(),
+          handler: () => this.toggleArchive(),
+        },
+        {
+          id: 'remove',
+          icon: 'trash',
+          label: 'Удалить',
+          danger: true,
+          disabled: this.mutating(),
+          handler: () => this.remove(),
+        },
+      ]);
+    });
+
+    this.destroyRef.onDestroy(() => this.pageActions.clear());
   }
 
   initials(name: string): string {
@@ -128,6 +166,15 @@ export class ProgramPage {
         },
         error: err => this.error.set(err?.error?.detail ?? 'Не удалось подключиться'),
       });
+  }
+
+  openQr(): void {
+    if (!this.existingEnrollment() || this.isArchived()) return;
+    this.qrOpen.set(true);
+  }
+
+  closeQr(): void {
+    this.qrOpen.set(false);
   }
 
   rename(): void {
@@ -161,9 +208,13 @@ export class ProgramPage {
   toggleArchive(): void {
     const e = this.existingEnrollment();
     if (!e) return;
+    const willArchive = !e.is_archived;
+    const message = willArchive
+      ? 'Перенести программу в архив? Она пропадёт из основного списка.'
+      : 'Вернуть программу из архива?';
+    if (!confirm(message)) return;
     this.mutating.set(true);
     this.error.set(null);
-    const willArchive = !e.is_archived;
     this.enrollmentsApi
       .update(e.id, { is_archived: willArchive })
       .pipe(finalize(() => this.mutating.set(false)))
