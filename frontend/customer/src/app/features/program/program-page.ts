@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TuiLoader } from '@taiga-ui/core';
 import { TuiAvatar } from '@taiga-ui/kit';
@@ -85,7 +85,10 @@ export class ProgramPage {
   });
 
   constructor() {
-    this.refresh();
+    effect(() => {
+      const id = this.id();
+      this.refresh(id);
+    });
   }
 
   initials(name: string): string {
@@ -113,11 +116,11 @@ export class ProgramPage {
       });
   }
 
-  private refresh(): void {
+  private refresh(id: string): void {
     this.loading.set(true);
     this.error.set(null);
     forkJoin({
-      program: this.catalog.getProgram(this.id()).pipe(
+      program: this.catalog.getProgram(id).pipe(
         catchError(err => {
           this.error.set(
             err?.status === 404
