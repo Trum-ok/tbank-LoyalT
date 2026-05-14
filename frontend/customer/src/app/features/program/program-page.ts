@@ -12,6 +12,7 @@ import { CatalogApi } from '../../core/api/catalog-api.service';
 import { EnrollmentsApi } from '../../core/api/enrollments-api.service';
 import { EnrollmentsStore } from '../../core/enrollments.store';
 import { formatPoints } from '../../core/format';
+import { NotifyService } from '../../core/notify.service';
 
 interface Highlight {
   value: string;
@@ -30,6 +31,7 @@ export class ProgramPage {
   private readonly enrollmentsApi = inject(EnrollmentsApi);
   private readonly store = inject(EnrollmentsStore);
   private readonly router = inject(Router);
+  private readonly notify = inject(NotifyService);
 
   readonly id = input.required<string>();
   readonly loading = signal(true);
@@ -52,6 +54,12 @@ export class ProgramPage {
   readonly isArchived = computed(
     () => this.existingEnrollment()?.is_archived ?? false,
   );
+
+  readonly displayName = computed(() => {
+    const e = this.existingEnrollment();
+    const p = this.program();
+    return e?.display_name?.trim() || p?.program_name || '';
+  });
 
   readonly formatPoints = formatPoints;
 
@@ -122,21 +130,56 @@ export class ProgramPage {
       });
   }
 
-  toggleArchive(): void {
+  rename(): void {
     const e = this.existingEnrollment();
-    if (!e) return;
+    const p = this.program();
+    if (!e || !p) return;
+    const current = e.display_name ?? p.program_name;
+    const next = prompt('Как назвать программу у себя?', current);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (trimmed === (e.display_name ?? '').trim()) return;
     this.mutating.set(true);
     this.error.set(null);
     this.enrollmentsApi
-      .update(e.id, { is_archived: !e.is_archived })
+      .update(e.id, { display_name: trimmed || null })
       .pipe(finalize(() => this.mutating.set(false)))
       .subscribe({
         next: () => {
           this.store.refresh();
           this.refresh(this.id());
+          this.notify.success('Название обновлено');
         },
-        error: err =>
-          this.error.set(err?.error?.detail ?? 'Не удалось изменить статус'),
+        error: err => {
+          const msg = err?.error?.detail ?? 'Не удалось переименовать';
+          this.error.set(msg);
+          this.notify.error(msg);
+        },
+      });
+  }
+
+  toggleArchive(): void {
+    const e = this.existingEnrollment();
+    if (!e) return;
+    this.mutating.set(true);
+    this.error.set(null);
+    const willArchive = !e.is_archived;
+    this.enrollmentsApi
+      .update(e.id, { is_archived: willArchive })
+      .pipe(finalize(() => this.mutating.set(false)))
+      .subscribe({
+        next: () => {
+          this.store.refresh();
+          this.refresh(this.id());
+          this.notify.success(
+            willArchive ? 'Программа в архиве' : 'Программа возвращена',
+          );
+        },
+        error: err => {
+          const msg = err?.error?.detail ?? 'Не удалось изменить статус';
+          this.error.set(msg);
+          this.notify.error(msg);
+        },
       });
   }
 
@@ -153,9 +196,13 @@ export class ProgramPage {
         next: () => {
           this.store.refresh();
           this.router.navigateByUrl('/my-programs');
+          this.notify.success('Программа удалена');
         },
-        error: err =>
-          this.error.set(err?.error?.detail ?? 'Не удалось удалить'),
+        error: err => {
+          const msg = err?.error?.detail ?? 'Не удалось удалить';
+          this.error.set(msg);
+          this.notify.error(msg);
+        },
       });
   }
 

@@ -1,0 +1,40 @@
+<div class="toast-host" aria-live="polite">
+  @for (toast of notify.toasts(); track toast.id) {
+    <div
+      class="toast"
+      [class.toast--success]="toast.kind === 'success'"
+      [class.toast--error]="toast.kind === 'error'"
+      [class.toast--info]="toast.kind === 'info'"
+      role="status"
+    >
+      @if (toast.kind === 'success') {
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M5 12l4 4 10-10"
+            stroke="currentColor"
+            stroke-width="2.5"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      } @else if (toast.kind === 'error') {
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            stroke-width="2.5"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+          <path d="M12 8v5M12 16v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      }
+      <span class="toast__message">{{ toast.message }}</span>
+    </div>
+  }
+</div>

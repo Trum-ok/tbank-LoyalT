@@ -14,6 +14,7 @@ import { EnrollmentsStore } from './core/enrollments.store';
 import { formatPoints } from './core/format';
 import { RoleSwitcher } from './shared-ui/role-switcher/role-switcher';
 import { ThemeToggle } from './shared-ui/theme-toggle/theme-toggle';
+import { ToastHost } from './shared-ui/toast-host/toast-host';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ import { ThemeToggle } from './shared-ui/theme-toggle/theme-toggle';
     RouterLinkActive,
     RoleSwitcher,
     ThemeToggle,
+    ToastHost,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

@@ -47,6 +47,8 @@
         <router-outlet />
       </main>
 
+      <app-toast-host />
+
       @if (!isDetail()) {
       <nav class="phone__tabs">
         <a routerLink="/catalog" routerLinkActive="is-active" class="phone__tab">

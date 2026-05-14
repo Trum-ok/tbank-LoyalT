@@ -37,6 +37,37 @@
     font-weight: 700;
   }
 
+  &__hero-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &__hero-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(28, 28, 30, 0.12);
+    color: inherit;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) {
+      background: rgba(28, 28, 30, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
   &__hero-figure {
     display: flex;
     align-items: baseline;
