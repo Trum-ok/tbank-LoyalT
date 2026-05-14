@@ -11,6 +11,7 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { CatalogApi } from '../../core/api/catalog-api.service';
 import { EnrollmentsApi } from '../../core/api/enrollments-api.service';
 import { EnrollmentsStore } from '../../core/enrollments.store';
+import { formatPoints } from '../../core/format';
 
 interface Highlight {
   value: string;
@@ -51,6 +52,8 @@ export class ProgramPage {
   readonly isArchived = computed(
     () => this.existingEnrollment()?.is_archived ?? false,
   );
+
+  readonly formatPoints = formatPoints;
 
   readonly highlight = computed<Highlight | null>(() => {
     const p = this.program();

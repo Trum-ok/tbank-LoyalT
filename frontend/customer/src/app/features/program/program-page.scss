@@ -210,35 +210,52 @@
     }
   }
 
-  &__cta-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  &__cta-status {
-    display: flex;
-    justify-content: center;
-  }
-
-  &__cta-status-pill {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--tbank-text);
-    background: var(--tbank-surface);
-    border: 1px solid var(--tbank-divider);
-    padding: 6px 12px;
-    border-radius: 999px;
-
-    &--muted {
-      color: var(--tbank-text-muted);
-    }
-  }
-
   &__cta-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+
+  &__balance {
+    background: var(--tbank-surface);
+    border: 1px solid var(--tbank-divider);
+    border-radius: 20px;
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__balance-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__balance-value {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  &__balance-number {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--tbank-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__balance-unit {
+    font-size: 14px;
+    color: var(--tbank-text-muted);
+  }
+
+  &__balance--archived {
+    opacity: 0.6;
   }
 
   &__error {

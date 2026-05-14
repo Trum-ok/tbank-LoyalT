@@ -40,6 +40,27 @@
       }
     </header>
 
+    @if (existingEnrollment(); as e) {
+      <section
+        class="program__balance"
+        [class.program__balance--archived]="isArchived()"
+      >
+        <span class="program__balance-label">
+          @if (isArchived()) {
+            Баланс в архиве
+          } @else {
+            Ваш баланс
+          }
+        </span>
+        <div class="program__balance-value">
+          <span class="program__balance-number">
+            {{ formatPoints(e.points_balance) }}
+          </span>
+          <span class="program__balance-unit">баллов</span>
+        </div>
+      </section>
+    }
+
     @if (p.description) {
       <section class="program__section">
         <h2 class="program__section-title">О программе</h2>
@@ -126,41 +147,28 @@
     }
 
     <div class="program__cta">
-      @if (existingEnrollment(); as e) {
-        <div class="program__cta-stack">
-          <div class="program__cta-status">
+      @if (existingEnrollment()) {
+        <div class="program__cta-actions">
+          <button
+            type="button"
+            class="program__cta-secondary"
+            [disabled]="mutating()"
+            (click)="toggleArchive()"
+          >
             @if (isArchived()) {
-              <span class="program__cta-status-pill program__cta-status-pill--muted">
-                В архиве
-              </span>
+              Разархивировать
             } @else {
-              <span class="program__cta-status-pill">
-                Подключено · баланс {{ e.points_balance }}
-              </span>
+              Архивировать
             }
-          </div>
-          <div class="program__cta-actions">
-            <button
-              type="button"
-              class="program__cta-secondary"
-              [disabled]="mutating()"
-              (click)="toggleArchive()"
-            >
-              @if (isArchived()) {
-                Разархивировать
-              } @else {
-                Архивировать
-              }
-            </button>
-            <button
-              type="button"
-              class="program__cta-danger"
-              [disabled]="mutating()"
-              (click)="remove()"
-            >
-              Удалить
-            </button>
-          </div>
+          </button>
+          <button
+            type="button"
+            class="program__cta-danger"
+            [disabled]="mutating()"
+            (click)="remove()"
+          >
+            Удалить
+          </button>
         </div>
       } @else {
         <button
