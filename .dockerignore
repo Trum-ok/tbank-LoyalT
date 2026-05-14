@@ -1,0 +1,29 @@
+# venv и кеши
+.venv/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Локальные оверрайды и доки, не нужные в образе
+local/
+frontend/
+.env
+.env.*
+*.md
+docs/
+
+# Claude
+.claude/

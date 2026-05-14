@@ -1,0 +1,142 @@
+# docker-compose для локального запуска всей платформы.
+# Запуск: cd deploy && docker compose up --build
+#
+# Включает: PostgreSQL (одна БД, schema-per-service), Kafka (KRaft, без ZooKeeper),
+# и все 4 микросервиса с применением Alembic-миграций при старте.
+
+name: tbank-loyalt
+
+x-service-base: &service-base
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    kafka:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tbank_loyalt
+    ports:
+      # хост:контейнер. 5433 на хосте, чтобы не конфликтовать с локальным Postgres.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tbank_loyalt"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  kafka:
+    image: apache/kafka:3.7.1
+    ports:
+      - "9092:9092"
+    environment:
+      # KRaft single-node, без ZooKeeper.
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  core-service:
+    <<: *service-base
+    working_dir: /app/services/core-service
+    command:
+      - sh
+      - -c
+      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      CORE_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      CORE_DB_SCHEMA: core
+      CORE_KAFKA_ENABLED: "true"
+      CORE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      CORE_KAFKA_GROUP_ID: core-service
+      CORE_KAFKA_TOPIC_CORE_EVENTS: core.events
+      CORE_KAFKA_SUBSCRIBE_TOPICS: '["partner.events"]'
+    ports:
+      - "8001:8000"
+
+  partner-service:
+    <<: *service-base
+    working_dir: /app/services/partner-service
+    command:
+      - sh
+      - -c
+      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      PARTNER_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      PARTNER_DB_SCHEMA: partner
+      PARTNER_KAFKA_ENABLED: "true"
+      PARTNER_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PARTNER_KAFKA_TOPIC_PARTNER_EVENTS: partner.events
+    ports:
+      - "8002:8000"
+
+  notification-service:
+    <<: *service-base
+    working_dir: /app/services/notification-service
+    command:
+      - sh
+      - -c
+      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      NOTIFICATION_DB_SCHEMA: notification
+      NOTIFICATION_KAFKA_ENABLED: "true"
+      NOTIFICATION_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      NOTIFICATION_KAFKA_GROUP_ID: notification-service
+      NOTIFICATION_KAFKA_TOPICS: '["core.events","partner.events"]'
+    ports:
+      - "8003:8000"
+
+  admin-service:
+    <<: *service-base
+    working_dir: /app/services/admin-service
+    command:
+      - sh
+      - -c
+      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      ADMIN_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      ADMIN_DB_SCHEMA: admin
+      ADMIN_CORE_SCHEMA: core
+      ADMIN_PARTNER_SCHEMA: partner
+      ADMIN_PARTNER_SERVICE_URL: http://partner-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      partner-service:
+        condition: service_healthy
+    ports:
+      - "8004:8000"
+
+volumes:
+  pgdata:
+  kafka_data:
