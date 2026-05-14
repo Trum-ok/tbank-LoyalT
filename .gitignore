@@ -36,3 +36,10 @@ local/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Node / frontend
+node_modules/
+frontend/**/dist/
+frontend/**/.angular/
+frontend/**/coverage/
+frontend/**/*.tsbuildinfo
