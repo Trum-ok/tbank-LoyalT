@@ -23,6 +23,11 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
+    # JWT кассира (HS256). Секрет ОБЯЗАН совпадать с CORE_JWT_SECRET,
+    # иначе core-service не примет токен кассы.
+    jwt_secret: str = "dev-tbank-loyalt-cashier-jwt-secret-change-in-prod"
+    jwt_ttl_hours: int = 12
+
     # Kafka. Если bootstrap не задан или kafka_enabled=False, producer работает в
     # stub-режиме и просто логирует события.
     kafka_enabled: bool = False

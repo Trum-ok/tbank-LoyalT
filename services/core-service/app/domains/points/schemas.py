@@ -1,9 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.domains.programs.models import ProgramStatus, ProgramType
 from app.domains.transactions.schemas import TransactionRead
 
 
@@ -55,3 +57,27 @@ class BalanceRead(BaseModel):
 class PointsOperationResult(BaseModel):
     transaction: TransactionRead
     balance_after: int
+
+
+class RewardOption(BaseModel):
+    id: UUID
+    title: str
+    description: str | None
+    cost_points: int
+    type: str
+
+
+class EnrollmentLookup(BaseModel):
+    """Что касса видит после сканирования QR клиента."""
+
+    enrollment_id: UUID
+    customer_id: UUID
+    program_id: UUID
+    program_name: str
+    program_type: ProgramType
+    program_status: ProgramStatus
+    accrual_rule: dict[str, Any]
+    min_redemption: int
+    display_name: str | None
+    points_balance: int
+    rewards: list[RewardOption]

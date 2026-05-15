@@ -23,6 +23,9 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
+    # JWT кассира (HS256). Секрет ОБЯЗАН совпадать с PARTNER_JWT_SECRET.
+    jwt_secret: str = "dev-tbank-loyalt-cashier-jwt-secret-change-in-prod"
+
     # Kafka. Если выключена, publisher логирует события, а consumer не стартует.
     # События принимаются вручную через POST /internal/events.
     kafka_enabled: bool = False

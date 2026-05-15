@@ -1,0 +1,45 @@
+<section class="hist">
+  <h1 class="hist__h1">Операции точки</h1>
+
+  @if (loading()) {
+    <div class="empty-box">Загружаем…</div>
+  } @else if (transactions().length === 0) {
+    <div class="empty-box">Пока нет операций.</div>
+  } @else {
+    <div class="hist__list">
+      @for (t of transactions(); track t.id) {
+        <div class="card hist__row" [class.is-reversed]="t.is_reversed">
+          <div class="hist__main">
+            <span class="hist__type">
+              {{ transactionTypeLabel(t.type) }}
+              @if (t.is_reversed) {
+                <span class="hist__badge">отменено</span>
+              }
+            </span>
+            <span class="hist__desc">{{ t.description || '—' }}</span>
+            <span class="hist__time">{{ formatDateTime(t.created_at) }}</span>
+          </div>
+          <div class="hist__right">
+            <span
+              class="hist__points"
+              [class.is-plus]="t.type === 'accrual'"
+              [class.is-minus]="t.type === 'redemption'"
+            >
+              {{ t.type === 'accrual' ? '+' : t.type === 'redemption' ? '−' : '' }}{{ formatPoints(t.points) }}
+            </span>
+            @if (canReverse(t)) {
+              <button
+                type="button"
+                class="btn btn--danger btn--sm"
+                [disabled]="reversingId() === t.id"
+                (click)="reverse(t)"
+              >
+                {{ reversingId() === t.id ? '…' : 'Отменить' }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

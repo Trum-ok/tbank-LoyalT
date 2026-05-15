@@ -7,9 +7,11 @@ from app.domains.points import service
 from app.domains.points.schemas import (
     AccrueRequest,
     BalanceRead,
+    EnrollmentLookup,
     PointsOperationResult,
     RedeemRequest,
     ReverseRequest,
+    RewardOption,
 )
 from app.domains.transactions.schemas import TransactionRead
 
@@ -29,6 +31,37 @@ async def accrue(
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
         balance_after=balance,
+    )
+
+
+@partner_router.get("/lookup/{enrollment_id}", response_model=EnrollmentLookup)
+async def lookup(
+    enrollment_id: UUID, partner_id: CurrentPartnerId, session: SessionDep
+) -> EnrollmentLookup:
+    enrollment, program, rewards = await service.lookup_enrollment(
+        session, partner_id, enrollment_id
+    )
+    return EnrollmentLookup(
+        enrollment_id=enrollment.id,
+        customer_id=enrollment.customer_id,
+        program_id=program.id,
+        program_name=program.name,
+        program_type=program.type,
+        program_status=program.status,
+        accrual_rule=program.accrual_rule or {},
+        min_redemption=program.min_redemption,
+        display_name=enrollment.display_name,
+        points_balance=enrollment.points_balance,
+        rewards=[
+            RewardOption(
+                id=r.id,
+                title=r.title,
+                description=r.description,
+                cost_points=r.cost_points,
+                type=r.type,
+            )
+            for r in rewards
+        ],
     )
 
 

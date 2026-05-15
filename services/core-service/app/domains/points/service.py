@@ -8,13 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domains.enrollments.models import Enrollment
 from app.domains.enrollments.service import (
     ensure_customer,
+    get_enrollment,
     get_enrollment_by_pair,
 )
 from app.domains.partners.models import Partner
 from app.domains.points.schemas import AccrueRequest, RedeemRequest
 from app.domains.programs.models import Program, ProgramStatus, ProgramType
 from app.domains.programs.service import get_program
-from app.domains.rewards.service import get_reward
+from app.domains.rewards.service import get_reward, list_rewards
 from app.domains.transactions.models import Transaction, TransactionType
 from app.errors import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from app.events import publisher
@@ -270,6 +271,22 @@ async def reverse(
         key=str(original.customer_id),
     )
     return reversal, enrollment.points_balance
+
+
+async def lookup_enrollment(
+    session: AsyncSession, partner_id: UUID, enrollment_id: UUID
+) -> tuple[Enrollment, Program, list]:
+    """Резолв отсканированного на кассе QR (enrollment_id).
+
+    Возвращает подключение клиента, программу и активные награды,
+    проверив, что программа принадлежит этому партнёру.
+    """
+    enrollment = await get_enrollment(session, enrollment_id)
+    program = await get_program(session, enrollment.program_id)
+    if program.partner_id != partner_id:
+        raise ForbiddenError("Enrollment belongs to another partner's program")
+    rewards = await list_rewards(session, program.id, only_active=True)
+    return enrollment, program, rewards
 
 
 async def get_balance(

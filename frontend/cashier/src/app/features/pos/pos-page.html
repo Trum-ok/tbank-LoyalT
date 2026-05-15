@@ -1,0 +1,168 @@
+<section class="pos">
+  @if (stage() === 'scan') {
+    <div class="pos__scan">
+      <h1 class="pos__h1">Сканируйте QR клиента</h1>
+      <p class="pos__hint">
+        Попросите клиента открыть программу и показать QR-код.
+      </p>
+
+      <div class="pos__camera">
+        <video #video class="pos__video" playsinline muted></video>
+        <div class="pos__frame"></div>
+        @if (!cameraOn()) {
+          <button
+            type="button"
+            class="pos__camera-start"
+            (click)="startCamera()"
+          >
+            Включить камеру
+          </button>
+        }
+      </div>
+
+      @if (cameraError()) {
+        <div class="error-box">{{ cameraError() }}</div>
+      }
+
+      <div class="pos__manual">
+        <label class="field">
+          <span class="field__label">Или код вручную</span>
+          <input
+            class="field__input"
+            placeholder="enrollment-id с экрана клиента"
+            [value]="manualCode()"
+            (input)="manualCode.set($any($event.target).value)"
+          />
+        </label>
+        <button
+          type="button"
+          class="btn btn--ghost"
+          [disabled]="busy() || !manualCode().trim()"
+          (click)="submitManual()"
+        >
+          Найти клиента
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (stage() === 'client' && client(); as c) {
+    <div class="pos__client">
+      <div class="card pos__balance">
+        <span class="pos__balance-label">{{ c.display_name || 'Клиент' }}</span>
+        <span class="pos__balance-value">
+          {{ formatPoints(c.points_balance) }}
+          <small>баллов</small>
+        </span>
+        <span class="pos__program">
+          {{ c.program_name }} · {{ programTypeLabel(c.program_type) }}
+        </span>
+      </div>
+
+      <div class="card pos__section">
+        <h2 class="pos__h2">Начислить</h2>
+
+        @if (accrualMode() === 'amount') {
+          <label class="field">
+            <span class="field__label">Сумма чека, ₽</span>
+            <input
+              class="field__input"
+              inputmode="decimal"
+              placeholder="0"
+              [value]="amount()"
+              (input)="amount.set($any($event.target).value)"
+            />
+          </label>
+        } @else {
+          <div class="pos__stepper">
+            <button
+              type="button"
+              class="pos__step"
+              (click)="changeVisits(-1)"
+            >
+              −
+            </button>
+            <span class="pos__step-value">
+              {{ visits() }}
+              <small>визит(ов)</small>
+            </span>
+            <button
+              type="button"
+              class="pos__step"
+              (click)="changeVisits(1)"
+            >
+              +
+            </button>
+          </div>
+        }
+
+        <details class="pos__advanced">
+          <summary>Указать баллы вручную</summary>
+          <input
+            class="field__input"
+            inputmode="numeric"
+            placeholder="кол-во баллов"
+            [value]="manualPoints()"
+            (input)="manualPoints.set($any($event.target).value)"
+          />
+        </details>
+
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="busy()"
+          (click)="accrue()"
+        >
+          {{ busy() ? 'Начисляем…' : 'Начислить баллы' }}
+        </button>
+      </div>
+
+      <div class="card pos__section">
+        <h2 class="pos__h2">Списать на награду</h2>
+        @if (c.rewards.length === 0) {
+          <p class="pos__hint">В программе нет активных наград.</p>
+        } @else {
+          <div class="pos__rewards">
+            @for (r of c.rewards; track r.id) {
+              <button
+                type="button"
+                class="pos__reward"
+                [disabled]="busy() || c.points_balance < r.cost_points"
+                (click)="redeem(r)"
+              >
+                <span class="pos__reward-title">{{ r.title }}</span>
+                <span class="pos__reward-cost">
+                  {{ formatPoints(r.cost_points) }} б.
+                </span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <button type="button" class="btn btn--ghost" (click)="reset()">
+        Отмена
+      </button>
+    </div>
+  }
+
+  @if (stage() === 'done' && done(); as d) {
+    <div class="pos__done">
+      <div class="pos__done-mark" [class.is-redeem]="d.kind === 'redemption'">
+        ✓
+      </div>
+      <h1 class="pos__h1">
+        {{ d.kind === 'accrual' ? 'Баллы начислены' : 'Награда выдана' }}
+      </h1>
+      <p class="pos__done-points">
+        {{ d.kind === 'accrual' ? '+' : '−' }}{{ formatPoints(d.points) }} баллов
+      </p>
+      <p class="pos__hint">
+        Баланс клиента: {{ formatPoints(d.balanceAfter) }}
+      </p>
+      <button type="button" class="btn btn--primary" (click)="reset()">
+        Следующий клиент
+      </button>
+    </div>
+  }
+</section>

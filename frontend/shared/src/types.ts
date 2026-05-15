@@ -243,3 +243,84 @@ export interface RewardUpdate {
   value?: Record<string, unknown> | null;
   is_active?: boolean | null;
 }
+
+// ===== Staff / касса =====
+
+export interface StaffRead {
+  id: UUID;
+  partner_id: UUID;
+  name: string;
+  login_code: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StaffCreate {
+  name: string;
+  login_code: string;
+  pin: string;
+}
+
+export interface StaffUpdate {
+  name?: string | null;
+  pin?: string | null;
+  is_active?: boolean | null;
+}
+
+export interface StaffLoginRequest {
+  login_code: string;
+  pin: string;
+}
+
+export interface StaffLoginResponse {
+  access_token: string;
+  token_type: string;
+  staff_id: UUID;
+  staff_name: string;
+  partner_id: UUID;
+  partner_name: string;
+}
+
+export interface RewardOption {
+  id: UUID;
+  title: string;
+  description: string | null;
+  cost_points: number;
+  type: RewardType;
+}
+
+export interface EnrollmentLookup {
+  enrollment_id: UUID;
+  customer_id: UUID;
+  program_id: UUID;
+  program_name: string;
+  program_type: ProgramType;
+  program_status: ProgramStatus;
+  accrual_rule: Record<string, unknown>;
+  min_redemption: number;
+  display_name: string | null;
+  points_balance: number;
+  rewards: RewardOption[];
+}
+
+export interface AccruePayload {
+  customer_id: UUID;
+  program_id: UUID;
+  purchase_amount?: number;
+  points?: number;
+  visits?: number;
+  description?: string | null;
+}
+
+export interface RedeemPayload {
+  customer_id: UUID;
+  program_id: UUID;
+  reward_id: UUID;
+  description?: string | null;
+}
+
+export interface PointsOperationResult {
+  transaction: TransactionRead;
+  balance_after: number;
+}

@@ -43,6 +43,12 @@ export const routes: Routes = [
     title: 'Транзакции',
   },
   {
+    path: 'staff',
+    loadComponent: () =>
+      import('./features/staff/staff-page').then(m => m.StaffPage),
+    title: 'Сотрудники',
+  },
+  {
     path: 'profile',
     loadComponent: () =>
       import('./features/profile/profile-page').then(m => m.ProfilePage),

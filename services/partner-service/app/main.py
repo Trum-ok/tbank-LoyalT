@@ -12,6 +12,8 @@ from app.domains.applications.router import admin_router as applications_admin_r
 from app.domains.applications.router import partner_router as applications_partner_router
 from app.domains.partners.router import admin_router as partners_admin_router
 from app.domains.partners.router import partner_router as partners_partner_router
+from app.domains.staff.router import auth_router as staff_auth_router
+from app.domains.staff.router import router as staff_router
 from app.events import publisher
 
 settings = get_settings()
@@ -65,6 +67,8 @@ def create_app() -> FastAPI:
         applications_admin_router,
         partners_partner_router,
         partners_admin_router,
+        staff_auth_router,
+        staff_router,
     ):
         app.include_router(router)
 

@@ -7,3 +7,4 @@ export const HEADER_CUSTOMER_ID = 'X-Customer-Id';
 export const HEADER_PARTNER_ID = 'X-Partner-Id';
 export const HEADER_ACCOUNT_ID = 'X-Account-Id';
 export const HEADER_ADMIN_ID = 'X-Admin-Id';
+export const HEADER_STAFF_ID = 'X-Staff-Id';

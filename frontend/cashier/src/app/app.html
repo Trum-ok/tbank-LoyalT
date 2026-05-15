@@ -1,0 +1,65 @@
+<tui-root>
+  <app-toast-host />
+  <div class="shell">
+    @if (identity.isAuthed()) {
+      <header class="shell__top">
+        <div class="shell__top-meta">
+          <span class="shell__partner">{{ identity.partnerName() }}</span>
+          <span class="shell__staff">{{ identity.staffName() }}</span>
+        </div>
+        <button class="shell__logout" type="button" (click)="logout()">
+          Выйти
+        </button>
+      </header>
+    }
+
+    <main class="shell__main">
+      <router-outlet />
+    </main>
+
+    @if (identity.isAuthed()) {
+      <nav class="shell__tabs">
+        <a routerLink="/pos" routerLinkActive="is-active" class="shell__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <rect
+              x="3"
+              y="4"
+              width="18"
+              height="16"
+              rx="3"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M3 9h18"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </svg>
+          <span>Касса</span>
+        </a>
+        <a routerLink="/history" routerLinkActive="is-active" class="shell__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <circle
+              cx="12"
+              cy="12"
+              r="9"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M12 7v6l4 2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>История</span>
+        </a>
+      </nav>
+    }
+  </div>
+</tui-root>

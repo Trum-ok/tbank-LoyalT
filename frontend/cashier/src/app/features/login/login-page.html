@@ -1,0 +1,55 @@
+<section class="login">
+  <div class="login__brand">
+    <span class="login__mark">Т</span>
+    <h1 class="login__title">Касса</h1>
+    <p class="login__sub">Вход для кассира · код точки и PIN</p>
+  </div>
+
+  <label class="field">
+    <span class="field__label">Код точки</span>
+    <input
+      class="field__input login__code"
+      autocapitalize="characters"
+      autocomplete="off"
+      placeholder="COFFEE"
+      [value]="loginCode()"
+      (input)="setCode($any($event.target).value)"
+    />
+  </label>
+
+  <div class="login__pin">
+    <span class="field__label">PIN</span>
+    <div class="login__dots">
+      @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) {
+        <span
+          class="login__dot"
+          [class.is-filled]="i < pinDots()"
+          [class.is-hidden]="i >= 4 && i >= pinDots()"
+        ></span>
+      }
+    </div>
+  </div>
+
+  <div class="login__pad">
+    @for (k of keys; track $index) {
+      <button
+        type="button"
+        class="login__key"
+        [class.login__key--empty]="k === ''"
+        [disabled]="k === ''"
+        (click)="press(k)"
+      >
+        {{ k }}
+      </button>
+    }
+  </div>
+
+  <button
+    type="button"
+    class="btn btn--primary login__submit"
+    [disabled]="!canSubmit() || loading()"
+    (click)="submit()"
+  >
+    {{ loading() ? 'Входим…' : 'Войти' }}
+  </button>
+</section>

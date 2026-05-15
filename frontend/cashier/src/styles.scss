@@ -1,0 +1,169 @@
+/* === Т-Лояльность · касса: мобильная тема поверх Taiga === */
+
+[tuiTheme='dark'],
+:root {
+  --tbank-bg: #0e0f12;
+  --tbank-surface: #1a1b1e;
+  --tbank-surface-2: #232427;
+  --tbank-elevated: #2b2c30;
+  --tbank-text: #f5f5f7;
+  --tbank-text-muted: rgba(245, 245, 247, 0.6);
+  --tbank-text-faint: rgba(245, 245, 247, 0.4);
+  --tbank-divider: rgba(255, 255, 255, 0.08);
+  --tbank-divider-strong: rgba(255, 255, 255, 0.16);
+  --tbank-page-bg: #050608;
+  --tbank-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+}
+
+[tuiTheme='light'] {
+  --tbank-bg: #f4f4f6;
+  --tbank-surface: #ffffff;
+  --tbank-surface-2: #f4f4f6;
+  --tbank-elevated: #ffffff;
+  --tbank-text: #1c1c1e;
+  --tbank-text-muted: #54595f;
+  --tbank-text-faint: #8a8f96;
+  --tbank-divider: rgba(0, 0, 0, 0.07);
+  --tbank-divider-strong: rgba(0, 0, 0, 0.12);
+  --tbank-page-bg: #ececef;
+  --tbank-card-shadow: 0 8px 24px rgba(20, 20, 25, 0.06);
+}
+
+:root {
+  --tbank-yellow: #ffdd2d;
+  --tbank-yellow-hover: #ffcd00;
+  --tbank-blue: #428bf9;
+  --tbank-green: #3ec98c;
+  --tbank-red: #ff6262;
+  --tbank-radius: 20px;
+  --tbank-radius-sm: 12px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  font-family:
+    'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  background: var(--tbank-page-bg);
+  color: var(--tbank-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: var(--tbank-surface-2);
+  color: var(--tbank-text);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn--primary {
+  background: var(--tbank-yellow);
+  color: #1c1c1e;
+
+  &:active:not(:disabled) {
+    background: var(--tbank-yellow-hover);
+  }
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--tbank-divider-strong);
+}
+
+.btn--danger {
+  background: rgba(255, 98, 98, 0.12);
+  color: var(--tbank-red);
+}
+
+.btn--sm {
+  width: auto;
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tbank-text-muted);
+}
+
+.field__input {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--tbank-radius-sm);
+  border: 1px solid var(--tbank-divider-strong);
+  background: var(--tbank-surface);
+  color: var(--tbank-text);
+  font-size: 17px;
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: var(--tbank-text-faint);
+  }
+
+  &:focus {
+    border-color: var(--tbank-blue);
+  }
+}
+
+.card {
+  background: var(--tbank-surface);
+  border: 1px solid var(--tbank-divider);
+  border-radius: var(--tbank-radius);
+  padding: 18px;
+  box-shadow: var(--tbank-card-shadow);
+}
+
+.error-box {
+  padding: 14px 16px;
+  background: rgba(255, 98, 98, 0.1);
+  border: 1px solid rgba(255, 98, 98, 0.24);
+  border-radius: var(--tbank-radius-sm);
+  color: var(--tbank-red);
+  font-size: 14px;
+}
+
+.empty-box {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--tbank-text-muted);
+}

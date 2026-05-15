@@ -1,0 +1,98 @@
+<section class="page staff">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Сотрудники</h1>
+      <p class="page-subtitle">
+        Коды доступа для кассиров и официантов. По коду точки и PIN сотрудник
+        входит в приложение кассы и начисляет/списывает баллы клиентам.
+      </p>
+    </div>
+  </header>
+
+  @if (!hasPartner()) {
+    <div class="empty-box">
+      Сначала подключите бизнес.
+      <br />
+      <a routerLink="/onboarding" class="btn btn--primary" style="margin-top: 14px">
+        Пройти онбординг
+      </a>
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="error-box">{{ error() }}</div>
+    }
+
+    <form class="card" (ngSubmit)="create(); $event.preventDefault()">
+      <h3 class="card__title">Новый кассир</h3>
+      <div class="row row--3">
+        <label class="field">
+          <span class="field__label">Имя / точка</span>
+          <input
+            class="field__input"
+            placeholder="Касса на Тверской"
+            [value]="form().name"
+            (input)="patch('name', $any($event.target).value)"
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">Код точки</span>
+          <input
+            class="field__input"
+            placeholder="COFFEE"
+            [value]="form().login_code"
+            (input)="patch('login_code', $any($event.target).value)"
+          />
+          <span class="field__hint">Латиница/цифры, 3–32 символа</span>
+        </label>
+        <label class="field">
+          <span class="field__label">PIN</span>
+          <input
+            class="field__input"
+            inputmode="numeric"
+            placeholder="4–8 цифр"
+            [value]="form().pin"
+            (input)="patch('pin', $any($event.target).value)"
+          />
+        </label>
+      </div>
+      <div class="card__actions">
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Создаём…' : 'Добавить кассира' }}
+        </button>
+      </div>
+    </form>
+
+    @if (loading()) {
+      <div class="card">Загружаем…</div>
+    } @else if (staff().length === 0) {
+      <div class="empty-box">Пока нет ни одного кассира.</div>
+    } @else {
+      <section class="card staff__list">
+        <h3 class="card__title">Активные коды ({{ staff().length }})</h3>
+        @for (s of staff(); track s.id) {
+          <div class="staff__row">
+            <div class="staff__main">
+              <span class="staff__name">{{ s.name }}</span>
+              <span class="staff__code">код · {{ s.login_code }}</span>
+            </div>
+            <span
+              class="status-pill"
+              [class]="s.is_active ? 'status-pill--active' : 'status-pill--blocked'"
+            >
+              {{ s.is_active ? 'активен' : 'отключён' }}
+            </span>
+            <div class="staff__actions">
+              <button class="btn btn--ghost" (click)="toggleActive(s)">
+                {{ s.is_active ? 'Отключить' : 'Включить' }}
+              </button>
+              <button class="btn btn--ghost" (click)="resetPin(s)">
+                Сменить PIN
+              </button>
+              <button class="btn btn--danger" (click)="remove(s)">Удалить</button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  }
+</section>
