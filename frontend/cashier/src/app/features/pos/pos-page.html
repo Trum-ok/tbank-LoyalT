@@ -49,13 +49,13 @@
   @if (stage() === 'client' && client(); as c) {
     <div class="pos__client">
       <div class="card pos__balance">
-        <span class="pos__balance-label">{{ c.display_name || 'Клиент' }}</span>
+        <span class="pos__balance-label">{{ c.program_name }}</span>
         <span class="pos__balance-value">
           {{ formatPoints(c.points_balance) }}
           <small>баллов</small>
         </span>
         <span class="pos__program">
-          {{ c.program_name }} · {{ programTypeLabel(c.program_type) }}
+          {{ programTypeLabel(c.program_type) }} · баланс клиента
         </span>
       </div>
 

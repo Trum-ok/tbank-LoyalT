@@ -299,7 +299,6 @@ export interface EnrollmentLookup {
   program_status: ProgramStatus;
   accrual_rule: Record<string, unknown>;
   min_redemption: number;
-  display_name: string | null;
   points_balance: number;
   rewards: RewardOption[];
 }

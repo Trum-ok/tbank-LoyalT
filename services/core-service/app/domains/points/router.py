@@ -50,7 +50,6 @@ async def lookup(
         program_status=program.status,
         accrual_rule=program.accrual_rule or {},
         min_redemption=program.min_redemption,
-        display_name=enrollment.display_name,
         points_balance=enrollment.points_balance,
         rewards=[
             RewardOption(

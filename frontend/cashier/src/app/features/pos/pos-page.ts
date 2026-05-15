@@ -25,6 +25,7 @@ interface DoneInfo {
   kind: 'accrual' | 'redemption';
   points: number;
   balanceAfter: number;
+  transactionId: string;
 }
 
 @Component({
@@ -218,6 +219,7 @@ export class PosPage implements OnDestroy {
             kind: 'accrual',
             points: res.transaction.points,
             balanceAfter: res.balance_after,
+            transactionId: res.transaction.id,
           });
           this.stage.set('done');
           this.notify.success(`Начислено ${formatPoints(res.transaction.points)}`);
@@ -254,9 +256,41 @@ export class PosPage implements OnDestroy {
             kind: 'redemption',
             points: res.transaction.points,
             balanceAfter: res.balance_after,
+            transactionId: res.transaction.id,
           });
           this.stage.set('done');
           this.notify.success(`Награда выдана: ${reward.title}`);
+        }
+      });
+  }
+
+  undo(): void {
+    const d = this.done();
+    const c = this.client();
+    if (!d || this.busy()) return;
+    this.busy.set(true);
+    this.pointsApi
+      .reverse(d.transactionId, 'Откат операции с кассы')
+      .pipe(
+        catchError(err => {
+          this.notify.error(
+            err?.status === 409
+              ? 'Нельзя откатить: клиент уже потратил эти баллы'
+              : err?.error?.detail ?? 'Не удалось отменить операцию',
+          );
+          return of(null);
+        }),
+        finalize(() => this.busy.set(false)),
+      )
+      .subscribe(res => {
+        if (res) {
+          this.notify.success('Операция отменена');
+          if (c) {
+            this.done.set(null);
+            this.lookup(c.enrollment_id);
+          } else {
+            this.reset();
+          }
         }
       });
   }

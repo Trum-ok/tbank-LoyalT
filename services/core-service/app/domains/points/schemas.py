@@ -78,6 +78,5 @@ class EnrollmentLookup(BaseModel):
     program_status: ProgramStatus
     accrual_rule: dict[str, Any]
     min_redemption: int
-    display_name: str | None
     points_balance: int
     rewards: list[RewardOption]
