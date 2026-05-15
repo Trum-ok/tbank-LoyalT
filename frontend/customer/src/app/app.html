@@ -106,15 +106,6 @@
 
       @if (!isDetail()) {
       <nav class="phone__tabs">
-        <a routerLink="/catalog" routerLinkActive="is-active" class="phone__tab">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
-            <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" />
-            <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" />
-            <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" />
-          </svg>
-          <span>Каталог</span>
-        </a>
         <a routerLink="/my-programs" routerLinkActive="is-active" class="phone__tab">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
             <path
@@ -124,6 +115,15 @@
             <circle cx="16" cy="12" r="1.4" fill="currentColor" />
           </svg>
           <span>Кошелёк</span>
+        </a>
+        <a routerLink="/catalog" routerLinkActive="is-active" class="phone__tab">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
+            <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" />
+            <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" />
+            <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" />
+          </svg>
+          <span>Каталог</span>
         </a>
         <a routerLink="/transactions" routerLinkActive="is-active" class="phone__tab">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">

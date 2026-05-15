@@ -4,7 +4,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'catalog',
+    redirectTo: 'my-programs',
   },
   {
     path: 'catalog',
@@ -42,5 +42,5 @@ export const routes: Routes = [
       ),
     title: 'Уведомления',
   },
-  { path: '**', redirectTo: 'catalog' },
+  { path: '**', redirectTo: 'my-programs' },
 ];
