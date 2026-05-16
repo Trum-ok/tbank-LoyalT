@@ -90,46 +90,87 @@ export class DashboardPage {
     () => this.programs().filter(p => p.status === 'published').length,
   );
 
-  // Гистограмма «новые юзеры по дням».
-  readonly newUsersSeries = computed(() => {
-    const rows = this.analytics()?.new_users_by_day ?? [];
-    const max = Math.max(1, ...rows.map(r => r.count));
-    return rows.map(r => ({
+  // Шкала Y: три деления (max / середина / 0) с позицией в % высоты.
+  private barTicks(max: number, decimals = 0) {
+    const f = (x: number) => x.toFixed(decimals);
+    return [
+      { label: f(max), pct: 100 },
+      { label: f(max / 2), pct: 50 },
+      { label: f(0), pct: 0 },
+    ];
+  }
+
+  private buildBars(rows: { date: string; value: number; tip: string }[]) {
+    const max = Math.max(...rows.map(r => r.value), 0) || 1;
+    const items = rows.map(r => ({
       label: this.dayLabel(r.date),
-      value: r.count,
-      ratio: r.count / max,
-      title: `${r.date} · ${r.count} новых`,
+      date: r.date,
+      value: r.value,
+      ratio: r.value / max,
+      tip: r.tip,
     }));
+    return { items, max };
+  }
+
+  // Гистограмма «новые юзеры по дням».
+  readonly newUsersChart = computed(() => {
+    const rows = this.analytics()?.new_users_by_day ?? [];
+    const c = this.buildBars(
+      rows.map(r => ({
+        date: r.date,
+        value: r.count,
+        tip: `${this.dayLabel(r.date)} · ${r.count} нов.`,
+      })),
+    );
+    return { ...c, ticks: this.barTicks(c.max, 0) };
   });
 
   // Гистограмма «покупки / юзер по дням».
-  readonly purchasesSeries = computed(() => {
+  readonly purchasesChart = computed(() => {
     const rows = this.analytics()?.purchases_per_user_by_day ?? [];
-    const max = Math.max(0.0001, ...rows.map(r => r.ratio));
-    return rows.map(r => ({
-      label: this.dayLabel(r.date),
-      value: r.ratio,
-      ratio: r.ratio / max,
-      title: `${r.date} · ${r.ratio} (${r.purchases} покупок / ${r.users} юзеров)`,
-    }));
+    const c = this.buildBars(
+      rows.map(r => ({
+        date: r.date,
+        value: r.ratio,
+        tip: `${this.dayLabel(r.date)} · ${r.ratio} (${r.purchases} опер. / ${r.users} юз.)`,
+      })),
+    );
+    return { ...c, ticks: this.barTicks(c.max, 2) };
   });
 
-  // Кривая retention для SVG-полилинии (viewBox 100×100).
-  readonly retentionPath = computed(() => {
+  // Подписи оси X: первая / средняя / последняя точка.
+  xticks(items: { label: string }[]): string[] {
+    if (items.length === 0) return [];
+    if (items.length <= 2) return items.map(i => i.label);
+    const mid = Math.floor((items.length - 1) / 2);
+    return [items[0].label, items[mid].label, items[items.length - 1].label];
+  }
+
+  // Кривая retention: точки с координатами в системе viewBox 100×100
+  // (x растягивается, точки рендерим HTML-оверлеем, чтобы не искажались).
+  readonly retentionChart = computed(() => {
     const curve = this.analytics()?.retention.curve ?? [];
     if (curve.length < 2) return null;
     const n = curve.length - 1;
-    const pts = curve
-      .map((p, i) => {
-        const x = (i / n) * 100;
-        const y = 100 - p.retention * 100;
-        return `${x.toFixed(2)},${y.toFixed(2)}`;
-      })
-      .join(' ');
-    const area = `0,100 ${pts} 100,100`;
+    const pts = curve.map((p, i) => ({
+      x: +((i / n) * 100).toFixed(2),
+      y: +(100 - p.retention * 100).toFixed(2),
+      day: p.day,
+      pct: +(p.retention * 100).toFixed(1),
+    }));
+    const line = pts.map(p => `${p.x},${p.y}`).join(' ');
+    const area = `0,100 ${line} 100,100`;
     const median = this.analytics()?.retention.median_churn_day ?? null;
-    const medianX = median !== null ? (median / n) * 100 : null;
-    return { line: pts, area, medianX, lastDay: curve[curve.length - 1].day };
+    const medianX = median !== null ? +((median / n) * 100).toFixed(2) : null;
+    return {
+      pts,
+      line,
+      area,
+      median,
+      medianX,
+      lastDay: curve[curve.length - 1].day,
+      yticks: [100, 75, 50, 25, 0],
+    };
   });
 
   readonly heatmap = computed(() => {
@@ -144,6 +185,7 @@ export class DashboardPage {
           hour,
           count,
           intensity: hm.max > 0 ? count / hm.max : 0,
+          tip: `${label}, ${hour}:00 — ${count} опер.`,
         };
       }),
     }));

@@ -184,19 +184,33 @@
                     <p class="card__sub">Первое вступление клиента в программу партнёра.</p>
                   </div>
                 </header>
-                @if (newUsersSeries().length === 0) {
+                @if (newUsersChart().items.length === 0) {
                   <p class="card__sub">Нет данных за период.</p>
                 } @else {
-                  <div class="bars">
-                    @for (b of newUsersSeries(); track b.label + $index) {
-                      <div class="bars__col" [title]="b.title">
-                        <span class="bars__fill" [style.height.%]="b.ratio * 100"></span>
+                  <div class="bchart">
+                    <div class="bchart__y">
+                      @for (t of newUsersChart().ticks; track t.pct) {
+                        <span class="bchart__ytick" [style.bottom.%]="t.pct">{{ t.label }}</span>
+                      }
+                    </div>
+                    <div class="bchart__plot">
+                      @for (t of newUsersChart().ticks; track t.pct) {
+                        <span class="bchart__grid" [style.bottom.%]="t.pct"></span>
+                      }
+                      <div class="bars">
+                        @for (b of newUsersChart().items; track b.date) {
+                          <div class="bars__col">
+                            <span class="bars__tip">{{ b.tip }}</span>
+                            <span class="bars__fill" [style.height.%]="b.ratio * 100"></span>
+                          </div>
+                        }
                       </div>
-                    }
+                    </div>
                   </div>
-                  <div class="bars__axis">
-                    <span>{{ newUsersSeries()[0].label }}</span>
-                    <span>{{ newUsersSeries()[newUsersSeries().length - 1].label }}</span>
+                  <div class="bchart__x">
+                    @for (l of xticks(newUsersChart().items); track $index) {
+                      <span>{{ l }}</span>
+                    }
                   </div>
                 }
               </section>
@@ -208,22 +222,36 @@
                     <p class="card__sub">Среднее число операций на активного клиента.</p>
                   </div>
                 </header>
-                @if (purchasesSeries().length === 0) {
+                @if (purchasesChart().items.length === 0) {
                   <p class="card__sub">Нет данных за период.</p>
                 } @else {
-                  <div class="bars">
-                    @for (b of purchasesSeries(); track b.label + $index) {
-                      <div class="bars__col" [title]="b.title">
-                        <span
-                          class="bars__fill bars__fill--blue"
-                          [style.height.%]="b.ratio * 100"
-                        ></span>
+                  <div class="bchart">
+                    <div class="bchart__y">
+                      @for (t of purchasesChart().ticks; track t.pct) {
+                        <span class="bchart__ytick" [style.bottom.%]="t.pct">{{ t.label }}</span>
+                      }
+                    </div>
+                    <div class="bchart__plot">
+                      @for (t of purchasesChart().ticks; track t.pct) {
+                        <span class="bchart__grid" [style.bottom.%]="t.pct"></span>
+                      }
+                      <div class="bars">
+                        @for (b of purchasesChart().items; track b.date) {
+                          <div class="bars__col">
+                            <span class="bars__tip">{{ b.tip }}</span>
+                            <span
+                              class="bars__fill bars__fill--blue"
+                              [style.height.%]="b.ratio * 100"
+                            ></span>
+                          </div>
+                        }
                       </div>
-                    }
+                    </div>
                   </div>
-                  <div class="bars__axis">
-                    <span>{{ purchasesSeries()[0].label }}</span>
-                    <span>{{ purchasesSeries()[purchasesSeries().length - 1].label }}</span>
+                  <div class="bchart__x">
+                    @for (l of xticks(purchasesChart().items); track $index) {
+                      <span>{{ l }}</span>
+                    }
                   </div>
                 }
               </section>
@@ -252,12 +280,19 @@
                       @for (c of row.cells; track c.hour) {
                         <span
                           class="heatmap__cell"
-                          [style.opacity]="0.08 + c.intensity * 0.92"
-                          [title]="row.label + ' ' + c.hour + ':00 · ' + c.count"
-                        ></span>
+                          [class.is-empty]="c.count === 0"
+                          [style.--i]="c.intensity"
+                        >
+                          <span class="heatmap__tip">{{ c.tip }}</span>
+                        </span>
                       }
                     </div>
                   }
+                </div>
+                <div class="heatmap__legend">
+                  <span class="heatmap__legend-cap">меньше</span>
+                  <span class="heatmap__legend-bar"></span>
+                  <span class="heatmap__legend-cap">больше · до {{ hm.max }}</span>
                 </div>
               } @else {
                 <p class="card__sub">Нет данных за период.</p>
@@ -298,38 +333,58 @@
                   </p>
                 </div>
               </header>
-              @if (retentionPath(); as rp) {
-                <div class="retention">
-                  <svg
-                    class="retention__svg"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                  >
-                    @for (g of [0, 25, 50, 75, 100]; track g) {
-                      <line
-                        class="retention__grid"
-                        x1="0"
-                        [attr.y1]="g"
-                        x2="100"
-                        [attr.y2]="g"
-                      />
+              @if (retentionChart(); as rc) {
+                <div class="rchart">
+                  <div class="rchart__y">
+                    @for (v of rc.yticks; track v) {
+                      <span class="rchart__ytick" [style.top.%]="100 - v">{{ v }}%</span>
                     }
-                    <polygon class="retention__area" [attr.points]="rp.area" />
-                    <polyline class="retention__line" [attr.points]="rp.line" />
-                    @if (rp.medianX !== null) {
-                      <line
-                        class="retention__median"
-                        [attr.x1]="rp.medianX"
-                        y1="0"
-                        [attr.x2]="rp.medianX"
-                        y2="100"
-                      />
-                    }
-                  </svg>
-                  <div class="retention__axis">
-                    <span>D0</span>
-                    <span>D{{ rp.lastDay }}</span>
                   </div>
+                  <div class="rchart__plot">
+                    <svg
+                      class="rchart__svg"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                    >
+                      @for (v of rc.yticks; track v) {
+                        <line
+                          class="rchart__grid"
+                          x1="0"
+                          [attr.y1]="100 - v"
+                          x2="100"
+                          [attr.y2]="100 - v"
+                        />
+                      }
+                      <polygon class="rchart__area" [attr.points]="rc.area" />
+                      <polyline class="rchart__line" [attr.points]="rc.line" />
+                      @if (rc.medianX !== null) {
+                        <line
+                          class="rchart__median"
+                          [attr.x1]="rc.medianX"
+                          y1="0"
+                          [attr.x2]="rc.medianX"
+                          y2="100"
+                        />
+                      }
+                    </svg>
+                    @for (p of rc.pts; track p.day) {
+                      <button
+                        type="button"
+                        class="rchart__dot"
+                        [style.left.%]="p.x"
+                        [style.top.%]="p.y"
+                      >
+                        <span class="rchart__tip">D{{ p.day }} · {{ p.pct }}%</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div class="rchart__x">
+                  <span>D0</span>
+                  @if (rc.median !== null) {
+                    <span class="rchart__x-med">медиана · D{{ rc.median }}</span>
+                  }
+                  <span>D{{ rc.lastDay }}</span>
                 </div>
               } @else {
                 <p class="card__sub">Недостаточно данных для построения кривой.</p>

@@ -236,13 +236,84 @@
   justify-content: center;
 }
 
+%tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translate(-50%, -4px);
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(20, 20, 22, 0.96);
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 6;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+%axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0 0 48px;
+  font-size: 10px;
+  color: var(--tbank-text-muted);
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+
+%ytick {
+  position: absolute;
+  right: 0;
+  font-size: 10px;
+  color: var(--tbank-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Гистограммы (новые юзеры / покупки на юзера) ──
+.bchart {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 8px;
+  height: 180px;
+
+  &__y {
+    position: relative;
+  }
+
+  &__ytick {
+    @extend %ytick;
+    transform: translateY(50%);
+  }
+
+  &__plot {
+    position: relative;
+  }
+
+  &__grid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--tbank-divider);
+    opacity: 0.6;
+  }
+
+  &__x {
+    @extend %axis;
+  }
+}
+
 .bars {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  height: 160px;
 
   &__col {
+    position: relative;
     flex: 1 1 0;
     height: 100%;
     display: flex;
@@ -255,30 +326,58 @@
     border-radius: 4px 4px 2px 2px;
     background: linear-gradient(180deg, var(--tbank-yellow), #ffcd00);
     min-height: 2px;
-    transition: height 0.3s ease;
+    transition: filter 0.15s ease, opacity 0.15s ease;
 
     &--blue {
       background: linear-gradient(180deg, #4b9bff, #1a73e8);
     }
   }
 
-  &__axis {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: var(--tbank-text-muted);
-    font-family: 'SF Mono', 'Menlo', monospace;
+  &:hover &__fill {
+    opacity: 0.35;
+  }
+
+  &__col:hover &__fill {
+    opacity: 1;
+    filter: brightness(1.12);
+  }
+
+  &__tip {
+    @extend %tooltip;
+    transform: translate(-50%, -6px);
+    margin-bottom: 2px;
+  }
+
+  &__col:hover &__tip {
+    opacity: 1;
   }
 }
 
-.retention {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+// ── Retention curve ──
+.rchart {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 8px;
+
+  &__y {
+    position: relative;
+    height: 200px;
+  }
+
+  &__ytick {
+    @extend %ytick;
+    transform: translateY(-50%);
+  }
+
+  &__plot {
+    position: relative;
+    height: 200px;
+  }
 
   &__svg {
     width: 100%;
-    height: 200px;
+    height: 100%;
+    display: block;
   }
 
   &__grid {
@@ -306,12 +405,48 @@
     vector-effect: non-scaling-stroke;
   }
 
-  &__axis {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: var(--tbank-text-muted);
-    font-family: 'SF Mono', 'Menlo', monospace;
+  &__dot {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: var(--tbank-yellow);
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    &:hover::after {
+      opacity: 1;
+      inset: 1px;
+      box-shadow: 0 0 0 3px rgba(255, 221, 45, 0.25);
+    }
+  }
+
+  &__tip {
+    @extend %tooltip;
+  }
+
+  &__dot:hover &__tip {
+    opacity: 1;
+  }
+
+  &__x {
+    @extend %axis;
+  }
+
+  &__x-med {
+    color: var(--tbank-red);
   }
 }
 
@@ -347,10 +482,52 @@
   }
 
   &__cell {
+    position: relative;
     aspect-ratio: 1;
     border-radius: 3px;
     background: var(--tbank-yellow);
-    transition: opacity 0.2s ease;
+    opacity: calc(0.08 + var(--i, 0) * 0.92);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+    &.is-empty {
+      background: var(--tbank-divider);
+      opacity: 0.35;
+    }
+
+    &:hover {
+      transform: scale(1.35);
+      box-shadow: 0 0 0 2px var(--tbank-text);
+      z-index: 4;
+    }
+  }
+
+  &__tip {
+    @extend %tooltip;
+  }
+
+  &__cell:hover &__tip {
+    opacity: 1;
+  }
+
+  &__legend {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--tbank-text-muted);
+  }
+
+  &__legend-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 221, 45, 0.1),
+      var(--tbank-yellow)
+    );
   }
 }
 
