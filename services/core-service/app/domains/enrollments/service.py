@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import BigInteger, cast, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,6 +27,22 @@ async def ensure_customer(session: AsyncSession, customer_id: UUID) -> Customer:
     return customer
 
 
+async def generate_short_code(session: AsyncSession) -> str:
+    """Цифровой код подключения для диктовки на кассе.
+
+    Последовательный, от 4 до 9 цифр (1000, 1001, … 999999999) —
+    короткий, пока подключений немного.
+    """
+    result = await session.execute(
+        select(func.max(cast(Enrollment.short_code, BigInteger)))
+    )
+    current = result.scalar() or 0
+    nxt = max(current + 1, 1000)
+    if nxt > 999_999_999:
+        raise ConflictError("Failed to allocate a unique enrollment code")
+    return str(nxt)
+
+
 async def enroll(
     session: AsyncSession, customer_id: UUID, data: EnrollmentCreate
 ) -> Enrollment:
@@ -39,6 +55,7 @@ async def enroll(
         customer_id=customer_id,
         program_id=data.program_id,
         display_name=data.display_name,
+        short_code=await generate_short_code(session),
     )
     session.add(enrollment)
     try:

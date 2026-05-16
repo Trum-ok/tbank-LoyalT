@@ -20,6 +20,7 @@ class EnrollmentRead(BaseModel):
     id: UUID
     customer_id: UUID
     program_id: UUID
+    short_code: str
     display_name: str | None
     is_archived: bool
     points_balance: int

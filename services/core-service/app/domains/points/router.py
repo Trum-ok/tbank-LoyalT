@@ -34,17 +34,12 @@ async def accrue(
     )
 
 
-@partner_router.get("/lookup/{enrollment_id}", response_model=EnrollmentLookup)
-async def lookup(
-    enrollment_id: UUID, partner_id: CurrentPartnerId, session: SessionDep
-) -> EnrollmentLookup:
-    enrollment, program, rewards = await service.lookup_enrollment(
-        session, partner_id, enrollment_id
-    )
+def _build_lookup(enrollment, program, rewards) -> EnrollmentLookup:
     return EnrollmentLookup(
         enrollment_id=enrollment.id,
         customer_id=enrollment.customer_id,
         program_id=program.id,
+        short_code=enrollment.short_code,
         program_name=program.name,
         program_type=program.type,
         program_status=program.status,
@@ -62,6 +57,26 @@ async def lookup(
             for r in rewards
         ],
     )
+
+
+@partner_router.get("/lookup/{enrollment_id}", response_model=EnrollmentLookup)
+async def lookup(
+    enrollment_id: UUID, partner_id: CurrentPartnerId, session: SessionDep
+) -> EnrollmentLookup:
+    enrollment, program, rewards = await service.lookup_enrollment(
+        session, partner_id, enrollment_id
+    )
+    return _build_lookup(enrollment, program, rewards)
+
+
+@partner_router.get("/lookup-code/{code}", response_model=EnrollmentLookup)
+async def lookup_by_code(
+    code: str, partner_id: CurrentPartnerId, session: SessionDep
+) -> EnrollmentLookup:
+    enrollment, program, rewards = await service.lookup_by_short_code(
+        session, partner_id, code
+    )
+    return _build_lookup(enrollment, program, rewards)
 
 
 @partner_router.post(

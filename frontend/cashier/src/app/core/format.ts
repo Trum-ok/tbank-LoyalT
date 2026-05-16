@@ -63,15 +63,37 @@ export function transactionTypeLabel(type: string): string {
   }
 }
 
-/** Парсит payload QR клиента: `tbank-loyalt:enrollment:<uuid>`. */
+/**
+ * Парсит код клиента: payload QR `tbank-loyalt:enrollment:<uuid>` или
+ * продиктованный код. Терпим к диктовке: регистр, пробелы и отсутствие
+ * дефисов игнорируются (32 hex без дефисов тоже принимаются).
+ */
 const QR_PREFIX = 'tbank-loyalt:enrollment:';
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const HEX32_RE = /^[0-9a-f]{32}$/;
 
 export function parseEnrollmentCode(raw: string): string | null {
-  const text = raw.trim();
-  const candidate = text.startsWith(QR_PREFIX)
-    ? text.slice(QR_PREFIX.length)
-    : text;
-  return UUID_RE.test(candidate) ? candidate.toLowerCase() : null;
+  let text = raw.trim();
+  const lower = text.toLowerCase();
+  if (lower.startsWith(QR_PREFIX)) {
+    text = text.slice(QR_PREFIX.length);
+  }
+  // Убираем всё кроме hex: пробелы, дефисы, переносы.
+  const hex = text.toLowerCase().replace(/[^0-9a-f]/g, '');
+  if (!HEX32_RE.test(hex)) return null;
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20, 32),
+  ].join('-');
+}
+
+/**
+ * Короткий цифровой код подключения (4–9 цифр), продиктованный клиентом.
+ * Пробелы/прочее игнорируются. null — если не похоже на код.
+ */
+export function parseShortCode(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '');
+  return digits.length >= 4 && digits.length <= 9 ? digits : null;
 }

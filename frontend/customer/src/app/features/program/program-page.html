@@ -192,6 +192,23 @@
       }
     </div>
 
+    @if (existingEnrollment() && !isArchived() && manualCode(); as code) {
+      <div class="program__code program__code--inline">
+        <span class="program__code-label">Код для кассы (если нет QR)</span>
+        <button
+          type="button"
+          class="program__code-value"
+          (click)="copyCode()"
+          title="Нажмите, чтобы скопировать"
+        >
+          {{ code }}
+        </button>
+        <span class="program__code-hint">
+          продиктуйте кассиру или нажмите, чтобы скопировать
+        </span>
+      </div>
+    }
+
     @if (renameOpen()) {
       <div class="program__modal" (click)="closeRename()">
         <form
@@ -280,6 +297,21 @@
           <span class="program__qr-balance">
             Баланс: {{ formatPoints(e.points_balance) }} баллов
           </span>
+
+          @if (manualCode(); as code) {
+            <div class="program__code program__code--modal">
+              <span class="program__code-label">Или продиктуйте код</span>
+              <button
+                type="button"
+                class="program__code-value"
+                (click)="copyCode()"
+                title="Нажмите, чтобы скопировать"
+              >
+                {{ code }}
+              </button>
+              <span class="program__code-hint">нажмите, чтобы скопировать</span>
+            </div>
+          }
         </div>
       </div>
     }

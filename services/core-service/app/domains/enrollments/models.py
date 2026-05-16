@@ -22,12 +22,15 @@ class Enrollment(UUIDPKMixin, TimestampsMixin, Base):
     __tablename__ = "enrollment"
     __table_args__ = (
         UniqueConstraint("customer_id", "program_id", name="uq_enrollment_customer_program"),
+        UniqueConstraint("short_code", name="uq_enrollment_short_code"),
         Index("ix_enrollment_customer_id", "customer_id"),
         Index("ix_enrollment_program_id", "program_id"),
     )
 
     customer_id: Mapped[UUID] = mapped_column(ForeignKey("customer.id", ondelete="CASCADE"))
     program_id: Mapped[UUID] = mapped_column(ForeignKey("program.id", ondelete="CASCADE"))
+    # Короткий цифровой код для диктовки на кассе вместо QR (9 цифр).
+    short_code: Mapped[str] = mapped_column(String(12))
     display_name: Mapped[str | None] = mapped_column(String(255))
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 

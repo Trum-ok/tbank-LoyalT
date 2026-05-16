@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domains.enrollments.models import Enrollment
 from app.domains.enrollments.service import (
     ensure_customer,
+    generate_short_code,
     get_enrollment,
     get_enrollment_by_pair,
 )
@@ -100,7 +101,11 @@ async def accrue(
     try:
         enrollment = await get_enrollment_by_pair(session, req.customer_id, req.program_id)
     except NotFoundError:
-        enrollment = Enrollment(customer_id=req.customer_id, program_id=req.program_id)
+        enrollment = Enrollment(
+            customer_id=req.customer_id,
+            program_id=req.program_id,
+            short_code=await generate_short_code(session),
+        )
         session.add(enrollment)
         await session.flush()
 
@@ -282,6 +287,24 @@ async def lookup_enrollment(
     проверив, что программа принадлежит этому партнёру.
     """
     enrollment = await get_enrollment(session, enrollment_id)
+    program = await get_program(session, enrollment.program_id)
+    if program.partner_id != partner_id:
+        raise ForbiddenError("Enrollment belongs to another partner's program")
+    rewards = await list_rewards(session, program.id, only_active=True)
+    return enrollment, program, rewards
+
+
+async def lookup_by_short_code(
+    session: AsyncSession, partner_id: UUID, code: str
+) -> tuple[Enrollment, Program, list]:
+    """Резолв по короткому цифровому коду (продиктован вместо QR)."""
+    normalized = "".join(ch for ch in code if ch.isdigit())
+    result = await session.execute(
+        select(Enrollment).where(Enrollment.short_code == normalized)
+    )
+    enrollment = result.scalar_one_or_none()
+    if enrollment is None:
+        raise NotFoundError("Enrollment not found for this code")
     program = await get_program(session, enrollment.program_id)
     if program.partner_id != partner_id:
         raise ForbiddenError("Enrollment belongs to another partner's program")

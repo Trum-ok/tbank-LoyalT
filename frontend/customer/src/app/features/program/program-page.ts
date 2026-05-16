@@ -78,6 +78,12 @@ export class ProgramPage {
     return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(payload)}`;
   });
 
+  /** Короткий цифровой код подключения для диктовки на кассе. */
+  readonly manualCode = computed(() => {
+    const e = this.existingEnrollment();
+    return e?.short_code ?? null;
+  });
+
   readonly formatPoints = formatPoints;
 
   readonly highlight = computed<Highlight | null>(() => {
@@ -188,6 +194,15 @@ export class ProgramPage {
 
   closeQr(): void {
     this.qrOpen.set(false);
+  }
+
+  copyCode(): void {
+    const code = this.manualCode();
+    if (!code) return;
+    navigator.clipboard?.writeText(code).then(
+      () => this.notify.success('Код скопирован'),
+      () => this.notify.error('Не удалось скопировать код'),
+    );
   }
 
   openRename(): void {

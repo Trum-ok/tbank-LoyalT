@@ -21,6 +21,12 @@ export class PointsApi {
     );
   }
 
+  lookupByCode(code: string): Observable<EnrollmentLookup> {
+    return this.http.get<EnrollmentLookup>(
+      `${this.base}/points/lookup-code/${code}`,
+    );
+  }
+
   accrue(body: AccruePayload): Observable<PointsOperationResult> {
     return this.http.post<PointsOperationResult>(
       `${this.base}/points/accrue`,

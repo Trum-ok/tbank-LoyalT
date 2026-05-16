@@ -13,13 +13,14 @@ import {
   RewardOption,
 } from '@tbank-loyalt/shared';
 import jsQR from 'jsqr';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 
 import { PointsApi } from '../../core/api/points-api.service';
 import {
   formatPoints,
   formatPointsLabel,
   parseEnrollmentCode,
+  parseShortCode,
   pointsWord,
   programTypeLabel,
 } from '../../core/format';
@@ -178,7 +179,7 @@ export class PosPage implements OnDestroy {
             const enrollmentId = parseEnrollmentCode(code.data);
             if (enrollmentId) {
               this.stopCamera();
-              this.lookup(enrollmentId);
+              this.runLookup(this.pointsApi.lookup(enrollmentId));
               return;
             }
           }
@@ -189,19 +190,24 @@ export class PosPage implements OnDestroy {
   }
 
   submitManual(): void {
-    const enrollmentId = parseEnrollmentCode(this.manualCode());
-    if (!enrollmentId) {
+    const raw = this.manualCode();
+    const shortCode = parseShortCode(raw);
+    const enrollmentId = shortCode ? null : parseEnrollmentCode(raw);
+    if (!shortCode && !enrollmentId) {
       this.notify.error('Это не похоже на код клиента');
       return;
     }
     this.stopCamera();
-    this.lookup(enrollmentId);
+    this.runLookup(
+      shortCode
+        ? this.pointsApi.lookupByCode(shortCode)
+        : this.pointsApi.lookup(enrollmentId!),
+    );
   }
 
-  private lookup(enrollmentId: string): void {
+  private runLookup(request: Observable<EnrollmentLookup>): void {
     this.busy.set(true);
-    this.pointsApi
-      .lookup(enrollmentId)
+    request
       .pipe(
         catchError(err => {
           const msg =
@@ -368,7 +374,7 @@ export class PosPage implements OnDestroy {
           this.notify.success('Операция отменена');
           if (c) {
             this.done.set(null);
-            this.lookup(c.enrollment_id);
+            this.runLookup(this.pointsApi.lookup(c.enrollment_id));
           } else {
             this.reset();
           }

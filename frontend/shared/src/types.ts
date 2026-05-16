@@ -37,6 +37,7 @@ export interface EnrollmentRead {
   id: UUID;
   customer_id: UUID;
   program_id: UUID;
+  short_code: string;
   display_name: string | null;
   is_archived: boolean;
   points_balance: number;
@@ -294,6 +295,7 @@ export interface EnrollmentLookup {
   enrollment_id: UUID;
   customer_id: UUID;
   program_id: UUID;
+  short_code: string;
   program_name: string;
   program_type: ProgramType;
   program_status: ProgramStatus;

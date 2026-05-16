@@ -26,10 +26,11 @@
 
       <div class="pos__manual">
         <label class="field">
-          <span class="field__label">Или код вручную</span>
+          <span class="field__label">Или код клиента вручную</span>
           <input
             class="field__input"
-            placeholder="enrollment-id с экрана клиента"
+            inputmode="numeric"
+            placeholder="цифровой код с экрана клиента"
             [value]="manualCode()"
             (input)="manualCode.set($any($event.target).value)"
           />

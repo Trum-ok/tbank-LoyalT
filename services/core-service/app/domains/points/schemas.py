@@ -73,6 +73,7 @@ class EnrollmentLookup(BaseModel):
     enrollment_id: UUID
     customer_id: UUID
     program_id: UUID
+    short_code: str
     program_name: str
     program_type: ProgramType
     program_status: ProgramStatus
