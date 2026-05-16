@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.transactions.models import Transaction
+from app.domains.transactions.models import Transaction, TransactionType
 from app.errors import ForbiddenError, NotFoundError
 
 
@@ -21,7 +21,14 @@ async def list_for_customer(
     limit: int = 50,
     offset: int = 0,
 ) -> list[Transaction]:
-    stmt = select(Transaction).where(Transaction.customer_id == customer_id)
+    # Клиенту не показываем «кухню» отмен: ни сами reversal-операции,
+    # ни исходную транзакцию, которую откатили (баланс при этом сходится —
+    # начисление+отмена в сумме дают ноль и просто исчезают из истории).
+    stmt = select(Transaction).where(
+        Transaction.customer_id == customer_id,
+        Transaction.type != TransactionType.REVERSAL,
+        Transaction.is_reversed.is_(False),
+    )
     if program_id is not None:
         stmt = stmt.where(Transaction.program_id == program_id)
     stmt = stmt.order_by(Transaction.created_at.desc()).limit(limit).offset(offset)
