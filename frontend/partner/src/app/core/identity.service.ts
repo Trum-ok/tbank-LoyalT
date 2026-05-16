@@ -14,7 +14,7 @@ const STORAGE_KEY = 'tbank-loyalt-partner:identity';
 // подложите id существующего партнёра, иначе FK-ограничения дадут 500/409.
 const DEMO_IDENTITIES: PartnerIdentity[] = [
   {
-    account_id: '11111111-1111-1111-1111-111111111111',
+    account_id: 'b9e8470e-20c3-4c74-9720-067a3c8959cb',
     partner_id: '1f6ea13f-7ddb-4a0a-82e9-6308a2616267',
     label: 'Кофе Хауз (демо)',
     is_demo: true,

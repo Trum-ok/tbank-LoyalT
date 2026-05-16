@@ -107,7 +107,14 @@ curl localhost:8002/admin/applications/$APP/approve \
 # 4. Партнёр редактирует профиль — событие partner.updated
 curl -X PATCH localhost:8002/partners/me \
   -H "X-Account-Id: $ACC" -H 'content-type: application/json' \
-  -d '{"logo_url":"https://cdn/logo.png","brand_color":"#7BB661"}'
+  -d '{"brand_color":"#7BB661"}'
+
+# 4b. Партнёр загружает кастомный логотип в MinIO — событие partner.updated.
+#     logo_url проставляется автоматически на публичную ссылку MinIO,
+#     каталог клиента покажет аватар вместо инициалов.
+curl -X PUT localhost:8002/partners/me/logo \
+  -H "X-Account-Id: $ACC" \
+  -F 'file=@logo.png;type=image/png'
 
 # 5. Админ блокирует — событие partner.status_changed
 PARTNER_ID=$(curl -s localhost:8002/partners/me -H "X-Account-Id: $ACC" | jq -r .id)
@@ -121,4 +128,3 @@ curl -X POST localhost:8002/admin/partners/$PARTNER_ID/block \
 - Несколько аккаунтов на одного партнёра (сотрудники ЛК).
 - Аналитика (дашборд для партнёра) — требует доступа к данным core.
 - Коммуникации (рассылки push-сегментам) — после notification-service.
-- Загрузка логотипа (S3/storage), а не только URL.

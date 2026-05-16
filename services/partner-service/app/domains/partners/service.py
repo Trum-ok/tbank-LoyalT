@@ -109,6 +109,21 @@ async def update_partner_profile(
     return partner
 
 
+async def set_logo_url(
+    session: AsyncSession, account_id: UUID, logo_url: str
+) -> Partner:
+    """Проставить ссылку на логотип (после загрузки файла в хранилище)
+    и опубликовать `partner.updated`, чтобы каталог клиента подхватил аватар."""
+    partner = await get_partner_by_account(session, account_id)
+    partner.logo_url = logo_url
+    await session.commit()
+    await session.refresh(partner)
+    await publisher.publish(
+        "partner.updated", _to_event_payload(partner), key=str(partner.id)
+    )
+    return partner
+
+
 async def set_status(
     session: AsyncSession, partner_id: UUID, target: PartnerStatus
 ) -> Partner:

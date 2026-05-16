@@ -1,7 +1,9 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
+from app import storage
+from app.config import get_settings
 from app.deps import CurrentAccountId, CurrentAdminId, SessionDep
 from app.domains.partners import service
 from app.domains.partners.models import PartnerStatus
@@ -26,6 +28,45 @@ async def update_my_partner(
     session: SessionDep,
 ) -> PartnerRead:
     partner = await service.update_partner_profile(session, account_id, data)
+    return PartnerRead.model_validate(partner)
+
+
+@partner_router.put("/me/logo", response_model=PartnerRead)
+async def upload_my_logo(
+    account_id: CurrentAccountId,
+    session: SessionDep,
+    file: UploadFile = File(...),
+) -> PartnerRead:
+    """Загрузить кастомный логотип (PNG/SVG/JPEG/WebP) в MinIO.
+
+    Файл кладётся в публичный bucket, `logo_url` проставляется на прямую
+    ссылку — каталог клиента покажет аватар вместо инициалов.
+    """
+    content_type = (file.content_type or "").split(";")[0].strip().lower()
+    if content_type not in storage.EXT_BY_CONTENT_TYPE:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Поддерживаются только PNG, SVG, JPEG и WebP",
+        )
+
+    settings = get_settings()
+    data = await file.read()
+    if not data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пустой файл",
+        )
+    if len(data) > settings.logo_max_bytes:
+        limit_mb = settings.logo_max_bytes / (1024 * 1024)
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Файл больше {limit_mb:.0f} МБ",
+        )
+
+    # partner_id нужен как стабильный ключ объекта в хранилище.
+    partner = await service.get_partner_by_account(session, account_id)
+    logo_url = await storage.upload_logo(partner.id, data, content_type)
+    partner = await service.set_logo_url(session, account_id, logo_url)
     return PartnerRead.model_validate(partner)
 
 

@@ -78,19 +78,36 @@
         </label>
       </div>
 
-      <label class="field">
-        <span class="field__label">Ссылка на логотип</span>
-        <input
-          class="field__input"
-          type="url"
-          placeholder="https://..."
-          [value]="form().logo_url ?? ''"
-          (input)="patch('logo_url', $any($event.target).value)"
-        />
-        <span class="field__hint">
-          Квадратный PNG или SVG, желательно прозрачный фон.
-        </span>
-      </label>
+      <div class="field">
+        <span class="field__label">Логотип</span>
+        <div class="profile__logo-upload">
+          @if (p.logo_url) {
+            <img class="profile__logo-preview" [src]="p.logo_url" [alt]="p.name" />
+          } @else {
+            <span
+              class="profile__logo-preview profile__logo-preview--initials"
+            >
+              {{ p.name.slice(0, 2).toUpperCase() }}
+            </span>
+          }
+          <div class="profile__logo-actions">
+            <label class="btn btn--ghost">
+              {{ uploadingLogo() ? 'Загружаем…' : 'Загрузить файл' }}
+              <input
+                type="file"
+                accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                hidden
+                [disabled]="uploadingLogo()"
+                (change)="onLogoSelected($event)"
+              />
+            </label>
+            <span class="field__hint">
+              Квадратный PNG или SVG, прозрачный фон, до 2 МБ. Применяется
+              сразу — отдельно сохранять не нужно.
+            </span>
+          </div>
+        </div>
+      </div>
 
       <div class="row row--2">
         <label class="field">

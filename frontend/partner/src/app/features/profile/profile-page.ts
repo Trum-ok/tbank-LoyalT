@@ -35,7 +35,17 @@ export class ProfilePage {
 
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly uploadingLogo = signal(false);
   readonly error = signal<string | null>(null);
+
+  // Должно совпадать с PARTNER_LOGO_MAX_BYTES на бэкенде (2 МБ).
+  private readonly logoMaxBytes = 2 * 1024 * 1024;
+  private readonly logoAccept = [
+    'image/png',
+    'image/svg+xml',
+    'image/jpeg',
+    'image/webp',
+  ];
   readonly partner = signal<PartnerRead | null>(null);
   readonly account = signal<AccountRead | null>(null);
 
@@ -86,6 +96,48 @@ export class ProfilePage {
 
   patch<K extends keyof PartnerUpdate>(key: K, value: PartnerUpdate[K]): void {
     this.form.update(f => ({ ...f, [key]: value }));
+  }
+
+  onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    if (!this.logoAccept.includes(file.type)) {
+      this.notify.error('Поддерживаются только PNG, SVG, JPEG и WebP');
+      input.value = '';
+      return;
+    }
+    if (file.size > this.logoMaxBytes) {
+      this.notify.error('Файл больше 2 МБ');
+      input.value = '';
+      return;
+    }
+
+    this.uploadingLogo.set(true);
+    this.error.set(null);
+    this.partnerApi
+      .uploadLogo(file)
+      .pipe(
+        catchError(err => {
+          const msg = err?.error?.detail ?? 'Не удалось загрузить логотип';
+          this.error.set(msg);
+          this.notify.error(msg);
+          return of(null);
+        }),
+        finalize(() => {
+          this.uploadingLogo.set(false);
+          input.value = '';
+        }),
+      )
+      .subscribe(p => {
+        if (p) {
+          this.partner.set(p);
+          this.form.update(f => ({ ...f, logo_url: p.logo_url ?? '' }));
+          this.notify.success('Логотип обновлён');
+        }
+      });
   }
 
   save(): void {

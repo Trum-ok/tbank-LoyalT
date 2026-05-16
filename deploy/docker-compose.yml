@@ -63,6 +63,20 @@ services:
       timeout: 5s
       retries: 20
 
+  minio:
+    image: minio/minio:RELEASE.2024-08-17T01-24-54Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      # 9000 — S3 API (его адрес сохраняется в logo_url, должен быть доступен
+      # из браузера клиента). 9001 — веб-консоль MinIO.
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
   core-service:
     <<: *service-base
     working_dir: /app/services/core-service
@@ -97,6 +111,20 @@ services:
       # Резолв аудитории рассылок: внутренний REST-вызов в core-service
       # (внутри сети контейнеров — порт 8000, не хостовый 8001).
       PARTNER_CORE_BASE_URL: http://core-service:8000
+      # MinIO: SDK ходит во внутренний адрес контейнера, а в logo_url
+      # сохраняется хостовый адрес — его открывает браузер клиента.
+      PARTNER_S3_ENDPOINT_URL: http://minio:9000
+      PARTNER_S3_PUBLIC_URL: http://localhost:9000
+      PARTNER_S3_ACCESS_KEY: minioadmin
+      PARTNER_S3_SECRET_KEY: minioadmin
+      PARTNER_S3_BUCKET: partner-logos
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_started
     ports:
       - "8002:8000"
 
@@ -143,3 +171,4 @@ services:
 volumes:
   pgdata:
   kafka_data:
+  minio_data:

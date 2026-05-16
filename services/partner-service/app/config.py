@@ -37,6 +37,19 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_topic_partner_events: str = "partner.events"
 
+    # MinIO / S3-совместимое хранилище логотипов партнёров.
+    # s3_endpoint_url — адрес для SDK (внутри docker-сети это http://minio:9000).
+    # s3_public_url — базовый URL, который видит браузер клиента и который
+    # сохраняется в logo_url (на хосте это http://localhost:9000).
+    s3_endpoint_url: str = "http://localhost:9000"
+    s3_public_url: str = "http://localhost:9000"
+    s3_access_key: str = "minioadmin"
+    s3_secret_key: str = "minioadmin"
+    s3_region: str = "us-east-1"
+    s3_bucket: str = "partner-logos"
+    # Лимит размера загружаемого логотипа, байт (по умолчанию 2 МБ).
+    logo_max_bytes: int = 2 * 1024 * 1024
+
 
 @lru_cache
 def get_settings() -> Settings:

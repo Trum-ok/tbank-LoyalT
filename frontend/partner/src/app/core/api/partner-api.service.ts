@@ -17,4 +17,10 @@ export class PartnerApi {
   updateMe(body: PartnerUpdate): Observable<PartnerRead> {
     return this.http.patch<PartnerRead>(`${this.base}/partners/me`, body);
   }
+
+  uploadLogo(file: File): Observable<PartnerRead> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.put<PartnerRead>(`${this.base}/partners/me/logo`, form);
+  }
 }

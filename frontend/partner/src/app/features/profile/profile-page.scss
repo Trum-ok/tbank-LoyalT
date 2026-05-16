@@ -69,6 +69,44 @@
     }
   }
 
+  &__logo-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 6px;
+  }
+
+  &__logo-preview {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--brand, #ffdd2d);
+    object-fit: cover;
+    flex-shrink: 0;
+
+    &--initials {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #1c1c1e;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  &__logo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+
+    .btn {
+      align-self: flex-start;
+      cursor: pointer;
+    }
+  }
+
   &__name {
     margin: 0;
     font-size: 22px;
