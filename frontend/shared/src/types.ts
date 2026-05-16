@@ -389,3 +389,45 @@ export interface AnalyticsRead {
   retention: AnalyticsRetention;
   heatmap: AnalyticsHeatmap;
 }
+
+export type BroadcastSegment =
+  | 'all_enrolled'
+  | 'active_30d'
+  | 'by_program'
+  | 'balance_positive'
+  | 'new_7d';
+
+export type BroadcastStatus = 'draft' | 'sent' | 'failed';
+
+export interface BroadcastRead {
+  id: UUID;
+  partner_id: UUID;
+  title: string;
+  body: string;
+  segment: BroadcastSegment;
+  program_id: UUID | null;
+  status: BroadcastStatus;
+  audience_count: number | null;
+  sent_count: number | null;
+  sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BroadcastCreate {
+  title: string;
+  body: string;
+  segment: BroadcastSegment;
+  program_id?: UUID | null;
+}
+
+export interface BroadcastUpdate {
+  title?: string;
+  body?: string;
+  segment?: BroadcastSegment;
+  program_id?: UUID | null;
+}
+
+export interface AudiencePreview {
+  count: number;
+}

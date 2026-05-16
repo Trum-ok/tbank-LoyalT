@@ -94,6 +94,9 @@ services:
       PARTNER_KAFKA_ENABLED: "true"
       PARTNER_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PARTNER_KAFKA_TOPIC_PARTNER_EVENTS: partner.events
+      # Резолв аудитории рассылок: внутренний REST-вызов в core-service
+      # (внутри сети контейнеров — порт 8000, не хостовый 8001).
+      PARTNER_CORE_BASE_URL: http://core-service:8000
     ports:
       - "8002:8000"
 

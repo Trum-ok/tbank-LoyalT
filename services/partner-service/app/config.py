@@ -23,6 +23,9 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
+    # Внутренний REST-вызов в core-service (резолв аудитории рассылок).
+    core_base_url: str = "http://localhost:8001"
+
     # JWT кассира (HS256). Секрет ОБЯЗАН совпадать с CORE_JWT_SECRET,
     # иначе core-service не примет токен кассы.
     jwt_secret: str = "dev-tbank-loyalt-cashier-jwt-secret-change-in-prod"

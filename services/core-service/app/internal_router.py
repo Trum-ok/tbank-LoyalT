@@ -1,12 +1,34 @@
 from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 from pydantic import BaseModel, Field
 
+from app.audience import AudienceSegment, resolve_audience
 from app.deps import SessionDep
 from app.inbox import handle_event
 
 router = APIRouter(prefix="/internal", tags=["internal"])
+
+
+class AudienceResponse(BaseModel):
+    count: int
+    customer_ids: list[UUID]
+
+
+@router.get("/partner-audience", response_model=AudienceResponse)
+async def partner_audience(
+    session: SessionDep,
+    partner_id: UUID,
+    segment: AudienceSegment = Query(default=AudienceSegment.ALL_ENROLLED),
+    program_id: UUID | None = Query(default=None),
+) -> AudienceResponse:
+    """Список customer_id для сегмента партнёра (для рассылок).
+
+    Внутренний эндпоинт: вызывается partner-service по внутренней сети.
+    """
+    ids = await resolve_audience(session, partner_id, segment, program_id)
+    return AudienceResponse(count=len(ids), customer_ids=ids)
 
 
 class IncomingEvent(BaseModel):

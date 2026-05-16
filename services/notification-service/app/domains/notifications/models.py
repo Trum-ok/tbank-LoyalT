@@ -16,6 +16,7 @@ class NotificationType(StrEnum):
     POINTS_EXPIRING = "points_expiring"  # «120 баллов сгорят через 3 дня»
     REWARD_AVAILABLE = "reward_available"  # «Накопили на бесплатный кофе!»
     NEW_PROMOTION = "new_promotion"  # «Двойные баллы по средам у Кофе Хауза»
+    BROADCAST = "broadcast"  # ручная рассылка партнёра из ЛК
     PARTNER_APPROVED = "partner_approved"  # системное — информационное
 
 

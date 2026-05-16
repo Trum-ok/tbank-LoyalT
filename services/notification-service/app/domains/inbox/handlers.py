@@ -105,6 +105,49 @@ async def _on_new_promotion(session: AsyncSession, payload: dict[str, Any]) -> N
     )
 
 
+async def _on_partner_broadcast(session: AsyncSession, payload: dict[str, Any]) -> None:
+    """Ручная рассылка из ЛК партнёра: фан-аут на список клиентов.
+
+    Адресаты уже разрешены partner-service (через core-service) и переданы
+    в payload.customer_ids — здесь только создаём по уведомлению на каждого.
+    """
+    title = payload.get("title") or "Сообщение от партнёра"
+    body = payload.get("body") or ""
+    customer_ids = payload.get("customer_ids") or []
+    if not customer_ids:
+        logger.info(
+            "broadcast %s: empty audience, nothing to deliver",
+            payload.get("broadcast_id"),
+        )
+        return
+    delivered = 0
+    for raw_id in customer_ids:
+        try:
+            await notifications_service.create_and_deliver(
+                session,
+                NotificationCreate(
+                    customer_id=UUID(str(raw_id)),
+                    type=NotificationType.BROADCAST,
+                    title=title,
+                    body=body,
+                    payload={
+                        "broadcast_id": payload.get("broadcast_id"),
+                        "partner_id": payload.get("partner_id"),
+                        "segment": payload.get("segment"),
+                    },
+                ),
+            )
+            delivered += 1
+        except Exception:
+            logger.exception("broadcast: failed for customer=%s", raw_id)
+    logger.info(
+        "broadcast %s delivered to %s/%s customers",
+        payload.get("broadcast_id"),
+        delivered,
+        len(customer_ids),
+    )
+
+
 async def _on_partner_approved(session: AsyncSession, payload: dict[str, Any]) -> None:
     # Системное информационное событие. Push клиентам не нужен.
     logger.info("partner approved: %s (%s)", payload.get("name"), payload.get("inn"))
@@ -116,6 +159,7 @@ HANDLERS: dict[str, Handler] = {
     "points.expiring": _on_points_expiring,
     "reward.available": _on_reward_available,
     "partner.new_promotion": _on_new_promotion,
+    "partner.broadcast": _on_partner_broadcast,
     "partner.approved": _on_partner_approved,
 }
 

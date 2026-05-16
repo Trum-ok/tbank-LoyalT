@@ -10,6 +10,7 @@ from app.config import get_settings
 from app.domains.accounts.router import router as accounts_router
 from app.domains.applications.router import admin_router as applications_admin_router
 from app.domains.applications.router import partner_router as applications_partner_router
+from app.domains.broadcasts.router import router as broadcasts_router
 from app.domains.partners.router import admin_router as partners_admin_router
 from app.domains.partners.router import partner_router as partners_partner_router
 from app.domains.staff.router import auth_router as staff_auth_router
@@ -67,6 +68,7 @@ def create_app() -> FastAPI:
         applications_admin_router,
         partners_partner_router,
         partners_admin_router,
+        broadcasts_router,
         staff_auth_router,
         staff_router,
     ):

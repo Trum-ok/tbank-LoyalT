@@ -1,0 +1,240 @@
+.broadcasts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__error {
+    padding: 12px 16px;
+    border-radius: var(--tbank-radius);
+    background: rgba(255, 80, 80, 0.12);
+    color: var(--tbank-red);
+    font-size: 13px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 14px;
+  }
+
+  &__audience {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: var(--tbank-radius);
+    background: var(--tbank-surface-2);
+    border: 1px solid var(--tbank-divider);
+  }
+
+  &__audience-num {
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__audience-cap {
+    font-size: 12px;
+    color: var(--tbank-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--tbank-surface);
+  border: 1px solid var(--tbank-divider);
+  border-radius: var(--tbank-radius);
+  padding: 20px;
+}
+
+.card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.card__sub {
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: var(--tbank-text-muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: var(--tbank-radius-sm);
+    border: 1px solid var(--tbank-divider);
+    background: var(--tbank-surface-2);
+    color: var(--tbank-text);
+    font-size: 14px;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--tbank-yellow);
+    }
+
+    &--area {
+      resize: vertical;
+      min-height: 90px;
+    }
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--tbank-text-muted);
+  }
+}
+
+.preview {
+  padding: 16px;
+  border-radius: var(--tbank-radius);
+  background: var(--tbank-bg, var(--tbank-surface-2));
+  border: 1px dashed var(--tbank-divider);
+
+  &__note {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 221, 45, 0.08),
+      var(--tbank-surface)
+    );
+    border: 1px solid rgba(255, 221, 45, 0.32);
+    border-radius: 18px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      right: 16px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--tbank-yellow);
+    }
+  }
+
+  &__head {
+    font-weight: 600;
+    font-size: 14px;
+    padding-right: 20px;
+  }
+
+  &__body {
+    margin: 0;
+    color: var(--tbank-text-muted);
+    line-height: 1.4;
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
+
+  &__time {
+    font-size: 11px;
+    color: var(--tbank-text-muted);
+  }
+}
+
+.blist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--tbank-radius-sm);
+    background: var(--tbank-surface-2);
+    border: 1px solid var(--tbank-divider);
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: var(--tbank-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(70, 200, 120, 0.16);
+  color: var(--tbank-green);
+
+  &--failed {
+    background: rgba(255, 80, 80, 0.16);
+    color: var(--tbank-red);
+  }
+}
+
+.btn--sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn--danger {
+  background: rgba(255, 80, 80, 0.14);
+  color: var(--tbank-red);
+  border: 1px solid rgba(255, 80, 80, 0.28);
+}
+
+@media (max-width: 900px) {
+  .broadcasts__grid {
+    grid-template-columns: 1fr;
+  }
+}

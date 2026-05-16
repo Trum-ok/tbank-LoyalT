@@ -1,0 +1,188 @@
+<section class="page broadcasts">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Рассылки</h1>
+      <p class="page-subtitle">
+        Push-уведомления клиентам: акции, напоминания, новости. Выберите
+        сегмент, проверьте предпросмотр и количество получателей.
+      </p>
+    </div>
+    <button type="button" class="btn btn--ghost" (click)="newDraft()">
+      Новая рассылка
+    </button>
+  </header>
+
+  @if (error()) {
+    <div class="broadcasts__error">{{ error() }}</div>
+  }
+
+  <div class="broadcasts__grid">
+    <section class="card">
+      <h2 class="card__title">
+        {{ editingId() ? 'Редактирование черновика' : 'Новая рассылка' }}
+      </h2>
+
+      <label class="field">
+        <span class="field__label">Заголовок</span>
+        <input
+          class="field__input"
+          type="text"
+          maxlength="255"
+          placeholder="Например: Двойные баллы в эти выходные"
+          [ngModel]="title()"
+          (ngModelChange)="title.set($event)"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Текст</span>
+        <textarea
+          class="field__input field__input--area"
+          rows="4"
+          maxlength="1000"
+          placeholder="Что хотите сообщить клиентам?"
+          [ngModel]="body()"
+          (ngModelChange)="body.set($event)"
+        ></textarea>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Сегмент аудитории</span>
+        <select
+          class="field__input"
+          [ngModel]="segment()"
+          (ngModelChange)="onSegmentChange($event)"
+        >
+          @for (s of segments; track s.code) {
+            <option [value]="s.code">{{ s.label }}</option>
+          }
+        </select>
+        <span class="field__hint">{{ segmentHint() }}</span>
+      </label>
+
+      @if (needsProgram()) {
+        <label class="field">
+          <span class="field__label">Программа</span>
+          <select
+            class="field__input"
+            [ngModel]="programId()"
+            (ngModelChange)="onProgramChange($event)"
+          >
+            <option [ngValue]="null" disabled>Выберите программу</option>
+            @for (p of programs(); track p.id) {
+              <option [value]="p.id">{{ p.name }}</option>
+            }
+          </select>
+        </label>
+      }
+
+      <div class="broadcasts__audience">
+        @if (audienceLoading()) {
+          <span class="broadcasts__audience-num">…</span>
+        } @else if (audienceCount() === null) {
+          <span class="broadcasts__audience-num">—</span>
+        } @else {
+          <span class="broadcasts__audience-num">{{ audienceCount() }}</span>
+        }
+        <span class="broadcasts__audience-cap">получателей в сегменте</span>
+      </div>
+
+      <div class="broadcasts__actions">
+        <button
+          type="button"
+          class="btn btn--ghost"
+          [disabled]="!canSubmit() || saving()"
+          (click)="saveDraft()"
+        >
+          {{ saving() ? 'Сохраняем…' : 'Сохранить черновик' }}
+        </button>
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="!canSubmit() || sending()"
+          (click)="sendCurrent()"
+        >
+          {{ sending() ? 'Отправляем…' : 'Отправить' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">Предпросмотр у клиента</h2>
+      <p class="card__sub">Так уведомление увидит клиент в приложении.</p>
+      <div class="preview">
+        <div class="preview__note is-unread">
+          <div class="preview__head">
+            {{ title().trim() || 'Заголовок уведомления' }}
+          </div>
+          <p class="preview__body">
+            {{ body().trim() || 'Текст уведомления появится здесь.' }}
+          </p>
+          <span class="preview__time">только что</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2 class="card__title">Черновики</h2>
+    @if (loading()) {
+      <p class="card__sub">Загрузка…</p>
+    } @else if (drafts().length === 0) {
+      <p class="card__sub">Черновиков нет.</p>
+    } @else {
+      <ul class="blist">
+        @for (b of drafts(); track b.id) {
+          <li class="blist__item">
+            <div class="blist__main">
+              <span class="blist__title">{{ b.title }}</span>
+              <span class="blist__sub">
+                {{ segmentLabel(b.segment) }}
+                @if (b.segment === 'by_program') {
+                  · {{ programName(b.program_id) }}
+                }
+              </span>
+            </div>
+            <div class="blist__actions">
+              <button type="button" class="btn btn--ghost btn--sm" (click)="editDraft(b)">
+                Открыть
+              </button>
+              <button type="button" class="btn btn--danger btn--sm" (click)="deleteDraft(b)">
+                Удалить
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">История отправленных</h2>
+    @if (loading()) {
+      <p class="card__sub">Загрузка…</p>
+    } @else if (history().length === 0) {
+      <p class="card__sub">Пока ничего не отправлено.</p>
+    } @else {
+      <ul class="blist">
+        @for (b of history(); track b.id) {
+          <li class="blist__item">
+            <div class="blist__main">
+              <span class="blist__title">
+                {{ b.title }}
+                <span class="badge" [class.badge--failed]="b.status === 'failed'">
+                  {{ b.status === 'failed' ? 'ошибка' : 'отправлено' }}
+                </span>
+              </span>
+              <span class="blist__sub">
+                {{ segmentLabel(b.segment) }} ·
+                {{ b.sent_count ?? 0 }} получателей ·
+                {{ formatDateTime(b.sent_at) }}
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>

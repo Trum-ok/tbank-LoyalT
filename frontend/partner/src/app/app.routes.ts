@@ -43,6 +43,14 @@ export const routes: Routes = [
     title: 'Транзакции',
   },
   {
+    path: 'broadcasts',
+    loadComponent: () =>
+      import('./features/broadcasts/broadcasts-page').then(
+        m => m.BroadcastsPage,
+      ),
+    title: 'Рассылки',
+  },
+  {
     path: 'staff',
     loadComponent: () =>
       import('./features/staff/staff-page').then(m => m.StaffPage),
