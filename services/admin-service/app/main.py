@@ -14,9 +14,7 @@ from app.domains.metrics.router import router as metrics_router
 from app.domains.moderation.router import (
     applications_router as moderation_applications_router,
 )
-from app.domains.moderation.router import (
-    partners_router as moderation_partners_router,
-)
+from app.domains.moderation.router import partners_router as moderation_partners_router
 
 settings = get_settings()
 

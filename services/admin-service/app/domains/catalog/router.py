@@ -19,6 +19,7 @@ router = APIRouter(prefix="/catalog", tags=["catalog"])
 
 # --- categories ---
 
+
 @router.get("/categories", response_model=list[CategoryRead])
 async def list_categories(_: CurrentAdmin, session: SessionDep) -> list[CategoryRead]:
     items = await service.list_categories(session)
@@ -37,6 +38,7 @@ async def upsert_category(
 
 
 # --- featured partners ---
+
 
 @router.get("/featured", response_model=list[FeaturedPartnerRead])
 async def list_featured(
@@ -69,6 +71,7 @@ async def remove_featured(
 
 # --- banners ---
 
+
 @router.get("/banners", response_model=list[BannerRead])
 async def list_banners(
     _: CurrentAdmin,
@@ -99,7 +102,5 @@ async def update_banner(
 
 
 @router.delete("/banners/{banner_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_banner(
-    banner_id: UUID, _: CurrentAdmin, session: SessionDep
-) -> None:
+async def delete_banner(banner_id: UUID, _: CurrentAdmin, session: SessionDep) -> None:
     await service.delete_banner(session, banner_id)

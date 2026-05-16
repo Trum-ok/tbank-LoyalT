@@ -98,7 +98,7 @@ async def list_categories(session: AsyncSession) -> list[CatalogCategory]:
         .group_by(Partner.category)
     )
     result = await session.execute(stmt)
-    counts: dict[PartnerCategory, int] = dict(result.all())
+    counts: dict[PartnerCategory, int] = {row[0]: row[1] for row in result.all()}
     return [
         CatalogCategory(code=cat, label=label, programs_count=counts.get(cat, 0))
         for cat, label in _CATEGORY_LABELS.items()

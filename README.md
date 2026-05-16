@@ -3,6 +3,7 @@
 > Команда **LLM Chads**. Решение кейса LoyalT.
 
 <p align="center">
+  <a href="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/lint.yml"><img src="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/lint.yml/badge.svg" alt="lint"></a>
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/PostgreSQL-schema--per--service-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">

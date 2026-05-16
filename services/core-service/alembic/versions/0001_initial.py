@@ -37,8 +37,12 @@ def upgrade() -> None:
             nullable=False,
             server_default="active",
         ),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.UniqueConstraint("inn", name="uq_partner_inn"),
         schema=SCHEMA,
     )
@@ -46,8 +50,12 @@ def upgrade() -> None:
     op.create_table(
         "customer",
         sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         schema=SCHEMA,
     )
 
@@ -65,14 +73,16 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
         ),
         sa.Column("points_ttl_days", sa.Integer(), nullable=True),
-        sa.Column(
-            "min_redemption", sa.Integer(), nullable=False, server_default="0"
-        ),
+        sa.Column("min_redemption", sa.Integer(), nullable=False, server_default="0"),
         sa.Column(
             "status", sa.String(length=16), nullable=False, server_default="draft"
         ),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["partner_id"], [f"{SCHEMA}.partner.id"], ondelete="CASCADE"
         ),
@@ -96,8 +106,12 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
         ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["program_id"], [f"{SCHEMA}.program.id"], ondelete="CASCADE"
         ),
@@ -112,11 +126,13 @@ def upgrade() -> None:
         sa.Column("program_id", sa.Uuid(), nullable=False),
         sa.Column("display_name", sa.String(length=255), nullable=True),
         sa.Column("is_archived", sa.Boolean(), nullable=False, server_default="false"),
+        sa.Column("points_balance", sa.Integer(), nullable=False, server_default="0"),
         sa.Column(
-            "points_balance", sa.Integer(), nullable=False, server_default="0"
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
         ),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["customer_id"], [f"{SCHEMA}.customer.id"], ondelete="CASCADE"
         ),
@@ -150,8 +166,12 @@ def upgrade() -> None:
         sa.Column("expires_at", sa.DateTime(), nullable=True),
         sa.Column("is_reversed", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("description", sa.String(length=500), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["enrollment_id"], [f"{SCHEMA}.enrollment.id"], ondelete="CASCADE"
         ),

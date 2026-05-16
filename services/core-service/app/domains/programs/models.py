@@ -31,7 +31,9 @@ class Program(UUIDPKMixin, TimestampsMixin, Base):
         Index("ix_program_status", "status"),
     )
 
-    partner_id: Mapped[UUID] = mapped_column(ForeignKey("partner.id", ondelete="CASCADE"))
+    partner_id: Mapped[UUID] = mapped_column(
+        ForeignKey("partner.id", ondelete="CASCADE")
+    )
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(String(2000))
     type: Mapped[ProgramType] = mapped_column(String(16))
@@ -47,5 +49,7 @@ class Program(UUIDPKMixin, TimestampsMixin, Base):
     min_redemption: Mapped[int] = mapped_column(default=0, server_default="0")
 
     status: Mapped[ProgramStatus] = mapped_column(
-        String(16), default=ProgramStatus.DRAFT, server_default=ProgramStatus.DRAFT.value
+        String(16),
+        default=ProgramStatus.DRAFT,
+        server_default=ProgramStatus.DRAFT.value,
     )

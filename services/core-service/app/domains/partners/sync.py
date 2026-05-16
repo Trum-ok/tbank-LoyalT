@@ -64,9 +64,7 @@ async def upsert_partner(session: AsyncSession, payload: dict[str, Any]) -> Part
     else:
         partner.inn = payload.get("inn", partner.inn)
         partner.name = payload.get("name", partner.name)
-        partner.category = _coerce_category(
-            payload.get("category", partner.category)
-        )
+        partner.category = _coerce_category(payload.get("category", partner.category))
         if "logo_url" in payload:
             partner.logo_url = payload["logo_url"]
         if "brand_color" in payload:

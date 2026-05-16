@@ -11,4 +11,6 @@ class AdminAccount(UUIDPKMixin, TimestampsMixin, Base):
 
     email: Mapped[str] = mapped_column(String(255), unique=True)
     full_name: Mapped[str | None] = mapped_column(String(255))
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )

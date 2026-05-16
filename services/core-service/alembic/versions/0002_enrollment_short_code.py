@@ -35,14 +35,11 @@ def upgrade() -> None:
     for offset, (enrollment_id,) in enumerate(rows):
         bind.execute(
             sa.text(
-                f'UPDATE "{SCHEMA}".enrollment '
-                "SET short_code = :code WHERE id = :id"
+                f'UPDATE "{SCHEMA}".enrollment ' "SET short_code = :code WHERE id = :id"
             ).bindparams(code=str(1000 + offset), id=enrollment_id)
         )
 
-    op.alter_column(
-        "enrollment", "short_code", nullable=False, schema=SCHEMA
-    )
+    op.alter_column("enrollment", "short_code", nullable=False, schema=SCHEMA)
     op.create_unique_constraint(
         "uq_enrollment_short_code", "enrollment", ["short_code"], schema=SCHEMA
     )

@@ -7,13 +7,13 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.domains.programs.models import ProgramStatus, ProgramType
 
 
-def _validate_accrual_rule(program_type: ProgramType, rule: dict[str, Any]) -> dict[str, Any]:
+def _validate_accrual_rule(
+    program_type: ProgramType, rule: dict[str, Any]
+) -> dict[str, Any]:
     match program_type:
         case ProgramType.ACCRUAL:
             if "percent" not in rule and "points_per_rub" not in rule:
-                raise ValueError(
-                    "accrual rule requires 'percent' or 'points_per_rub'"
-                )
+                raise ValueError("accrual rule requires 'percent' or 'points_per_rub'")
         case ProgramType.VISIT:
             if "points_per_visit" not in rule:
                 raise ValueError("visit rule requires 'points_per_visit'")

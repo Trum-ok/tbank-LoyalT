@@ -55,8 +55,7 @@ _COLUMNS = (
 
 
 def _create_partitioned_table() -> None:
-    op.execute(
-        f"""
+    op.execute(f"""
         CREATE TABLE "{SCHEMA}".transaction (
             id UUID NOT NULL,
             enrollment_id UUID NOT NULL,
@@ -90,8 +89,7 @@ def _create_partitioned_table() -> None:
                 FOREIGN KEY (reward_id)
                 REFERENCES "{SCHEMA}".reward (id) ON DELETE SET NULL
         ) PARTITION BY HASH (partner_id)
-        """
-    )
+        """)
     for i in range(PARTITIONS):
         op.execute(
             f'CREATE TABLE "{SCHEMA}".transaction_p{i} '
@@ -131,9 +129,7 @@ def _create_indexes() -> None:
 def upgrade() -> None:
     cols = ", ".join(_COLUMNS)
 
-    op.execute(
-        f'ALTER TABLE "{SCHEMA}".transaction RENAME TO transaction_old'
-    )
+    op.execute(f'ALTER TABLE "{SCHEMA}".transaction RENAME TO transaction_old')
     _create_partitioned_table()
     op.execute(
         f'INSERT INTO "{SCHEMA}".transaction ({cols}) '
@@ -146,12 +142,9 @@ def upgrade() -> None:
 def downgrade() -> None:
     cols = ", ".join(_COLUMNS)
 
-    op.execute(
-        f'ALTER TABLE "{SCHEMA}".transaction RENAME TO transaction_part'
-    )
+    op.execute(f'ALTER TABLE "{SCHEMA}".transaction RENAME TO transaction_part')
     # Обычная (непартиционированная) таблица с исходным PK и self-FK.
-    op.execute(
-        f"""
+    op.execute(f"""
         CREATE TABLE "{SCHEMA}".transaction (
             id UUID NOT NULL,
             enrollment_id UUID NOT NULL,
@@ -188,8 +181,7 @@ def downgrade() -> None:
                 FOREIGN KEY (reverses_id)
                 REFERENCES "{SCHEMA}".transaction (id) ON DELETE SET NULL
         )
-        """
-    )
+        """)
     op.execute(
         f'INSERT INTO "{SCHEMA}".transaction ({cols}) '
         f'SELECT {cols} FROM "{SCHEMA}".transaction_part'

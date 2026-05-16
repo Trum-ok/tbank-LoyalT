@@ -21,9 +21,7 @@ auth_router = APIRouter(prefix="/staff", tags=["staff-auth"])
 
 @auth_router.post("/login", response_model=StaffLoginResponse)
 async def login(data: StaffLoginRequest, session: SessionDep) -> StaffLoginResponse:
-    staff, partner = await service.authenticate(
-        session, data.login_code, data.pin
-    )
+    staff, partner = await service.authenticate(session, data.login_code, data.pin)
     return StaffLoginResponse(
         access_token=tokens.issue(staff.id, partner.id),
         token_type="bearer",

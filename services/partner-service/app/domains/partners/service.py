@@ -50,9 +50,7 @@ async def approve_application_and_create_partner(
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
-        raise ConflictError(
-            "Partner with this INN or account already exists"
-        ) from exc
+        raise ConflictError("Partner with this INN or account already exists") from exc
     await session.refresh(partner)
 
     await publisher.publish(
@@ -71,7 +69,9 @@ async def get_partner(session: AsyncSession, partner_id: UUID) -> Partner:
 
 
 async def get_partner_by_account(session: AsyncSession, account_id: UUID) -> Partner:
-    result = await session.execute(select(Partner).where(Partner.account_id == account_id))
+    result = await session.execute(
+        select(Partner).where(Partner.account_id == account_id)
+    )
     partner = result.scalar_one_or_none()
     if partner is None:
         raise NotFoundError("Partner not found for this account")
@@ -139,5 +139,3 @@ async def set_status(
         key=str(partner.id),
     )
     return partner
-
-

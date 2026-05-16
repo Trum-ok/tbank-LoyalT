@@ -30,8 +30,12 @@ def upgrade() -> None:
         sa.Column("token", sa.String(length=512), nullable=False),
         sa.Column("platform", sa.String(length=16), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.UniqueConstraint("customer_id", "token", name="uq_device_customer_token"),
         schema=SCHEMA,
     )
@@ -59,8 +63,12 @@ def upgrade() -> None:
         sa.Column("delivered_at", sa.DateTime(), nullable=True),
         sa.Column("delivery_error", sa.String(length=2000), nullable=True),
         sa.Column("is_read", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         schema=SCHEMA,
     )
     op.create_index(

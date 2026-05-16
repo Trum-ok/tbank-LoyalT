@@ -36,5 +36,7 @@ class Partner(UUIDPKMixin, TimestampsMixin, Base):
     logo_url: Mapped[str | None] = mapped_column(String(1024))
     brand_color: Mapped[str | None] = mapped_column(String(16))
     status: Mapped[PartnerStatus] = mapped_column(
-        String(16), default=PartnerStatus.ACTIVE, server_default=PartnerStatus.ACTIVE.value
+        String(16),
+        default=PartnerStatus.ACTIVE,
+        server_default=PartnerStatus.ACTIVE.value,
     )
