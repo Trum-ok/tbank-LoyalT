@@ -11,7 +11,6 @@ import { TuiRoot } from '@taiga-ui/core';
 import { filter, map, startWith } from 'rxjs';
 
 import { EnrollmentsStore } from './core/enrollments.store';
-import { formatPoints } from './core/format';
 import { PageActionsService } from './core/page-actions.service';
 import { RoleSwitcher } from './shared-ui/role-switcher/role-switcher';
 import { ThemeToggle } from './shared-ui/theme-toggle/theme-toggle';
@@ -36,7 +35,6 @@ export class App {
   private readonly router = inject(Router);
 
   protected readonly enrollments = inject(EnrollmentsStore);
-  protected readonly formatPoints = formatPoints;
   protected readonly pageActions = inject(PageActionsService);
 
   private readonly currentUrl = toSignal(
@@ -50,5 +48,9 @@ export class App {
 
   protected readonly isDetail = computed(() =>
     /^\/catalog\/[^/]+/.test(this.currentUrl() ?? ''),
+  );
+
+  protected readonly isMyPrograms = computed(() =>
+    /^\/my-programs(\/|$|\?)/.test(this.currentUrl() ?? ''),
   );
 }
