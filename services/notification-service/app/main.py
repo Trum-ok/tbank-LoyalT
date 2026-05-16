@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from loyalt_common import RequestIdMiddleware, configure_logging
 
 from app import models  # noqa: F401
 from app.config import get_settings
@@ -13,6 +14,7 @@ from app.domains.inbox.router import router as inbox_router
 from app.domains.notifications.router import router as notifications_router
 
 settings = get_settings()
+configure_logging(settings.app_name, settings.log_level)
 
 
 @asynccontextmanager
@@ -38,6 +40,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Добавлен последним → внешний слой: request_id проставляется до CORS,
+    # роутинга и обработчика 500, поэтому есть во всех логах запроса.
+    app.add_middleware(RequestIdMiddleware)
 
     # Starlette по умолчанию формирует 500 минуя CORSMiddleware, из-за чего
     # браузер блокирует ответ как нарушающий CORS. Перехватываем все

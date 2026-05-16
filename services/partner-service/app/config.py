@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     app_name: str = "partner-service"
     debug: bool = False
 
+    # Уровень логирования (PARTNER_LOG_LEVEL): DEBUG/INFO/WARNING/ERROR.
+    log_level: str = "INFO"
+
     database_url: str = Field(
         default="postgresql+psycopg://postgres:postgres@localhost:5432/tbank_loyalt"
     )
