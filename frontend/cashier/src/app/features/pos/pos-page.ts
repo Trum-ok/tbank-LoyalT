@@ -52,6 +52,7 @@ export class PosPage implements OnDestroy {
 
   readonly client = signal<EnrollmentLookup | null>(null);
   readonly done = signal<DoneInfo | null>(null);
+  readonly confirmUndo = signal(false);
 
   // Форма начисления
   readonly amount = signal('');
@@ -324,7 +325,17 @@ export class PosPage implements OnDestroy {
       });
   }
 
+  askUndo(): void {
+    if (!this.done() || this.busy()) return;
+    this.confirmUndo.set(true);
+  }
+
+  cancelUndo(): void {
+    this.confirmUndo.set(false);
+  }
+
   undo(): void {
+    this.confirmUndo.set(false);
     const d = this.done();
     const c = this.client();
     if (!d || this.busy()) return;
@@ -362,6 +373,7 @@ export class PosPage implements OnDestroy {
   reset(): void {
     this.client.set(null);
     this.done.set(null);
+    this.confirmUndo.set(false);
     this.manualCode.set('');
     this.accrueError.set(null);
     this.stage.set('scan');

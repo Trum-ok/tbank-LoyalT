@@ -184,10 +184,49 @@
         type="button"
         class="btn btn--danger"
         [disabled]="busy()"
-        (click)="undo()"
+        (click)="askUndo()"
       >
         {{ busy() ? 'Отменяем…' : 'Отменить операцию' }}
       </button>
+    </div>
+  }
+
+  @if (confirmUndo() && done(); as d) {
+    <div class="pos__modal" (click)="cancelUndo()">
+      <div
+        class="pos__modal-card"
+        role="dialog"
+        aria-modal="true"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="pos__modal-icon">!</div>
+        <h2 class="pos__modal-title">Отменить операцию?</h2>
+        <p class="pos__modal-text">
+          {{
+            d.kind === 'accrual'
+              ? 'Начисленные ' + formatPoints(d.points) + ' баллов будут списаны обратно.'
+              : 'Списание будет отменено, ' + formatPoints(d.points) + ' баллов вернутся клиенту.'
+          }}
+          Это действие нельзя будет отменить.
+        </p>
+        <div class="pos__modal-actions">
+          <button
+            type="button"
+            class="btn btn--ghost"
+            (click)="cancelUndo()"
+          >
+            Нет, оставить
+          </button>
+          <button
+            type="button"
+            class="btn btn--danger"
+            [disabled]="busy()"
+            (click)="undo()"
+          >
+            Да, отменить
+          </button>
+        </div>
+      </div>
     </div>
   }
 </section>
