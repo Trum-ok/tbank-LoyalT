@@ -325,3 +325,67 @@ export interface PointsOperationResult {
   transaction: TransactionRead;
   balance_after: number;
 }
+
+export type AnalyticsPeriod = '1d' | '7d' | '14d' | '30d' | '90d' | 'all';
+
+export interface AnalyticsDayCount {
+  date: string;
+  count: number;
+}
+
+export interface AnalyticsPurchasesPerUserDay {
+  date: string;
+  purchases: number;
+  users: number;
+  ratio: number;
+}
+
+export interface AnalyticsSummary {
+  active_customers: number;
+  accrued: number;
+  redeemed: number;
+  average_check: number;
+}
+
+export interface AnalyticsStickiness {
+  dau: number;
+  wau: number;
+  mau: number;
+  dau_wau_pct: number;
+  dau_mau_pct: number;
+}
+
+export interface AnalyticsRetentionPoint {
+  day: number;
+  retention: number;
+}
+
+export interface AnalyticsRetention {
+  cohort_size: number;
+  d1: number | null;
+  d7: number | null;
+  d30: number | null;
+  curve: AnalyticsRetentionPoint[];
+  median_churn_day: number | null;
+}
+
+export interface AnalyticsHeatCell {
+  dow: number;
+  hour: number;
+  count: number;
+}
+
+export interface AnalyticsHeatmap {
+  max: number;
+  cells: AnalyticsHeatCell[];
+}
+
+export interface AnalyticsRead {
+  period: AnalyticsPeriod;
+  summary: AnalyticsSummary;
+  new_users_by_day: AnalyticsDayCount[];
+  purchases_per_user_by_day: AnalyticsPurchasesPerUserDay[];
+  stickiness: AnalyticsStickiness;
+  retention: AnalyticsRetention;
+  heatmap: AnalyticsHeatmap;
+}

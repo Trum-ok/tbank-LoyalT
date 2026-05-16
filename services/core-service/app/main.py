@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app import models  # noqa: F401 — регистрация моделей для Alembic
 from app.config import get_settings
 from app.consumer import consumer
+from app.domains.analytics.router import partner_router as analytics_router
 from app.domains.catalog.router import router as catalog_router
 from app.domains.enrollments.router import router as enrollments_router
 from app.domains.partners.router import router as partners_router
@@ -81,6 +82,7 @@ def create_app() -> FastAPI:
         balance_router,
         tx_customer_router,
         tx_partner_router,
+        analytics_router,
         internal_router,
     ):
         app.include_router(router)

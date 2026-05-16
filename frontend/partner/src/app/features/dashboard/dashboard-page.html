@@ -48,97 +48,295 @@
       <a routerLink="/programs" class="btn btn--primary">Новая программа</a>
     </header>
 
-    @if (loading()) {
-      <div class="card">Считаем метрики…</div>
-    } @else {
-      <div class="dashboard__metrics">
-        <div class="metric metric--accent">
-          <span class="metric__label">Активные клиенты</span>
-          <span class="metric__value">{{ stats().customers }}</span>
-          <span class="metric__hint">за период журнала</span>
-        </div>
-        <div class="metric metric--green">
-          <span class="metric__label">Начислено баллов</span>
-          <span class="metric__value">+{{ stats().accrued }}</span>
-          <span class="metric__hint">{{ stats().published }} программ опубликовано</span>
-        </div>
-        <div class="metric metric--red">
-          <span class="metric__label">Списано баллов</span>
-          <span class="metric__value">−{{ stats().redeemed }}</span>
-          <span class="metric__hint">обмен на награды</span>
-        </div>
-        <div class="metric">
-          <span class="metric__label">Средний чек</span>
-          <span class="metric__value">{{ formatAmount(stats().averageCheck) }}</span>
-          <span class="metric__hint">по операциям с чеком</span>
-        </div>
+    <div class="dashboard__toolbar">
+      <div class="tabs" role="tablist" aria-label="Разделы дашборда">
+        @for (t of tabs; track t.value) {
+          <button
+            type="button"
+            class="tabs__btn"
+            [class.tabs__btn--active]="tab() === t.value"
+            (click)="setTab(t.value)"
+          >
+            {{ t.label }}
+          </button>
+        }
       </div>
 
-      <section class="card chart">
-        <header class="card__head">
-          <div>
-            <h2 class="card__title">Начисления за 14 дней</h2>
-            <p class="card__sub">Сколько баллов суммарно выдано клиентам по дням.</p>
-          </div>
-        </header>
-        <div class="chart__grid">
-          @for (b of daySeries(); track b.day) {
-            <div class="chart__bar" [title]="b.day + ' · ' + b.value">
-              <span class="chart__bar-fill" [style.height.%]="b.ratio * 100"></span>
-              <span class="chart__bar-label">{{ b.label }}</span>
+      <div class="period-switch" role="tablist" aria-label="Период">
+        @for (p of periods; track p.value) {
+          <button
+            type="button"
+            class="period-switch__btn"
+            [class.period-switch__btn--active]="period() === p.value"
+            (click)="setPeriod(p.value)"
+          >
+            {{ p.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (analyticsLoading() && !analytics()) {
+      <div class="card">Считаем метрики…</div>
+    } @else if (!analytics()) {
+      <div class="card">Не удалось загрузить аналитику.</div>
+    } @else {
+      <div class="dashboard__content" [class.is-stale]="analyticsLoading()">
+        @switch (tab()) {
+          @case ('overview') {
+            <div class="dashboard__metrics">
+              <div class="metric metric--accent">
+                <span class="metric__label">Активные клиенты</span>
+                <span class="metric__value">{{ summary()?.active_customers }}</span>
+                <span class="metric__hint">за выбранный период</span>
+              </div>
+              <div class="metric metric--green">
+                <span class="metric__label">Начислено баллов</span>
+                <span class="metric__value">+{{ summary()?.accrued }}</span>
+                <span class="metric__hint">{{ publishedCount() }} программ опубликовано</span>
+              </div>
+              <div class="metric metric--red">
+                <span class="metric__label">Списано баллов</span>
+                <span class="metric__value">−{{ summary()?.redeemed }}</span>
+                <span class="metric__hint">обмен на награды</span>
+              </div>
+              <div class="metric">
+                <span class="metric__label">Средний чек</span>
+                <span class="metric__value">{{ formatAmount(summary()?.average_check ?? 0) }}</span>
+                <span class="metric__hint">по операциям с чеком</span>
+              </div>
+            </div>
+
+            <div class="dashboard__split">
+              <section class="card">
+                <h2 class="card__title">Топ программ</h2>
+                @if (topPrograms().length === 0) {
+                  <p class="card__sub">Программ пока нет.</p>
+                } @else {
+                  <ul class="top-programs">
+                    @for (row of topPrograms(); track row.program.id) {
+                      <li class="top-programs__item">
+                        <a [routerLink]="['/programs', row.program.id]" class="top-programs__link">
+                          <div class="top-programs__main">
+                            <span class="top-programs__name">{{ row.program.name }}</span>
+                            <span class="top-programs__sub">
+                              {{ programTypeLabel(row.program.type) }} ·
+                              {{ programStatusLabel(row.program.status) }}
+                            </span>
+                          </div>
+                          <span class="top-programs__points">+{{ row.accrued }}</span>
+                        </a>
+                      </li>
+                    }
+                  </ul>
+                }
+              </section>
+
+              <section class="card">
+                <h2 class="card__title">Последние транзакции</h2>
+                @if (recent().length === 0) {
+                  <p class="card__sub">Пока не было операций.</p>
+                } @else {
+                  <ul class="recent">
+                    @for (tx of recent(); track tx.id) {
+                      <li class="recent__item" [class]="'recent__item--' + tx.type">
+                        <span class="recent__type">{{ transactionTypeLabel(tx.type) }}</span>
+                        <span class="recent__points">
+                          @if (tx.type === 'accrual') {+{{ tx.points }}}
+                          @else if (tx.type === 'redemption') {−{{ tx.points }}}
+                          @else {{{ tx.points }}}
+                        </span>
+                        <span class="recent__time">{{ formatDateTime(tx.created_at) }}</span>
+                      </li>
+                    }
+                  </ul>
+                  <a routerLink="/transactions" class="btn btn--ghost btn--full">
+                    Открыть весь журнал
+                  </a>
+                }
+              </section>
             </div>
           }
-        </div>
-      </section>
 
-      <div class="dashboard__split">
-        <section class="card">
-          <h2 class="card__title">Топ программ</h2>
-          @if (topPrograms().length === 0) {
-            <p class="card__sub">Программ пока нет.</p>
-          } @else {
-            <ul class="top-programs">
-              @for (row of topPrograms(); track row.program.id) {
-                <li class="top-programs__item">
-                  <a [routerLink]="['/programs', row.program.id]" class="top-programs__link">
-                    <div class="top-programs__main">
-                      <span class="top-programs__name">{{ row.program.name }}</span>
-                      <span class="top-programs__sub">
-                        {{ programTypeLabel(row.program.type) }} ·
-                        {{ programStatusLabel(row.program.status) }}
-                      </span>
+          @case ('engagement') {
+            <div class="dashboard__kpis">
+              <div class="kpi">
+                <span class="kpi__label">DAU / WAU</span>
+                <span class="kpi__value">{{ pct(stickiness()?.dau_wau_pct) }}</span>
+                <span class="kpi__hint">
+                  DAU {{ stickiness()?.dau }} · WAU {{ stickiness()?.wau }}
+                </span>
+              </div>
+              <div class="kpi">
+                <span class="kpi__label">DAU / MAU</span>
+                <span class="kpi__value">{{ pct(stickiness()?.dau_mau_pct) }}</span>
+                <span class="kpi__hint">
+                  DAU {{ stickiness()?.dau }} · MAU {{ stickiness()?.mau }}
+                </span>
+              </div>
+            </div>
+
+            <div class="dashboard__split">
+              <section class="card chart">
+                <header class="card__head">
+                  <div>
+                    <h2 class="card__title">Новые юзеры по дням</h2>
+                    <p class="card__sub">Первое вступление клиента в программу партнёра.</p>
+                  </div>
+                </header>
+                @if (newUsersSeries().length === 0) {
+                  <p class="card__sub">Нет данных за период.</p>
+                } @else {
+                  <div class="bars">
+                    @for (b of newUsersSeries(); track b.label + $index) {
+                      <div class="bars__col" [title]="b.title">
+                        <span class="bars__fill" [style.height.%]="b.ratio * 100"></span>
+                      </div>
+                    }
+                  </div>
+                  <div class="bars__axis">
+                    <span>{{ newUsersSeries()[0].label }}</span>
+                    <span>{{ newUsersSeries()[newUsersSeries().length - 1].label }}</span>
+                  </div>
+                }
+              </section>
+
+              <section class="card chart">
+                <header class="card__head">
+                  <div>
+                    <h2 class="card__title">Покупки / юзер по дням</h2>
+                    <p class="card__sub">Среднее число операций на активного клиента.</p>
+                  </div>
+                </header>
+                @if (purchasesSeries().length === 0) {
+                  <p class="card__sub">Нет данных за период.</p>
+                } @else {
+                  <div class="bars">
+                    @for (b of purchasesSeries(); track b.label + $index) {
+                      <div class="bars__col" [title]="b.title">
+                        <span
+                          class="bars__fill bars__fill--blue"
+                          [style.height.%]="b.ratio * 100"
+                        ></span>
+                      </div>
+                    }
+                  </div>
+                  <div class="bars__axis">
+                    <span>{{ purchasesSeries()[0].label }}</span>
+                    <span>{{ purchasesSeries()[purchasesSeries().length - 1].label }}</span>
+                  </div>
+                }
+              </section>
+            </div>
+
+            <section class="card">
+              <header class="card__head">
+                <div>
+                  <h2 class="card__title">Активность: день × час</h2>
+                  <p class="card__sub">
+                    Распределение операций по дням недели и часам (UTC).
+                  </p>
+                </div>
+              </header>
+              @if (heatmap(); as hm) {
+                <div class="heatmap">
+                  <div class="heatmap__corner"></div>
+                  <div class="heatmap__hours">
+                    @for (h of hm.hours; track h) {
+                      <span class="heatmap__hour">{{ h % 3 === 0 ? h : '' }}</span>
+                    }
+                  </div>
+                  @for (row of hm.rows; track row.label) {
+                    <div class="heatmap__dow">{{ row.label }}</div>
+                    <div class="heatmap__row">
+                      @for (c of row.cells; track c.hour) {
+                        <span
+                          class="heatmap__cell"
+                          [style.opacity]="0.08 + c.intensity * 0.92"
+                          [title]="row.label + ' ' + c.hour + ':00 · ' + c.count"
+                        ></span>
+                      }
                     </div>
-                    <span class="top-programs__points">+{{ row.accrued }}</span>
-                  </a>
-                </li>
+                  }
+                </div>
+              } @else {
+                <p class="card__sub">Нет данных за период.</p>
               }
-            </ul>
+            </section>
           }
-        </section>
 
-        <section class="card">
-          <h2 class="card__title">Последние транзакции</h2>
-          @if (recent().length === 0) {
-            <p class="card__sub">Пока не было операций.</p>
-          } @else {
-            <ul class="recent">
-              @for (tx of recent(); track tx.id) {
-                <li class="recent__item" [class]="'recent__item--' + tx.type">
-                  <span class="recent__type">{{ transactionTypeLabel(tx.type) }}</span>
-                  <span class="recent__points">
-                    @if (tx.type === 'accrual') {+{{ tx.points }}}
-                    @else if (tx.type === 'redemption') {−{{ tx.points }}}
-                    @else {{{ tx.points }}}
-                  </span>
-                  <span class="recent__time">{{ formatDateTime(tx.created_at) }}</span>
-                </li>
+          @case ('retention') {
+            <div class="dashboard__kpis">
+              <div class="kpi">
+                <span class="kpi__label">Retention D1</span>
+                <span class="kpi__value">{{ ret(retention()?.d1) }}</span>
+                <span class="kpi__hint">когорта {{ retention()?.cohort_size }}</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi__label">Retention D7</span>
+                <span class="kpi__value">{{ ret(retention()?.d7) }}</span>
+                <span class="kpi__hint">от дня вступления</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi__label">Retention D30</span>
+                <span class="kpi__value">{{ ret(retention()?.d30) }}</span>
+                <span class="kpi__hint">от дня вступления</span>
+              </div>
+            </div>
+
+            <section class="card">
+              <header class="card__head">
+                <div>
+                  <h2 class="card__title">Retention curve</h2>
+                  <p class="card__sub">
+                    Доля когорты, активная на N-й день после вступления.
+                    @if (retention()?.median_churn_day !== null && retention()?.median_churn_day !== undefined) {
+                      Медианный день оттока — <b>D{{ retention()?.median_churn_day }}</b>.
+                    } @else {
+                      Удержание не падало ниже 50% за окно.
+                    }
+                  </p>
+                </div>
+              </header>
+              @if (retentionPath(); as rp) {
+                <div class="retention">
+                  <svg
+                    class="retention__svg"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                  >
+                    @for (g of [0, 25, 50, 75, 100]; track g) {
+                      <line
+                        class="retention__grid"
+                        x1="0"
+                        [attr.y1]="g"
+                        x2="100"
+                        [attr.y2]="g"
+                      />
+                    }
+                    <polygon class="retention__area" [attr.points]="rp.area" />
+                    <polyline class="retention__line" [attr.points]="rp.line" />
+                    @if (rp.medianX !== null) {
+                      <line
+                        class="retention__median"
+                        [attr.x1]="rp.medianX"
+                        y1="0"
+                        [attr.x2]="rp.medianX"
+                        y2="100"
+                      />
+                    }
+                  </svg>
+                  <div class="retention__axis">
+                    <span>D0</span>
+                    <span>D{{ rp.lastDay }}</span>
+                  </div>
+                </div>
+              } @else {
+                <p class="card__sub">Недостаточно данных для построения кривой.</p>
               }
-            </ul>
-            <a routerLink="/transactions" class="btn btn--ghost btn--full">
-              Открыть весь журнал
-            </a>
+            </section>
           }
-        </section>
+        }
       </div>
     }
   }
