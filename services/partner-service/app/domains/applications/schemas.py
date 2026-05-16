@@ -14,6 +14,21 @@ class ApplicationCreate(BaseModel):
     contact_phone: str | None = Field(default=None, max_length=32)
     description: str | None = Field(default=None, max_length=2000)
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "business_name": "Кофейня «Тёплый угол»",
+                    "inn": "7701234567",
+                    "category": "food",
+                    "contact_email": "owner@coffee-point.ru",
+                    "contact_phone": "+79001234567",
+                    "description": "Сеть кофеен в центре города",
+                }
+            ]
+        }
+    )
+
 
 class ApplicationUpdate(BaseModel):
     business_name: str | None = Field(default=None, min_length=1, max_length=255)

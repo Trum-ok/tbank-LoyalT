@@ -337,11 +337,15 @@ name = "loyalt-common"
 version = "0.1.0"
 source = { editable = "libs/loyalt-common" }
 dependencies = [
+    { name = "pydantic" },
     { name = "starlette" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "starlette", specifier = ">=0.40.0" }]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "starlette", specifier = ">=0.40.0" },
+]
 
 [[package]]
 name = "mako"

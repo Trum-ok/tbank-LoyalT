@@ -23,6 +23,19 @@ class AccrueRequest(BaseModel):
 
     description: str | None = Field(default=None, max_length=500)
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "customer_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "program_id": "9c1b2d3e-4f5a-6789-abcd-ef0123456789",
+                    "purchase_amount": "1500.00",
+                    "description": "Чек №12345, касса №2",
+                }
+            ]
+        }
+    }
+
     @model_validator(mode="after")
     def check_one_of(self) -> "AccrueRequest":
         provided = [
@@ -39,9 +52,28 @@ class RedeemRequest(BaseModel):
     reward_id: UUID
     description: str | None = Field(default=None, max_length=500)
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "customer_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "program_id": "9c1b2d3e-4f5a-6789-abcd-ef0123456789",
+                    "reward_id": "1a2b3c4d-5e6f-7081-92a3-b4c5d6e7f809",
+                    "description": "Бесплатный кофе",
+                }
+            ]
+        }
+    }
+
 
 class ReverseRequest(BaseModel):
     description: str | None = Field(default=None, max_length=500)
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"description": "Ошибочное начисление, возврат чека"}]
+        }
+    }
 
 
 class BalanceRead(BaseModel):
