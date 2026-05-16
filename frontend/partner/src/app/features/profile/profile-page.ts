@@ -13,6 +13,7 @@ import { PartnerApi } from '../../core/api/partner-api.service';
 import {
   formatDateTime,
   partnerCategoryLabel,
+  partnerStatusLabel,
 } from '../../core/format';
 import { IdentityService } from '../../core/identity.service';
 import { NotifyService } from '../../core/notify.service';
@@ -32,6 +33,7 @@ export class ProfilePage {
 
   readonly formatDateTime = formatDateTime;
   readonly partnerCategoryLabel = partnerCategoryLabel;
+  readonly partnerStatusLabel = partnerStatusLabel;
 
   readonly loading = signal(true);
   readonly saving = signal(false);

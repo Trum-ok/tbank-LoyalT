@@ -85,6 +85,19 @@ export function programStatusLabel(status: string): string {
   }
 }
 
+export function partnerStatusLabel(status: string): string {
+  switch (status) {
+    case 'active':
+      return 'активен';
+    case 'suspended':
+      return 'приостановлен';
+    case 'blocked':
+      return 'заблокирован';
+    default:
+      return status;
+  }
+}
+
 export function applicationStatusLabel(status: string): string {
   switch (status) {
     case 'pending':
