@@ -161,10 +161,10 @@
           @case ('engagement') {
             <div class="dashboard__kpis">
               <div class="kpi">
-                <span class="kpi__label">DAU / WAU</span>
-                <span class="kpi__value">{{ pct(stickiness()?.dau_wau_pct) }}</span>
+                <span class="kpi__label">DAU</span>
+                <span class="kpi__value">{{ stickiness()?.dau }}</span>
                 <span class="kpi__hint">
-                  DAU {{ stickiness()?.dau }} · WAU {{ stickiness()?.wau }}
+                  ср. активных в день · WAU {{ stickiness()?.wau }}
                 </span>
               </div>
               <div class="kpi">
