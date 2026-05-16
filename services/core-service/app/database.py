@@ -15,6 +15,7 @@ from app.config import get_settings
 
 settings = get_settings()
 
+
 def _make_engine(url: str):
     return create_async_engine(
         url,
@@ -62,7 +63,9 @@ class UUIDPKMixin:
 
 
 class TimestampsMixin:
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
         onupdate=func.now(),

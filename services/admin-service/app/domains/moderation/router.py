@@ -32,9 +32,7 @@ async def list_applications(
 
 
 @applications_router.get("/{application_id}")
-async def get_application(
-    application_id: UUID, admin: CurrentAdmin
-) -> dict[str, Any]:
+async def get_application(application_id: UUID, admin: CurrentAdmin) -> dict[str, Any]:
     return await partner_client.get_application(admin.id, application_id)
 
 

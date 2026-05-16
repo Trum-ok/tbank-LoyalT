@@ -29,9 +29,7 @@ class AccrueRequest(BaseModel):
             v is not None for v in (self.purchase_amount, self.points, self.visits)
         ]
         if sum(provided) != 1:
-            raise ValueError(
-                "Provide exactly one of: purchase_amount, points, visits"
-            )
+            raise ValueError("Provide exactly one of: purchase_amount, points, visits")
         return self
 
 

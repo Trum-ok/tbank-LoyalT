@@ -40,9 +40,7 @@ async def partners_overview(session: AsyncSession) -> PartnersOverview:
     ).all()
     pending = (
         await session.execute(
-            text(
-                f"SELECT COUNT(*) FROM {PARTNER}.application WHERE status = 'pending'"
-            )
+            text(f"SELECT COUNT(*) FROM {PARTNER}.application WHERE status = 'pending'")
         )
     ).scalar_one()
     by_status = {row[0]: row[1] for row in rows_status}
@@ -72,14 +70,12 @@ async def transactions_overview(
 ) -> TransactionsOverview:
     where = "" if since is None else "WHERE created_at >= :since"
     params: dict[str, object] = {} if since is None else {"since": since}
-    sql = text(
-        f"""
+    sql = text(f"""
         SELECT type, COUNT(*) AS cnt, COALESCE(SUM(points), 0) AS pts
         FROM {CORE}.transaction
         {where}
         GROUP BY type
-        """
-    )
+        """)
     rows = (await session.execute(sql, params)).all()
     aggregates: dict[str, tuple[int, int]] = {
         row[0]: (int(row[1]), int(row[2])) for row in rows
@@ -103,8 +99,7 @@ async def top_partners(
     params: dict[str, object] = {"limit": limit}
     if since is not None:
         params["since"] = since
-    sql = text(
-        f"""
+    sql = text(f"""
         SELECT
             p.id, p.name,
             COUNT(t.id) AS tx_count,
@@ -115,8 +110,7 @@ async def top_partners(
         GROUP BY p.id, p.name
         ORDER BY tx_count DESC
         LIMIT :limit
-        """
-    )
+        """)
     rows = (await session.execute(sql, params)).all()
     return [
         TopPartner(
@@ -133,15 +127,13 @@ async def _daily_counts(
     session: AsyncSession, table: str, days: int
 ) -> list[DailyCount]:
     since = (datetime.utcnow() - timedelta(days=days - 1)).date()
-    sql = text(
-        f"""
+    sql = text(f"""
         SELECT date_trunc('day', created_at)::date AS day, COUNT(*) AS cnt
         FROM {table}
         WHERE created_at >= :since
         GROUP BY day
         ORDER BY day ASC
-        """
-    )
+        """)
     rows = (await session.execute(sql, {"since": since})).all()
     return [DailyCount(day=row[0], count=int(row[1])) for row in rows]
 

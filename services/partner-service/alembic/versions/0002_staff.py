@@ -36,9 +36,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("login_code", sa.String(length=32), nullable=False),
         sa.Column("pin_hash", sa.String(length=255), nullable=False),
-        sa.Column(
-            "is_active", sa.Boolean(), nullable=False, server_default="true"
-        ),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
         ),
@@ -54,8 +52,7 @@ def upgrade() -> None:
     op.create_index("ix_staff_partner_id", "staff", ["partner_id"], schema=SCHEMA)
 
     op.execute(
-        sa.text(
-            f"""
+        sa.text(f"""
             INSERT INTO "{SCHEMA}".staff
                 (id, partner_id, name, login_code, pin_hash, is_active)
             SELECT
@@ -65,8 +62,7 @@ def upgrade() -> None:
                 SELECT 1 FROM "{SCHEMA}".partner
                 WHERE id = CAST(:partner_id AS uuid)
             )
-            """
-        ).bindparams(
+            """).bindparams(
             staff_id=DEMO_STAFF_ID,
             partner_id=DEMO_PARTNER_ID,
             pin_hash=DEMO_PIN_HASH,

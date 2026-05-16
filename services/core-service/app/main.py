@@ -16,12 +16,8 @@ from app.domains.points.router import customer_router as balance_router
 from app.domains.points.router import partner_router as points_router
 from app.domains.programs.router import router as programs_router
 from app.domains.rewards.router import router as rewards_router
-from app.domains.transactions.router import (
-    customer_router as tx_customer_router,
-)
-from app.domains.transactions.router import (
-    partner_router as tx_partner_router,
-)
+from app.domains.transactions.router import customer_router as tx_customer_router
+from app.domains.transactions.router import partner_router as tx_partner_router
 from app.events import publisher
 from app.internal_router import router as internal_router
 

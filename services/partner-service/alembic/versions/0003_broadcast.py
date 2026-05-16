@@ -51,7 +51,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        "ix_broadcast_partner_id", table_name="broadcast", schema=SCHEMA
-    )
+    op.drop_index("ix_broadcast_partner_id", table_name="broadcast", schema=SCHEMA)
     op.drop_table("broadcast", schema=SCHEMA)

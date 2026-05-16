@@ -18,6 +18,7 @@ ALLOWED_CATEGORY_CODES = {"food", "beauty", "retail", "services", "entertainment
 
 # --- categories ---
 
+
 async def upsert_category(
     session: AsyncSession, code: str, data: CategoryUpsert
 ) -> CategoryOverride:
@@ -43,6 +44,7 @@ async def list_categories(session: AsyncSession) -> list[CategoryOverride]:
 
 
 # --- featured partners ---
+
 
 async def add_featured(
     session: AsyncSession, data: FeaturedPartnerCreate
@@ -74,6 +76,7 @@ async def remove_featured(session: AsyncSession, featured_id: UUID) -> None:
 
 
 # --- banners ---
+
 
 async def create_banner(session: AsyncSession, data: BannerCreate) -> Banner:
     banner = Banner(**data.model_dump())

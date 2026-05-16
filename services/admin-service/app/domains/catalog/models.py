@@ -20,7 +20,9 @@ class CategoryOverride(TimestampsMixin, Base):
     label: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(String(2000))
     display_order: Mapped[int] = mapped_column(default=0, server_default="0")
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
 
 
 class FeaturedPartner(UUIDPKMixin, TimestampsMixin, Base):
@@ -46,6 +48,8 @@ class Banner(UUIDPKMixin, TimestampsMixin, Base):
     image_url: Mapped[str | None] = mapped_column(String(1024))
     link_url: Mapped[str | None] = mapped_column(String(1024))
     position: Mapped[int] = mapped_column(default=0, server_default="0")
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
     starts_at: Mapped[datetime | None] = mapped_column()
     ends_at: Mapped[datetime | None] = mapped_column()

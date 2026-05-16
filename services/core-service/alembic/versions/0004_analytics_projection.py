@@ -32,8 +32,12 @@ def upgrade() -> None:
         sa.Column("customer_id", sa.Uuid(), nullable=False),
         sa.Column("day", sa.Date(), nullable=False),
         sa.Column("accrual_count", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("accrued_points", sa.BigInteger(), nullable=False, server_default="0"),
-        sa.Column("redeemed_points", sa.BigInteger(), nullable=False, server_default="0"),
+        sa.Column(
+            "accrued_points", sa.BigInteger(), nullable=False, server_default="0"
+        ),
+        sa.Column(
+            "redeemed_points", sa.BigInteger(), nullable=False, server_default="0"
+        ),
         sa.Column(
             "purchase_amount_sum",
             sa.Numeric(18, 2),

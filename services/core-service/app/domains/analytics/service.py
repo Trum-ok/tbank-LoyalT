@@ -125,7 +125,7 @@ async def build_partner_analytics(
         return window_start is None or d >= window_start
 
     # ---------------- Новые юзеры по дням ----------------
-    new_by_day: dict[date, int] = {d: 0 for d in window_days}
+    new_by_day: dict[date, int] = dict.fromkeys(window_days, 0)
     for d in first_enroll.values():
         if start_date <= d <= today:
             new_by_day[d] = new_by_day.get(d, 0) + 1
@@ -134,7 +134,7 @@ async def build_partner_analytics(
     ]
 
     # ---------------- Summary + покупки/юзер по дням ----------------
-    purchases_day: dict[date, int] = {d: 0 for d in window_days}
+    purchases_day: dict[date, int] = dict.fromkeys(window_days, 0)
     users_day: dict[date, set[UUID]] = {d: set() for d in window_days}
     accrued = 0
     redeemed = 0
@@ -235,12 +235,7 @@ async def build_partner_analytics(
                 d7 = round(ret, 4) if eligible else None
             elif offset == 30:
                 d30 = round(ret, 4) if eligible else None
-            if (
-                median_churn_day is None
-                and offset >= 1
-                and eligible
-                and ret <= 0.5
-            ):
+            if median_churn_day is None and offset >= 1 and eligible and ret <= 0.5:
                 median_churn_day = offset
 
     retention = Retention(

@@ -18,7 +18,9 @@ partner_router = APIRouter(prefix="/applications", tags=["applications"])
 admin_router = APIRouter(prefix="/admin/applications", tags=["applications-admin"])
 
 
-@partner_router.post("", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED)
+@partner_router.post(
+    "", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED
+)
 async def submit_application(
     data: ApplicationCreate,
     account_id: CurrentAccountId,

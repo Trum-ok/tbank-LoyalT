@@ -35,7 +35,9 @@ class Application(UUIDPKMixin, TimestampsMixin, Base):
         Index("ix_application_status", "status"),
     )
 
-    account_id: Mapped[UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    account_id: Mapped[UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
 
     business_name: Mapped[str] = mapped_column(String(255))
     inn: Mapped[str] = mapped_column(String(12))

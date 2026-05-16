@@ -48,8 +48,12 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
     enrollment_id: Mapped[UUID] = mapped_column(
         ForeignKey("enrollment.id", ondelete="CASCADE")
     )
-    customer_id: Mapped[UUID] = mapped_column(ForeignKey("customer.id", ondelete="CASCADE"))
-    program_id: Mapped[UUID] = mapped_column(ForeignKey("program.id", ondelete="CASCADE"))
+    customer_id: Mapped[UUID] = mapped_column(
+        ForeignKey("customer.id", ondelete="CASCADE")
+    )
+    program_id: Mapped[UUID] = mapped_column(
+        ForeignKey("program.id", ondelete="CASCADE")
+    )
     # Часть составного PK (ключ HASH-секции).
     partner_id: Mapped[UUID] = mapped_column(
         ForeignKey("partner.id", ondelete="CASCADE"), primary_key=True
@@ -74,6 +78,8 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
     expires_at: Mapped[datetime | None] = mapped_column()
 
     # Признак, что accrual-транзакция была отменена (reversal/expiration).
-    is_reversed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    is_reversed: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
 
     description: Mapped[str | None] = mapped_column(String(500))

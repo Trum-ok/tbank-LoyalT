@@ -23,10 +23,20 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
-from sqlalchemy import BigInteger, Date, Integer, Numeric, SmallInteger, Uuid, select
+from sqlalchemy import (
+    BigInteger,
+    CursorResult,
+    Date,
+    Integer,
+    Numeric,
+    SmallInteger,
+    Table,
+    Uuid,
+    select,
+)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
@@ -97,7 +107,7 @@ async def _mark_processed(session: AsyncSession, event_id: UUID) -> bool:
         .values(event_id=event_id)
         .on_conflict_do_nothing(index_elements=["event_id"])
     )
-    result = await session.execute(stmt)
+    result = cast("CursorResult[Any]", await session.execute(stmt))
     return result.rowcount == 1
 
 
@@ -124,16 +134,20 @@ async def _bump_daily(
         "purchase_amount_sum": amount,
         "purchase_count": purchase_count,
     }
-    t = AnalyticsDaily.__table__
-    stmt = pg_insert(t).values(**values).on_conflict_do_update(
-        index_elements=["partner_id", "customer_id", "day"],
-        set_={
-            "accrual_count": t.c.accrual_count + accrual_count,
-            "accrued_points": t.c.accrued_points + accrued_points,
-            "redeemed_points": t.c.redeemed_points + redeemed_points,
-            "purchase_amount_sum": t.c.purchase_amount_sum + amount,
-            "purchase_count": t.c.purchase_count + purchase_count,
-        },
+    t = cast(Table, AnalyticsDaily.__table__)
+    stmt = (
+        pg_insert(t)
+        .values(**values)
+        .on_conflict_do_update(
+            index_elements=["partner_id", "customer_id", "day"],
+            set_={
+                "accrual_count": t.c.accrual_count + accrual_count,
+                "accrued_points": t.c.accrued_points + accrued_points,
+                "redeemed_points": t.c.redeemed_points + redeemed_points,
+                "purchase_amount_sum": t.c.purchase_amount_sum + amount,
+                "purchase_count": t.c.purchase_count + purchase_count,
+            },
+        )
     )
     await session.execute(stmt)
 
@@ -141,12 +155,14 @@ async def _bump_daily(
 async def _bump_heatmap(
     session: AsyncSession, partner_id: UUID, when: datetime, delta: int = 1
 ) -> None:
-    t = AnalyticsHeatmap.__table__
-    stmt = pg_insert(t).values(
-        partner_id=partner_id, day=when.date(), hour=when.hour, cnt=delta
-    ).on_conflict_do_update(
-        index_elements=["partner_id", "day", "hour"],
-        set_={"cnt": t.c.cnt + delta},
+    t = cast(Table, AnalyticsHeatmap.__table__)
+    stmt = (
+        pg_insert(t)
+        .values(partner_id=partner_id, day=when.date(), hour=when.hour, cnt=delta)
+        .on_conflict_do_update(
+            index_elements=["partner_id", "day", "hour"],
+            set_={"cnt": t.c.cnt + delta},
+        )
     )
     await session.execute(stmt)
 
@@ -223,9 +239,9 @@ async def rebuild_from_transactions(session: AsyncSession) -> dict[str, int]:
     идёт по тем же правилам, что build_partner_analytics, поэтому
     цифры дашборда сходятся с историей независимо от Kafka.
     """
-    await session.execute(AnalyticsDaily.__table__.delete())
-    await session.execute(AnalyticsHeatmap.__table__.delete())
-    await session.execute(AnalyticsProcessedEvent.__table__.delete())
+    await session.execute(cast(Table, AnalyticsDaily.__table__).delete())
+    await session.execute(cast(Table, AnalyticsHeatmap.__table__).delete())
+    await session.execute(cast(Table, AnalyticsProcessedEvent.__table__).delete())
 
     daily: dict[tuple[UUID, UUID, date], dict[str, Any]] = {}
     heat: dict[tuple[UUID, date, int], int] = {}
@@ -268,7 +284,7 @@ async def rebuild_from_transactions(session: AsyncSession) -> dict[str, int]:
 
     if daily:
         await session.execute(
-            AnalyticsDaily.__table__.insert(),
+            cast(Table, AnalyticsDaily.__table__).insert(),
             [
                 {
                     "partner_id": pid,
@@ -281,7 +297,7 @@ async def rebuild_from_transactions(session: AsyncSession) -> dict[str, int]:
         )
     if heat:
         await session.execute(
-            AnalyticsHeatmap.__table__.insert(),
+            cast(Table, AnalyticsHeatmap.__table__).insert(),
             [
                 {"partner_id": pid, "day": d, "hour": h, "cnt": c}
                 for (pid, d, h), c in heat.items()

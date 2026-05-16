@@ -37,7 +37,7 @@ async def transactions(
 ) -> TransactionsOverview:
     if days is None:
         return await service.transactions_overview(session)
-    _, result = await service.overview_for_period(session, days=days)
+    _since, result = await service.overview_for_period(session, days=days)
     return result
 
 

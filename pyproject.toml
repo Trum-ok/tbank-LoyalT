@@ -50,6 +50,10 @@ ignore = [
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+known_first_party = ["app"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

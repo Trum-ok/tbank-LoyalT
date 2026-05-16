@@ -40,9 +40,7 @@ async def list_staff(session: AsyncSession, partner_id: UUID) -> list[Staff]:
     return list(result.scalars().all())
 
 
-async def _get_owned(
-    session: AsyncSession, staff_id: UUID, partner_id: UUID
-) -> Staff:
+async def _get_owned(session: AsyncSession, staff_id: UUID, partner_id: UUID) -> Staff:
     staff = await session.get(Staff, staff_id)
     if staff is None:
         raise NotFoundError("Staff not found")
@@ -65,9 +63,7 @@ async def update_staff(
     return staff
 
 
-async def delete_staff(
-    session: AsyncSession, staff_id: UUID, partner_id: UUID
-) -> None:
+async def delete_staff(session: AsyncSession, staff_id: UUID, partner_id: UUID) -> None:
     staff = await _get_owned(session, staff_id, partner_id)
     await session.delete(staff)
     await session.commit()
@@ -83,9 +79,7 @@ async def get_staff(session: AsyncSession, staff_id: UUID) -> Staff:
 async def authenticate(
     session: AsyncSession, login_code: str, pin: str
 ) -> tuple[Staff, Partner]:
-    result = await session.execute(
-        select(Staff).where(Staff.login_code == login_code)
-    )
+    result = await session.execute(select(Staff).where(Staff.login_code == login_code))
     staff = result.scalar_one_or_none()
     if staff is None or not staff.is_active or not verify_pin(pin, staff.pin_hash):
         raise ForbiddenError("Invalid login code or PIN")
