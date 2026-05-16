@@ -68,6 +68,46 @@ export class PosPage implements OnDestroy {
     return c?.program_type === 'accrual' ? 'amount' : 'visits';
   });
 
+  /**
+   * Сколько баллов будет начислено — повторяет _calculate_points
+   * из core-service. null = посчитать нельзя (нет ввода / правило кривое).
+   */
+  readonly previewPoints = computed<number | null>(() => {
+    const c = this.client();
+    if (!c) return null;
+
+    const manual = Number(this.manualPoints());
+    if (this.manualPoints().trim() && manual > 0) {
+      return Math.floor(manual);
+    }
+
+    const rule = c.accrual_rule ?? {};
+    const num = (key: string): number | null => {
+      const v = rule[key];
+      return typeof v === 'number' && !Number.isNaN(v) ? v : null;
+    };
+
+    if (c.program_type === 'accrual') {
+      const amount = Number(this.amount());
+      if (!amount || amount <= 0) return null;
+      const percent = num('percent');
+      if (percent !== null) return Math.floor((amount * percent) / 100);
+      const ppr = num('points_per_rub');
+      if (ppr !== null) return Math.floor(amount * ppr);
+      return null;
+    }
+
+    const v = Math.max(1, this.visits());
+    if (c.program_type === 'visit') {
+      const perVisit = num('points_per_visit');
+      return perVisit !== null ? v * perVisit : null;
+    }
+    if (c.program_type === 'stamps') {
+      return v; // 1 штамп = 1 балл
+    }
+    return null;
+  });
+
   ngOnDestroy(): void {
     this.stopCamera();
   }

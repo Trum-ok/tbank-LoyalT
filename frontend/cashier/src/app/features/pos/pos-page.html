@@ -107,6 +107,19 @@
           />
         </details>
 
+        @if (previewPoints() !== null) {
+          <div
+            class="pos__preview"
+            [class.is-zero]="previewPoints() === 0"
+          >
+            <span class="pos__preview-label">Будет начислено</span>
+            <span class="pos__preview-value">
+              +{{ formatPoints(previewPoints()!) }}
+              <small>баллов</small>
+            </span>
+          </div>
+        }
+
         @if (accrueError(); as msg) {
           <div class="error-box pos__accrue-error">{{ msg }}</div>
         }
