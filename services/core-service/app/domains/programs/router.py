@@ -5,7 +5,13 @@ from fastapi import APIRouter, status
 from app.deps import CurrentPartnerId, SessionDep
 from app.domains.programs import service
 from app.domains.programs.models import ProgramStatus
-from app.domains.programs.schemas import ProgramCreate, ProgramRead, ProgramUpdate
+from app.domains.programs.schemas import (
+    ProgramCreate,
+    ProgramRead,
+    ProgramUpdate,
+    TierCreate,
+    TierUpdate,
+)
 
 router = APIRouter(prefix="/programs", tags=["programs"])
 
@@ -72,4 +78,51 @@ async def archive_program(
     program = await service.transition_status(
         session, program_id, partner_id, ProgramStatus.ARCHIVED
     )
+    return ProgramRead.model_validate(program)
+
+
+# ---------------------------------------------------------------------------
+# Tier endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/{program_id}/tiers",
+    response_model=ProgramRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_tier(
+    program_id: UUID,
+    data: TierCreate,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> ProgramRead:
+    program = await service.add_tier(session, program_id, partner_id, data)
+    return ProgramRead.model_validate(program)
+
+
+@router.patch("/{program_id}/tiers/{tier_id}", response_model=ProgramRead)
+async def update_tier(
+    program_id: UUID,
+    tier_id: UUID,
+    data: TierUpdate,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> ProgramRead:
+    program = await service.update_tier(session, program_id, tier_id, partner_id, data)
+    return ProgramRead.model_validate(program)
+
+
+@router.delete(
+    "/{program_id}/tiers/{tier_id}",
+    response_model=ProgramRead,
+    status_code=status.HTTP_200_OK,
+)
+async def delete_tier(
+    program_id: UUID,
+    tier_id: UUID,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> ProgramRead:
+    program = await service.delete_tier(session, program_id, tier_id, partner_id)
     return ProgramRead.model_validate(program)

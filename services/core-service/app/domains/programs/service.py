@@ -3,10 +3,16 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.domains.partners.models import Partner
-from app.domains.programs.models import Program, ProgramStatus
-from app.domains.programs.schemas import ProgramCreate, ProgramUpdate
+from app.domains.programs.models import Program, ProgramStatus, ProgramTier
+from app.domains.programs.schemas import (
+    ProgramCreate,
+    ProgramUpdate,
+    TierCreate,
+    TierUpdate,
+)
 from app.errors import BadRequestError, ForbiddenError, NotFoundError
 
 
@@ -25,12 +31,17 @@ async def create_program(
     except IntegrityError as exc:
         await session.rollback()
         raise NotFoundError("Partner not found") from exc
-    await session.refresh(program)
+    await session.refresh(program, attribute_names=["tiers"])
     return program
 
 
 async def get_program(session: AsyncSession, program_id: UUID) -> Program:
-    program = await session.get(Program, program_id)
+    result = await session.execute(
+        select(Program)
+        .where(Program.id == program_id)
+        .options(selectinload(Program.tiers))
+    )
+    program = result.scalar_one_or_none()
     if program is None:
         raise NotFoundError("Program not found")
     return program
@@ -51,6 +62,7 @@ async def list_programs_for_partner(
     result = await session.execute(
         select(Program)
         .where(Program.partner_id == partner_id)
+        .options(selectinload(Program.tiers))
         .order_by(Program.created_at.desc())
     )
     return list(result.scalars().all())
@@ -65,7 +77,7 @@ async def update_program(
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(program, field, value)
     await session.commit()
-    await session.refresh(program)
+    await session.refresh(program, attribute_names=["tiers"])
     return program
 
 
@@ -91,5 +103,88 @@ async def transition_status(
         )
     program.status = target
     await session.commit()
-    await session.refresh(program)
+    await session.refresh(program, attribute_names=["tiers"])
+    return program
+
+
+# ---------------------------------------------------------------------------
+# Tier operations
+# ---------------------------------------------------------------------------
+
+
+async def _get_tier(session: AsyncSession, tier_id: UUID) -> ProgramTier:
+    tier = await session.get(ProgramTier, tier_id)
+    if tier is None:
+        raise NotFoundError("Tier not found")
+    return tier
+
+
+async def add_tier(
+    session: AsyncSession,
+    program_id: UUID,
+    partner_id: UUID,
+    data: TierCreate,
+) -> Program:
+    program = await get_program_for_partner(session, program_id, partner_id)
+    if program.status == ProgramStatus.ARCHIVED:
+        raise BadRequestError("Cannot add tiers to an archived program")
+
+    tier = ProgramTier(program_id=program_id, **data.model_dump())
+    session.add(tier)
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise BadRequestError(
+            "Tier with this name or threshold already exists in the program"
+        ) from exc
+    await session.refresh(program, attribute_names=["tiers"])
+    return program
+
+
+async def update_tier(
+    session: AsyncSession,
+    program_id: UUID,
+    tier_id: UUID,
+    partner_id: UUID,
+    data: TierUpdate,
+) -> Program:
+    program = await get_program_for_partner(session, program_id, partner_id)
+    if program.status == ProgramStatus.ARCHIVED:
+        raise BadRequestError("Cannot update tiers of an archived program")
+
+    tier = await _get_tier(session, tier_id)
+    if tier.program_id != program_id:
+        raise ForbiddenError("Tier does not belong to this program")
+
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(tier, field, value)
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise BadRequestError(
+            "Tier with this name or threshold already exists in the program"
+        ) from exc
+    await session.refresh(program, attribute_names=["tiers"])
+    return program
+
+
+async def delete_tier(
+    session: AsyncSession,
+    program_id: UUID,
+    tier_id: UUID,
+    partner_id: UUID,
+) -> Program:
+    program = await get_program_for_partner(session, program_id, partner_id)
+    if program.status == ProgramStatus.ARCHIVED:
+        raise BadRequestError("Cannot delete tiers of an archived program")
+
+    tier = await _get_tier(session, tier_id)
+    if tier.program_id != program_id:
+        raise ForbiddenError("Tier does not belong to this program")
+
+    await session.delete(tier)
+    await session.commit()
+    await session.refresh(program, attribute_names=["tiers"])
     return program
