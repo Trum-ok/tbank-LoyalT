@@ -23,6 +23,51 @@ from app.events import publisher
 settings = get_settings()
 configure_logging(settings.app_name, settings.log_level)
 
+API_DESCRIPTION = """
+Личный кабинет партнёра платформы лояльности **LoyalT**: регистрация бизнеса,
+заявки на модерацию, профиль партнёра, сотрудники кассы и рассылки клиентам.
+
+* **Аккаунт и заявка** (`/accounts`, `/applications`) — предприниматель
+  регистрируется и подаёт заявку, админ Т-Банка одобряет/отклоняет её.
+* **Профиль партнёра** (`/partners`) — карточка одобренного бизнеса, логотип
+  и брендирование (видны в каталоге клиента).
+* **Сотрудники** (`/staff`) — кассиры партнёра; вход кассы по коду и PIN
+  выдаёт JWT для вызова ручек начисления баллов в core-service.
+* **Рассылки** (`/broadcasts`) — сегментированные сообщения клиентам через
+  notification-service.
+* **`/admin/...`** — служебные ручки модерации для панели Т-Банка.
+
+Каждый запрос помечается `X-Request-ID` (сквозной через HTTP и Kafka),
+ошибки возвращаются единым телом `{"detail": "..."}`.
+""".strip()
+
+OPENAPI_TAGS = [
+    {
+        "name": "accounts",
+        "description": "Регистрация и профиль аккаунта предпринимателя.",
+    },
+    {
+        "name": "applications",
+        "description": "Заявка партнёра на подключение к платформе.",
+    },
+    {
+        "name": "applications-admin",
+        "description": "Модерация заявок панелью Т-Банка.",
+    },
+    {
+        "name": "partners",
+        "description": "Профиль одобренного партнёра и брендирование.",
+    },
+    {
+        "name": "partners-admin",
+        "description": "Управление статусом партнёров панелью Т-Банка.",
+    },
+    {"name": "broadcasts", "description": "Рассылки клиентам по сегментам."},
+    {"name": "staff-auth", "description": "Вход кассы по коду и PIN, выдача JWT."},
+    {"name": "staff", "description": "Управление кассирами из ЛК партнёра."},
+    {"name": "meta", "description": "Здоровье сервиса."},
+]
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -35,10 +80,21 @@ async def lifespan(_app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title=settings.app_name,
+        title="LoyalT · Partner API",
+        summary="ЛК партнёра: регистрация бизнеса, заявки, профиль, кассиры, рассылки.",
+        description=API_DESCRIPTION,
         version="0.1.0",
         debug=settings.debug,
         lifespan=lifespan,
+        openapi_tags=OPENAPI_TAGS,
+        contact={
+            "name": "Команда LLM Chads",
+            "url": "https://github.com/Trum-ok/tbank-loyalt",
+        },
+        license_info={
+            "name": "MIT",
+            "url": "https://github.com/Trum-ok/tbank-loyalt/blob/master/LICENSE",
+        },
     )
     app.add_middleware(
         CORSMiddleware,

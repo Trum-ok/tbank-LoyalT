@@ -4,6 +4,7 @@ from loyalt_common.context import get_request_id, request_id_ctx, set_request_id
 from loyalt_common.kafka import bind_request_id, with_request_id
 from loyalt_common.logging import configure_logging
 from loyalt_common.middleware import RequestIdMiddleware
+from loyalt_common.openapi import ErrorResponse, error_responses
 
 __all__ = [
     "configure_logging",
@@ -13,4 +14,6 @@ __all__ = [
     "request_id_ctx",
     "with_request_id",
     "bind_request_id",
+    "ErrorResponse",
+    "error_responses",
 ]

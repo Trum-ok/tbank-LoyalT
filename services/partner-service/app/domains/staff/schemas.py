@@ -12,6 +12,18 @@ class StaffCreate(BaseModel):
     login_code: str = LoginCode
     pin: str = Pin
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "name": "Касса №1",
+                    "login_code": "CASHIER-01",
+                    "pin": "1234",
+                }
+            ]
+        }
+    )
+
     @field_validator("login_code")
     @classmethod
     def upper(cls, v: str) -> str:
@@ -39,6 +51,10 @@ class StaffRead(BaseModel):
 class StaffLoginRequest(BaseModel):
     login_code: str = LoginCode
     pin: str = Pin
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"login_code": "CASHIER-01", "pin": "1234"}]}
+    )
 
     @field_validator("login_code")
     @classmethod
