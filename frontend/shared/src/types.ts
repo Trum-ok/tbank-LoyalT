@@ -431,3 +431,136 @@ export interface BroadcastUpdate {
 export interface AudiencePreview {
   count: number;
 }
+
+// ===== Admin-service =====
+
+export interface AdminRead {
+  id: UUID;
+  email: string;
+  full_name: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminCreate {
+  email: string;
+  full_name?: string | null;
+}
+
+export interface AdminUpdate {
+  full_name?: string | null;
+  is_active?: boolean | null;
+}
+
+export interface AdminPartnersOverview {
+  total: number;
+  by_status: Record<string, number>;
+  by_category: Record<string, number>;
+  pending_applications: number;
+}
+
+export interface AdminCustomersOverview {
+  total: number;
+  enrolled: number;
+}
+
+export interface AdminTransactionsOverview {
+  accruals_count: number;
+  accruals_points: number;
+  redemptions_count: number;
+  redemptions_points: number;
+  reversals_count: number;
+}
+
+export interface AdminPlatformOverview {
+  partners: AdminPartnersOverview;
+  customers: AdminCustomersOverview;
+  transactions: AdminTransactionsOverview;
+}
+
+export interface AdminTopPartner {
+  partner_id: UUID;
+  partner_name: string;
+  transactions_count: number;
+  customers_count: number;
+}
+
+export interface AdminDailyCount {
+  day: string;
+  count: number;
+}
+
+export interface AdminCategoryRead {
+  code: string;
+  label: string;
+  description: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminCategoryUpsert {
+  label: string;
+  description?: string | null;
+  display_order?: number;
+  is_active?: boolean;
+}
+
+export interface AdminFeaturedPartnerRead {
+  id: UUID;
+  partner_id: UUID;
+  position: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminFeaturedPartnerCreate {
+  partner_id: UUID;
+  position?: number;
+  starts_at?: string | null;
+  ends_at?: string | null;
+}
+
+export interface AdminBannerRead {
+  id: UUID;
+  title: string;
+  body: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  position: number;
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminBannerCreate {
+  title: string;
+  body?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  position?: number;
+  is_active?: boolean;
+  starts_at?: string | null;
+  ends_at?: string | null;
+}
+
+export interface AdminBannerUpdate {
+  title?: string | null;
+  body?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  position?: number | null;
+  is_active?: boolean | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+}
+
+export interface AdminDecisionRequest {
+  comment?: string | null;
+}

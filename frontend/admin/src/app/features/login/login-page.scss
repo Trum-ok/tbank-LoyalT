@@ -1,0 +1,83 @@
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--tbank-page-bg);
+}
+
+.login__card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.login__mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--tbank-yellow);
+  color: #1c1c1e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.login__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.login__sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--tbank-text-muted);
+}
+
+.login__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--tbank-surface-2);
+  border-radius: 999px;
+}
+
+.login__tab {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--tbank-text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &.is-active {
+    background: var(--tbank-surface);
+    color: var(--tbank-text);
+    box-shadow: var(--tbank-card-shadow);
+  }
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

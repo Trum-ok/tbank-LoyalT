@@ -8,6 +8,85 @@ importers:
 
   .: {}
 
+  frontend/admin:
+    dependencies:
+      '@angular/animations':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))
+      '@angular/common':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/compiler':
+        specifier: ^21.2.0
+        version: 21.2.12
+      '@angular/core':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)
+      '@angular/forms':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@angular/platform-browser@21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@angular/platform-browser':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))
+      '@angular/router':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@angular/platform-browser@21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@taiga-ui/cdk':
+        specifier: ^5.6.0
+        version: 5.6.0(5af0ea84dd45bd4592dbea17daa22b15)
+      '@taiga-ui/core':
+        specifier: ^5.6.0
+        version: 5.6.0(0fc16d76348e4d0a7442c78aa297f166)
+      '@taiga-ui/event-plugins':
+        specifier: ^5.0.0
+        version: 5.0.0(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@angular/platform-browser@21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(rxjs@7.8.2)
+      '@taiga-ui/i18n':
+        specifier: ^5.6.0
+        version: 5.6.0(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@ng-web-apis/common@5.2.0(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@types/dom-speech-recognition@0.0.8)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@taiga-ui/icons':
+        specifier: ^5.6.0
+        version: 5.6.0
+      '@taiga-ui/kit':
+        specifier: ^5.6.0
+        version: 5.6.0(583fc48e3d45ef05db2c02bf2db45eaa)
+      '@taiga-ui/layout':
+        specifier: ^5.6.0
+        version: 5.6.0(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@taiga-ui/cdk@5.6.0(5af0ea84dd45bd4592dbea17daa22b15))(@taiga-ui/core@5.6.0(0fc16d76348e4d0a7442c78aa297f166))(@taiga-ui/kit@5.6.0(583fc48e3d45ef05db2c02bf2db45eaa))(@taiga-ui/polymorpheus@5.0.0(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@angular/platform-browser@21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))))(rxjs@7.8.2)
+      '@taiga-ui/polymorpheus':
+        specifier: ^5.0.0
+        version: 5.0.0(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@angular/platform-browser@21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))
+      '@taiga-ui/styles':
+        specifier: ^5.6.0
+        version: 5.6.0(@taiga-ui/design-tokens@0.301.0)
+      '@tbank-loyalt/shared':
+        specifier: workspace:*
+        version: link:../shared
+      rxjs:
+        specifier: ~7.8.0
+        version: 7.8.2
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+    devDependencies:
+      '@angular/build':
+        specifier: ^21.2.10
+        version: 21.2.10(@angular/compiler-cli@21.2.12(@angular/compiler@21.2.12)(typescript@5.9.3))(@angular/compiler@21.2.12)(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(@angular/platform-browser@21.2.12(@angular/animations@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@angular/common@21.2.12(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.12(@angular/compiler@21.2.12)(rxjs@7.8.2)))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(chokidar@5.0.0)(less@4.6.4)(postcss@8.5.14)(tslib@2.8.1)(typescript@5.9.3)(vitest@4.1.6(jsdom@28.1.0)(vite@7.3.2(less@4.6.4)(sass@1.97.3)))
+      '@angular/cli':
+        specifier: ^21.2.10
+        version: 21.2.10(chokidar@5.0.0)
+      '@angular/compiler-cli':
+        specifier: ^21.2.0
+        version: 21.2.12(@angular/compiler@21.2.12)(typescript@5.9.3)
+      less:
+        specifier: ^4.6.4
+        version: 4.6.4
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.3
+      typescript:
+        specifier: ~5.9.2
+        version: 5.9.3
+
   frontend/cashier:
     dependencies:
       '@angular/animations':
@@ -5411,7 +5490,7 @@ snapshots:
     dependencies:
       hosted-git-info: 9.0.3
       proc-log: 6.1.0
-      semver: 7.7.4
+      semver: 7.8.0
       validate-npm-package-name: 7.0.2
 
   npm-packlist@10.0.4:

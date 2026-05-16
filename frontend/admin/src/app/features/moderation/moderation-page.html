@@ -1,0 +1,111 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Модерация заявок</h1>
+      <p class="page-subtitle">
+        Заявки бизнесов на подключение к Т-Лояльности.
+      </p>
+    </div>
+    <div class="ranges">
+      @for (f of filters; track f.value) {
+        <button
+          type="button"
+          class="ranges__btn"
+          [class.is-active]="filter() === f.value"
+          (click)="setFilter(f.value)"
+        >
+          {{ f.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="empty-box">Загрузка заявок…</div>
+  } @else if (items().length === 0) {
+    <div class="empty-box">Заявок в этой категории нет.</div>
+  } @else {
+    <div class="apps">
+      @for (app of items(); track app.id) {
+        <article class="card app">
+          <button type="button" class="app__head" (click)="toggle(app.id)">
+            <span class="app__main">
+              <span class="app__name">{{ app.business_name }}</span>
+              <span class="app__meta">
+                {{ partnerCategoryLabel(app.category) }} · ИНН {{ app.inn }}
+              </span>
+            </span>
+            <span class="app__right">
+              <span
+                class="status-pill"
+                [class]="'status-pill--' + app.status"
+              >
+                {{ applicationStatusLabel(app.status) }}
+              </span>
+              <span class="app__date">{{ formatDateTime(app.created_at) }}</span>
+            </span>
+          </button>
+
+          @if (expandedId() === app.id) {
+            <div class="app__body">
+              <div class="row row--2">
+                <div class="field">
+                  <span class="field__label">Контактный email</span>
+                  <span class="app__val">{{ app.contact_email }}</span>
+                </div>
+                <div class="field">
+                  <span class="field__label">Телефон</span>
+                  <span class="app__val">{{ app.contact_phone ?? '—' }}</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field__label">Описание</span>
+                <span class="app__val">{{ app.description ?? '—' }}</span>
+              </div>
+
+              @if (app.decision_comment) {
+                <div class="field">
+                  <span class="field__label">Комментарий решения</span>
+                  <span class="app__val">{{ app.decision_comment }}</span>
+                </div>
+              }
+
+              @if (app.status === 'pending') {
+                <div class="field">
+                  <label class="field__label" [attr.for]="'c-' + app.id">
+                    Комментарий (обязателен при отклонении)
+                  </label>
+                  <textarea
+                    [attr.id]="'c-' + app.id"
+                    class="field__textarea"
+                    placeholder="Например: некорректный ИНН"
+                    [ngModel]="comment()"
+                    (ngModelChange)="comment.set($event)"
+                  ></textarea>
+                </div>
+                <div class="app__actions">
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    [disabled]="acting() === app.id"
+                    (click)="approve(app)"
+                  >
+                    Одобрить
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger"
+                    [disabled]="acting() === app.id"
+                    (click)="reject(app)"
+                  >
+                    Отклонить
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

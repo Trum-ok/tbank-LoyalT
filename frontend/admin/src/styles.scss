@@ -1,0 +1,394 @@
+/* === T-Bank loyalty · partner cabinet: бренд-палитра поверх Taiga === */
+
+[tuiTheme='dark'] {
+  --tbank-bg: #0e0f12;
+  --tbank-surface: #1a1b1e;
+  --tbank-surface-2: #232427;
+  --tbank-elevated: #2b2c30;
+  --tbank-text: #f5f5f7;
+  --tbank-text-muted: rgba(245, 245, 247, 0.6);
+  --tbank-text-faint: rgba(245, 245, 247, 0.4);
+  --tbank-divider: rgba(255, 255, 255, 0.08);
+  --tbank-divider-strong: rgba(255, 255, 255, 0.14);
+  --tbank-sidebar-bg: #0a0b0e;
+  --tbank-page-bg: #050608;
+  --tbank-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+}
+
+[tuiTheme='light'],
+:root {
+  --tbank-bg: #f4f4f6;
+  --tbank-surface: #ffffff;
+  --tbank-surface-2: #f8f8fa;
+  --tbank-elevated: #ffffff;
+  --tbank-text: #1c1c1e;
+  --tbank-text-muted: #54595f;
+  --tbank-text-faint: #8a8f96;
+  --tbank-divider: rgba(0, 0, 0, 0.07);
+  --tbank-divider-strong: rgba(0, 0, 0, 0.12);
+  --tbank-sidebar-bg: #ffffff;
+  --tbank-page-bg: #ececef;
+  --tbank-card-shadow: 0 8px 24px rgba(20, 20, 25, 0.06);
+}
+
+:root {
+  --tbank-yellow: #ffdd2d;
+  --tbank-yellow-hover: #ffcd00;
+  --tbank-blue: #428bf9;
+  --tbank-blue-hover: #2f7af0;
+  --tbank-green: #3ec98c;
+  --tbank-red: #ff6262;
+  --tbank-radius: 20px;
+  --tbank-radius-lg: 28px;
+  --tbank-radius-sm: 12px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family:
+    'Manrope',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: var(--tbank-page-bg);
+  color: var(--tbank-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ===== Общие блоки для страниц кабинета ===== */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  margin: 6px 0 0;
+  color: var(--tbank-text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.card {
+  background: var(--tbank-surface);
+  border: 1px solid var(--tbank-divider);
+  border-radius: var(--tbank-radius);
+  padding: 20px;
+  box-shadow: var(--tbank-card-shadow);
+}
+
+.card--soft {
+  background: var(--tbank-surface-2);
+  box-shadow: none;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--tbank-surface-2);
+  color: var(--tbank-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: var(--tbank-divider-strong);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn--primary {
+  background: var(--tbank-yellow);
+  color: #1c1c1e;
+
+  &:hover:not(:disabled) {
+    background: var(--tbank-yellow-hover);
+  }
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--tbank-divider-strong);
+
+  &:hover:not(:disabled) {
+    background: var(--tbank-surface-2);
+  }
+}
+
+.btn--danger {
+  background: transparent;
+  color: var(--tbank-red);
+  border-color: rgba(255, 98, 98, 0.32);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 98, 98, 0.1);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tbank-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field__input,
+.field__textarea,
+.field__select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--tbank-radius-sm);
+  border: 1px solid var(--tbank-divider-strong);
+  background: var(--tbank-surface);
+  color: var(--tbank-text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: var(--tbank-text-faint);
+  }
+
+  &:focus {
+    border-color: var(--tbank-blue);
+  }
+}
+
+.field__textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.field__hint {
+  font-size: 12px;
+  color: var(--tbank-text-muted);
+}
+
+.field__error {
+  font-size: 12px;
+  color: var(--tbank-red);
+}
+
+.row {
+  display: grid;
+  gap: 14px;
+}
+
+.row--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.row--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 720px) {
+  .row--2,
+  .row--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+.status-pill--published,
+.status-pill--active,
+.status-pill--approved {
+  color: var(--tbank-green);
+  background: rgba(62, 201, 140, 0.12);
+}
+
+.status-pill--draft,
+.status-pill--pending {
+  color: var(--tbank-blue);
+  background: rgba(66, 139, 249, 0.12);
+}
+
+.status-pill--paused,
+.status-pill--suspended {
+  color: #d18b00;
+  background: rgba(255, 187, 0, 0.14);
+}
+
+.status-pill--archived,
+.status-pill--rejected,
+.status-pill--blocked {
+  color: var(--tbank-red);
+  background: rgba(255, 98, 98, 0.12);
+}
+
+.error-box {
+  padding: 14px 16px;
+  background: rgba(255, 98, 98, 0.1);
+  border: 1px solid rgba(255, 98, 98, 0.24);
+  border-radius: var(--tbank-radius-sm);
+  color: var(--tbank-red);
+  font-size: 14px;
+}
+
+.empty-box {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--tbank-text-muted);
+  background: var(--tbank-surface);
+  border-radius: var(--tbank-radius);
+  border: 1px dashed var(--tbank-divider-strong);
+}
+
+/* ===== Общие блоки админ-панели ===== */
+
+.ranges {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--tbank-surface-2);
+  border-radius: 999px;
+}
+
+.ranges__btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--tbank-text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &.is-active {
+    background: var(--tbank-surface);
+    color: var(--tbank-text);
+    box-shadow: var(--tbank-card-shadow);
+  }
+
+  &:hover:not(.is-active) {
+    color: var(--tbank-text);
+  }
+}
+
+.block-title {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.block-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tbank-text-muted);
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--tbank-divider);
+  }
+
+  th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tbank-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__empty {
+    text-align: center;
+    color: var(--tbank-text-muted);
+    padding: 28px 12px;
+  }
+}

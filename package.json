@@ -6,6 +6,7 @@
   "scripts": {
     "customer": "pnpm --filter @tbank-loyalt/customer start",
     "partner": "pnpm --filter @tbank-loyalt/partner start",
-    "cashier": "pnpm --filter @tbank-loyalt/cashier start"
+    "cashier": "pnpm --filter @tbank-loyalt/cashier start",
+    "admin": "pnpm --filter @tbank-loyalt/admin start"
   }
 }

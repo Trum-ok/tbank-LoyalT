@@ -1,0 +1,102 @@
+<div class="login">
+  <div class="login__card card">
+    <div class="login__brand">
+      <span class="login__mark">Т</span>
+      <div>
+        <h1 class="login__title">Т-Лояльность</h1>
+        <p class="login__sub">Панель Т-Банка · модерация и каталог</p>
+      </div>
+    </div>
+
+    <div class="login__tabs">
+      <button
+        type="button"
+        class="login__tab"
+        [class.is-active]="mode() === 'existing'"
+        (click)="setMode('existing')"
+      >
+        Вход по ID
+      </button>
+      <button
+        type="button"
+        class="login__tab"
+        [class.is-active]="mode() === 'bootstrap'"
+        (click)="setMode('bootstrap')"
+      >
+        Первый администратор
+      </button>
+    </div>
+
+    @if (error()) {
+      <div class="error-box">{{ error() }}</div>
+    }
+
+    @if (mode() === 'existing') {
+      <form class="login__form" (ngSubmit)="enterExisting()">
+        <div class="field">
+          <label class="field__label" for="admin-id">ID администратора</label>
+          <input
+            id="admin-id"
+            class="field__input"
+            type="text"
+            placeholder="00000000-0000-0000-0000-000000000000"
+            [ngModel]="adminId()"
+            (ngModelChange)="adminId.set($event)"
+            name="adminId"
+            autocomplete="off"
+          />
+          <span class="field__hint">
+            UUID существующего активного администратора (заголовок X-Admin-Id).
+          </span>
+        </div>
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="loading()"
+        >
+          {{ loading() ? 'Проверка…' : 'Войти' }}
+        </button>
+      </form>
+    } @else {
+      <form class="login__form" (ngSubmit)="createBootstrap()">
+        <div class="field">
+          <label class="field__label" for="email">Email</label>
+          <input
+            id="email"
+            class="field__input"
+            type="email"
+            placeholder="admin@tbank.ru"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            autocomplete="off"
+          />
+        </div>
+        <div class="field">
+          <label class="field__label" for="full-name">ФИО</label>
+          <input
+            id="full-name"
+            class="field__input"
+            type="text"
+            placeholder="Иван Иванов"
+            [ngModel]="fullName()"
+            (ngModelChange)="fullName.set($event)"
+            name="fullName"
+            autocomplete="off"
+          />
+        </div>
+        <span class="field__hint">
+          Создание работает только при пустой таблице администраторов
+          (первичная настройка платформы).
+        </span>
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="loading()"
+        >
+          {{ loading() ? 'Создание…' : 'Создать и войти' }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

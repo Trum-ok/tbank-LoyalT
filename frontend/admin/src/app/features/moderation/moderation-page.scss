@@ -1,0 +1,78 @@
+.apps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app {
+  padding: 0;
+  overflow: hidden;
+}
+
+.app__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--tbank-text);
+
+  &:hover {
+    background: var(--tbank-surface-2);
+  }
+}
+
+.app__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.app__name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.app__meta {
+  font-size: 13px;
+  color: var(--tbank-text-muted);
+}
+
+.app__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.app__date {
+  font-size: 12px;
+  color: var(--tbank-text-faint);
+}
+
+.app__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-top: 1px solid var(--tbank-divider);
+}
+
+.app__val {
+  font-size: 14px;
+  color: var(--tbank-text);
+  word-break: break-word;
+}
+
+.app__actions {
+  display: flex;
+  gap: 10px;
+}

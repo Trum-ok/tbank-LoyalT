@@ -1,0 +1,287 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Каталог</h1>
+      <p class="page-subtitle">
+        Категории, рекомендованные партнёры и промо-баннеры клиентского
+        каталога.
+      </p>
+    </div>
+    <div class="ranges">
+      @for (t of tabs; track t.value) {
+        <button
+          type="button"
+          class="ranges__btn"
+          [class.is-active]="tab() === t.value"
+          (click)="setTab(t.value)"
+        >
+          {{ t.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="empty-box">Загрузка каталога…</div>
+  } @else {
+    @switch (tab()) {
+      @case ('categories') {
+        <div class="cat-grid">
+          @for (c of categories(); track c.code) {
+            <div class="card cat">
+              @if (editCode() === c.code) {
+                <div class="field">
+                  <label class="field__label">Название</label>
+                  <input
+                    class="field__input"
+                    [ngModel]="catDraft().label"
+                    (ngModelChange)="patchCat('label', $event)"
+                  />
+                </div>
+                <div class="field">
+                  <label class="field__label">Описание</label>
+                  <textarea
+                    class="field__textarea"
+                    [ngModel]="catDraft().description"
+                    (ngModelChange)="patchCat('description', $event)"
+                  ></textarea>
+                </div>
+                <div class="row row--2">
+                  <div class="field">
+                    <label class="field__label">Порядок</label>
+                    <input
+                      class="field__input"
+                      type="number"
+                      [ngModel]="catDraft().display_order"
+                      (ngModelChange)="patchCat('display_order', +$event)"
+                    />
+                  </div>
+                  <label class="cat__check">
+                    <input
+                      type="checkbox"
+                      [ngModel]="catDraft().is_active"
+                      (ngModelChange)="patchCat('is_active', $event)"
+                    />
+                    Активна
+                  </label>
+                </div>
+                <div class="cat__actions">
+                  <button
+                    type="button"
+                    class="btn btn--primary btn--sm"
+                    [disabled]="saving()"
+                    (click)="saveCategory(c.code)"
+                  >
+                    Сохранить
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--sm"
+                    (click)="cancelEditCategory()"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              } @else {
+                <div class="cat__head">
+                  <span class="cat__title">{{ c.label }}</span>
+                  <span
+                    class="status-pill"
+                    [class]="c.is_active ? 'status-pill--active' : 'status-pill--archived'"
+                  >
+                    {{ c.is_active ? 'активна' : 'скрыта' }}
+                  </span>
+                </div>
+                <span class="cat__code">{{ c.code }} · порядок {{ c.display_order }}</span>
+                <p class="cat__desc">{{ c.description ?? 'Без описания' }}</p>
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--sm"
+                  (click)="startEditCategory(c)"
+                >
+                  Редактировать
+                </button>
+              }
+            </div>
+          } @empty {
+            <div class="empty-box">Категорий пока нет.</div>
+          }
+        </div>
+      }
+
+      @case ('featured') {
+        <div class="card featured__form">
+          <h2 class="block-title">Добавить рекомендованного партнёра</h2>
+          <div class="row row--3">
+            <div class="field">
+              <label class="field__label">Партнёр</label>
+              <select
+                class="field__select"
+                [ngModel]="newFeaturedPartner()"
+                (ngModelChange)="newFeaturedPartner.set($event)"
+              >
+                <option value="">— выберите —</option>
+                @for (p of partners(); track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label">Позиция</label>
+              <input
+                class="field__input"
+                type="number"
+                [ngModel]="newFeaturedPos()"
+                (ngModelChange)="newFeaturedPos.set(+$event)"
+              />
+            </div>
+            <div class="featured__add">
+              <button
+                type="button"
+                class="btn btn--primary"
+                [disabled]="saving()"
+                (click)="addFeatured()"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Партнёр</th>
+                <th class="tbl__num">Позиция</th>
+                <th>Добавлен</th>
+                <th class="tbl__num"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of featured(); track f.id) {
+                <tr>
+                  <td>{{ partnerName(f.partner_id) }}</td>
+                  <td class="tbl__num">{{ f.position }}</td>
+                  <td>{{ formatDate(f.created_at) }}</td>
+                  <td class="tbl__num">
+                    <button
+                      type="button"
+                      class="btn btn--danger btn--sm"
+                      (click)="removeFeatured(f.id)"
+                    >
+                      Убрать
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="tbl__empty">
+                    Рекомендованных партнёров нет.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @case ('banners') {
+        <div class="card featured__form">
+          <h2 class="block-title">Новый баннер</h2>
+          <div class="row row--2">
+            <div class="field">
+              <label class="field__label">Заголовок</label>
+              <input
+                class="field__input"
+                [ngModel]="bannerDraft().title"
+                (ngModelChange)="patchBanner('title', $event)"
+              />
+            </div>
+            <div class="field">
+              <label class="field__label">Позиция</label>
+              <input
+                class="field__input"
+                type="number"
+                [ngModel]="bannerDraft().position"
+                (ngModelChange)="patchBanner('position', +$event)"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label">Текст</label>
+            <textarea
+              class="field__textarea"
+              [ngModel]="bannerDraft().body"
+              (ngModelChange)="patchBanner('body', $event)"
+            ></textarea>
+          </div>
+          <div class="row row--2">
+            <div class="field">
+              <label class="field__label">URL картинки</label>
+              <input
+                class="field__input"
+                [ngModel]="bannerDraft().image_url"
+                (ngModelChange)="patchBanner('image_url', $event)"
+              />
+            </div>
+            <div class="field">
+              <label class="field__label">URL перехода</label>
+              <input
+                class="field__input"
+                [ngModel]="bannerDraft().link_url"
+                (ngModelChange)="patchBanner('link_url', $event)"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="saving()"
+            (click)="createBanner()"
+          >
+            Создать баннер
+          </button>
+        </div>
+
+        <div class="banners">
+          @for (b of banners(); track b.id) {
+            <div class="card banner">
+              <div class="banner__main">
+                <span class="banner__title">{{ b.title }}</span>
+                <span class="banner__body">{{ b.body ?? '—' }}</span>
+                <span class="banner__meta">позиция {{ b.position }}</span>
+              </div>
+              <div class="banner__side">
+                <span
+                  class="status-pill"
+                  [class]="b.is_active ? 'status-pill--active' : 'status-pill--archived'"
+                >
+                  {{ b.is_active ? 'активен' : 'выключен' }}
+                </span>
+                <div class="banner__actions">
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--sm"
+                    (click)="toggleBanner(b)"
+                  >
+                    {{ b.is_active ? 'Выключить' : 'Включить' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger btn--sm"
+                    (click)="deleteBanner(b.id)"
+                  >
+                    Удалить
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-box">Баннеров пока нет.</div>
+          }
+        </div>
+      }
+    }
+  }
+</section>

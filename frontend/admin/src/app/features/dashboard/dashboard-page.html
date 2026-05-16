@@ -1,0 +1,179 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Метрики платформы</h1>
+      <p class="page-subtitle">
+        Партнёры, клиенты и оборот баллов Т-Лояльности.
+      </p>
+    </div>
+    <div class="ranges">
+      @for (r of ranges; track r.label) {
+        <button
+          type="button"
+          class="ranges__btn"
+          [class.is-active]="range() === r.value"
+          (click)="setRange(r.value)"
+        >
+          {{ r.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="empty-box">Загрузка метрик…</div>
+  } @else if (!overview()) {
+    <div class="error-box">
+      Не удалось загрузить метрики. Проверьте доступ администратора и
+      доступность admin-service.
+    </div>
+  } @else {
+    <div class="kpi-grid">
+      <div class="card kpi">
+        <span class="kpi__label">Партнёры</span>
+        <span class="kpi__value">{{ formatNumber(partners()?.total) }}</span>
+        <span class="kpi__hint">
+          на модерации: {{ formatNumber(partners()?.pending_applications) }}
+        </span>
+      </div>
+      <div class="card kpi">
+        <span class="kpi__label">Клиенты</span>
+        <span class="kpi__value">{{ formatNumber(customers()?.total) }}</span>
+        <span class="kpi__hint">
+          с подключениями: {{ formatNumber(customers()?.enrolled) }}
+        </span>
+      </div>
+      <div class="card kpi">
+        <span class="kpi__label">Начислено баллов</span>
+        <span class="kpi__value">{{ formatNumber(tx()?.accruals_points) }}</span>
+        <span class="kpi__hint">
+          операций: {{ formatNumber(tx()?.accruals_count) }}
+        </span>
+      </div>
+      <div class="card kpi">
+        <span class="kpi__label">Списано баллов</span>
+        <span class="kpi__value">{{ formatNumber(tx()?.redemptions_points) }}</span>
+        <span class="kpi__hint">
+          операций: {{ formatNumber(tx()?.redemptions_count) }}
+        </span>
+      </div>
+      <div class="card kpi">
+        <span class="kpi__label">Оборот баллов</span>
+        <span class="kpi__value">{{ formatNumber(pointsTurnover()) }}</span>
+        <span class="kpi__hint">
+          отмен: {{ formatNumber(tx()?.reversals_count) }}
+        </span>
+      </div>
+    </div>
+
+    <div class="row row--2">
+      <div class="card">
+        <h2 class="block-title">Партнёры по статусу</h2>
+        <ul class="status-list">
+          @for (s of statusRows(); track s.status) {
+            <li class="status-list__item">
+              <span
+                class="status-pill"
+                [class]="'status-pill--' + s.status"
+              >
+                {{ s.label }}
+              </span>
+              <span class="status-list__count">{{ formatNumber(s.count) }}</span>
+            </li>
+          } @empty {
+            <li class="status-list__empty">Нет данных</li>
+          }
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2 class="block-title">Партнёры по категориям</h2>
+        <ul class="cat-list">
+          @for (c of categoryRows(); track c.code) {
+            <li class="cat-list__item">
+              <span class="cat-list__label">{{ c.label }}</span>
+              <span class="cat-list__bar">
+                <span
+                  class="cat-list__fill"
+                  [style.width.%]="c.ratio * 100"
+                ></span>
+              </span>
+              <span class="cat-list__count">{{ formatNumber(c.count) }}</span>
+            </li>
+          } @empty {
+            <li class="status-list__empty">Нет данных</li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="row row--2">
+      <div class="card">
+        <h2 class="block-title">
+          Новые клиенты
+          <span class="block-sub">всего {{ customersChart().total }}</span>
+        </h2>
+        <div class="bars">
+          @for (b of customersChart().bars; track $index) {
+            <span class="bars__col" [title]="b.label + ' · ' + b.value">
+              <span class="bars__fill" [style.height.%]="b.ratio * 100"></span>
+            </span>
+          }
+        </div>
+        <div class="bars__axis">
+          @for (t of xticks(customersChart().bars); track $index) {
+            <span>{{ t }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="block-title">
+          Новые партнёры
+          <span class="block-sub">всего {{ partnersChart().total }}</span>
+        </h2>
+        <div class="bars">
+          @for (b of partnersChart().bars; track $index) {
+            <span class="bars__col" [title]="b.label + ' · ' + b.value">
+              <span
+                class="bars__fill bars__fill--alt"
+                [style.height.%]="b.ratio * 100"
+              ></span>
+            </span>
+          }
+        </div>
+        <div class="bars__axis">
+          @for (t of xticks(partnersChart().bars); track $index) {
+            <span>{{ t }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="block-title">Топ партнёров по активности</h2>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Партнёр</th>
+            <th class="tbl__num">Транзакции</th>
+            <th class="tbl__num">Клиенты</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of topPartners(); track p.partner_id) {
+            <tr>
+              <td>{{ p.partner_name }}</td>
+              <td class="tbl__num">{{ formatNumber(p.transactions_count) }}</td>
+              <td class="tbl__num">{{ formatNumber(p.customers_count) }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" class="tbl__empty">Нет данных за период</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

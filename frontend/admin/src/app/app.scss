@@ -1,0 +1,246 @@
+.layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  background: var(--tbank-page-bg);
+
+  &__sidebar {
+    background: var(--tbank-sidebar-bg);
+    border-right: 1px solid var(--tbank-divider);
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 2px;
+  }
+
+  &__brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--tbank-yellow);
+    color: #1c1c1e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+
+  &__brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &__brand-name {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+
+  &__brand-sub {
+    font-size: 11px;
+    color: var(--tbank-text-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+  }
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: var(--tbank-text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    transition:
+      color 0.15s ease,
+      background 0.15s ease;
+
+    svg {
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      color: var(--tbank-text);
+      background: var(--tbank-surface-2);
+
+      svg {
+        opacity: 1;
+      }
+    }
+
+    &.is-active {
+      color: var(--tbank-text);
+      background: rgba(255, 221, 45, 0.12);
+
+      svg {
+        opacity: 1;
+        color: var(--tbank-yellow);
+      }
+    }
+  }
+
+  &__cta {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--tbank-yellow) 0%, #ffcd00 100%);
+    color: #1c1c1e;
+  }
+
+  &__cta-title {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  &__cta-sub {
+    font-size: 12px;
+    opacity: 0.75;
+  }
+
+  &__partner {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--tbank-surface);
+    border: 1px solid var(--tbank-divider);
+    --brand: var(--tbank-yellow);
+  }
+
+  &__partner-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #1c1c1e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  &__partner-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &__partner-name {
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__partner-id {
+    font-size: 11px;
+    color: var(--tbank-text-muted);
+    font-family: 'SF Mono', 'Menlo', monospace;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 32px;
+    background: color-mix(in srgb, var(--tbank-page-bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--tbank-divider);
+  }
+
+  &__topbar-left,
+  &__topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__env {
+    background: var(--tbank-yellow);
+    color: #1c1c1e;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.06em;
+  }
+
+  &__main {
+    padding: 28px 32px 48px;
+    max-width: 1280px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+
+    &__sidebar {
+      position: static;
+      height: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 16px;
+    }
+
+    &__nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    &__cta,
+    &__partner {
+      margin: 0;
+    }
+
+    &__main {
+      padding: 16px;
+    }
+  }
+}

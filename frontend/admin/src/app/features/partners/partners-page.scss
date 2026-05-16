@@ -1,0 +1,38 @@
+.partners__search {
+  max-width: 420px;
+}
+
+.partners__table-wrap {
+  padding: 8px 4px;
+  overflow-x: auto;
+}
+
+.partners__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.partners__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.partners__mono {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 13px;
+}
+
+.partners__actions {
+  display: inline-flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn--sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
