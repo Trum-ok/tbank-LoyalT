@@ -71,6 +71,7 @@
 
     @if (form(); as f) {
       <form class="card" (ngSubmit)="save(); $event.preventDefault()">
+        <!-- ── Основные настройки ─────────────────────────────────── -->
         <h2 class="card__title">Настройки программы</h2>
 
         <label class="field">
@@ -146,7 +147,7 @@
           </label>
 
           <label class="field">
-            <span class="field__label">Мин. для списания</span>
+            <span class="field__label">Мин. для списания, баллов</span>
             <input
               class="field__input"
               type="number"
@@ -157,14 +158,208 @@
           </label>
         </div>
 
+        <!-- ── Бонусные механики ──────────────────────────────────── -->
+        <h3 class="card__section-title">Бонусные механики</h3>
+
+        <div class="row row--3">
+          <label class="field">
+            <span class="field__label">Велком-бонус, баллов</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              placeholder="пусто = отключено"
+              [value]="f.welcome_bonus_points ?? ''"
+              (input)="patch('welcome_bonus_points', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+            <span class="field__hint">при первом вступлении</span>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Бонус в день рождения, баллов</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              placeholder="пусто = отключено"
+              [value]="f.birthday_bonus_points ?? ''"
+              (input)="patch('birthday_bonus_points', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Окно ДР, дней заранее</span>
+            <input
+              class="field__input"
+              type="number"
+              min="0"
+              max="30"
+              [value]="f.birthday_bonus_days"
+              (input)="patch('birthday_bonus_days', +$any($event.target).value)"
+              [disabled]="f.birthday_bonus_points === null"
+            />
+            <span class="field__hint">0 = только в день рождения</span>
+          </label>
+        </div>
+
+        <div class="row row--2">
+          <label class="field">
+            <span class="field__label">Реферальный бонус, баллов</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              placeholder="пусто = отключено"
+              [value]="f.referral_bonus_points ?? ''"
+              (input)="patch('referral_bonus_points', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+            <span class="field__hint">начисляется тому, кто пригласил клиента</span>
+          </label>
+        </div>
+
+        <!-- ── Ограничения ────────────────────────────────────────── -->
+        <h3 class="card__section-title">Ограничения начисления и списания</h3>
+
+        <div class="row row--3">
+          <label class="field">
+            <span class="field__label">Мин. сумма покупки, ₽</span>
+            <input
+              class="field__input"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="пусто = без ограничений"
+              [value]="f.min_purchase_rub ?? ''"
+              (input)="patch('min_purchase_rub', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+            <span class="field__hint">минимальный чек для начисления</span>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Лимит баллов за покупку</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              placeholder="пусто = без ограничений"
+              [value]="f.max_points_per_transaction ?? ''"
+              (input)="patch('max_points_per_transaction', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+            <span class="field__hint">макс. начислений за одну транзакцию</span>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Макс. % чека баллами</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              max="100"
+              placeholder="пусто = без ограничений"
+              [value]="f.max_redemption_percent ?? ''"
+              (input)="patch('max_redemption_percent', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+            <span class="field__hint">клиент может оплатить до N% покупки баллами</span>
+          </label>
+        </div>
+
+        <!-- ── Период действия ────────────────────────────────────── -->
+        <h3 class="card__section-title">Период действия</h3>
+
+        <div class="row row--2">
+          <label class="field">
+            <span class="field__label">Дата начала</span>
+            <input
+              class="field__input"
+              type="date"
+              [value]="f.valid_from"
+              (input)="patch('valid_from', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Дата окончания</span>
+            <input
+              class="field__input"
+              type="date"
+              [value]="f.valid_until"
+              (input)="patch('valid_until', $any($event.target).value)"
+            />
+          </label>
+        </div>
+
         <div class="card__actions">
-          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [disabled]="saving() || isArchived()"
+          >
             {{ saving() ? 'Сохраняем…' : 'Сохранить' }}
           </button>
         </div>
       </form>
     }
 
+    <!-- ── Уровни лояльности ──────────────────────────────────────── -->
+    <section class="card">
+      <header class="card__title-row">
+        <div>
+          <h2 class="card__title">Уровни лояльности</h2>
+          <p class="card__sub">
+            Клиент повышает уровень по накопленным баллам. Множитель умножает
+            базовое начисление.
+          </p>
+        </div>
+        @if (!isArchived()) {
+          <button type="button" class="btn btn--ghost" (click)="openTierCreator()">
+            + Уровень
+          </button>
+        }
+      </header>
+
+      @if (p.tiers.length === 0) {
+        <div class="empty-box empty-box--soft">
+          Уровней нет. Без них все клиенты начисляют баллы одинаково.
+        </div>
+      } @else {
+        <ul class="tiers">
+          @for (tier of p.tiers; track tier.id) {
+            <li class="tiers__item">
+              <div class="tiers__info">
+                <span class="tiers__name">{{ tier.name }}</span>
+                <span class="tiers__threshold">от {{ tier.threshold_points }} баллов</span>
+              </div>
+              <span
+                class="tiers__multiplier"
+                [class.tiers__multiplier--base]="tier.accrual_multiplier === 1"
+              >
+                {{ tierMultiplierLabel(tier.accrual_multiplier) }}
+              </span>
+              @if (!isArchived()) {
+                <div class="tiers__actions">
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--small"
+                    (click)="openTierEditor(tier)"
+                  >
+                    Изменить
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger btn--small"
+                    (click)="deleteTier(tier)"
+                  >
+                    Удалить
+                  </button>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- ── Награды ────────────────────────────────────────────────── -->
     <section class="card">
       <header class="card__title-row">
         <div>
@@ -218,6 +413,80 @@
   }
 </section>
 
+<!-- ── Модалка уровня ─────────────────────────────────────────────────── -->
+@if (tierModalOpen()) {
+  <div class="modal" (click)="closeTierModal()">
+    <form
+      class="modal__panel"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="saveTier(); $event.preventDefault()"
+    >
+      <header class="modal__head">
+        <h2 class="modal__title">
+          {{ editingTierId() ? 'Редактировать уровень' : 'Новый уровень' }}
+        </h2>
+        <button
+          type="button"
+          class="modal__close"
+          (click)="closeTierModal()"
+          aria-label="Закрыть"
+        >
+          ✕
+        </button>
+      </header>
+
+      <label class="field">
+        <span class="field__label">Название *</span>
+        <input
+          class="field__input"
+          placeholder="Бронзовый, Серебряный, VIP…"
+          [value]="tierDraft().name"
+          (input)="patchTier('name', $any($event.target).value)"
+          required
+        />
+      </label>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Порог входа, баллов</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0"
+            [value]="tierDraft().threshold_points"
+            (input)="patchTier('threshold_points', +$any($event.target).value)"
+          />
+          <span class="field__hint">накопленных баллов за всё время</span>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Множитель начисления</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0.1"
+            max="10"
+            step="0.1"
+            [value]="tierDraft().accrual_multiplier"
+            (input)="patchTier('accrual_multiplier', +$any($event.target).value)"
+          />
+          <span class="field__hint">1.0 = базовый, 2.0 = двойные баллы</span>
+        </label>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" (click)="closeTierModal()">
+          Отмена
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="tierPending()">
+          {{ tierPending() ? 'Сохраняем…' : 'Сохранить' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+}
+
+<!-- ── Модалка награды ────────────────────────────────────────────────── -->
 @if (rewardCreatorOpen()) {
   <div class="modal" (click)="closeRewardCreator()">
     <form

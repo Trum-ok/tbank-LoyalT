@@ -7,6 +7,9 @@ import {
   RewardCreate,
   RewardRead,
   RewardType,
+  TierCreate,
+  TierRead,
+  TierUpdate,
 } from '@tbank-loyalt/shared';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 
@@ -44,6 +47,24 @@ interface ProgramForm {
   visits_required: number | null;
   points_ttl_days: number | null;
   min_redemption: number;
+  // Бонусные механики
+  welcome_bonus_points: number | null;
+  birthday_bonus_points: number | null;
+  birthday_bonus_days: number;
+  referral_bonus_points: number | null;
+  // Ограничения
+  min_purchase_rub: number | null;
+  max_points_per_transaction: number | null;
+  max_redemption_percent: number | null;
+  // Период действия
+  valid_from: string;
+  valid_until: string;
+}
+
+interface TierDraft {
+  name: string;
+  threshold_points: number;
+  accrual_multiplier: number;
 }
 
 @Component({
@@ -79,6 +100,12 @@ export class ProgramDetailPage {
   readonly creatingReward = signal(false);
   readonly rewardDraft = signal<RewardDraft>(this.defaultRewardDraft());
 
+  // Tier management
+  readonly tierModalOpen = signal(false);
+  readonly editingTierId = signal<string | null>(null);
+  readonly tierDraft = signal<TierDraft>(this.defaultTierDraft());
+  readonly tierPending = signal(false);
+
   readonly canPublish = computed(() => {
     const p = this.program();
     return p?.status === 'draft' || p?.status === 'paused';
@@ -88,6 +115,7 @@ export class ProgramDetailPage {
     const s = this.program()?.status;
     return s === 'paused' || s === 'draft';
   });
+  readonly isArchived = computed(() => this.program()?.status === 'archived');
 
   constructor() {
     queueMicrotask(() => this.reload());
@@ -128,6 +156,16 @@ export class ProgramDetailPage {
       accrual_rule: this.buildRule(p, f),
       points_ttl_days: f.points_ttl_days,
       min_redemption: f.min_redemption,
+      welcome_bonus_points: f.welcome_bonus_points,
+      birthday_bonus_points: f.birthday_bonus_points,
+      birthday_bonus_days: f.birthday_bonus_days,
+      referral_bonus_points: f.referral_bonus_points,
+      min_purchase_amount:
+        f.min_purchase_rub != null ? Math.round(f.min_purchase_rub * 100) : null,
+      max_points_per_transaction: f.max_points_per_transaction,
+      max_redemption_percent: f.max_redemption_percent,
+      valid_from: f.valid_from || null,
+      valid_until: f.valid_until || null,
     };
 
     this.saving.set(true);
@@ -170,6 +208,8 @@ export class ProgramDetailPage {
     );
   }
 
+  // ── Rewards ────────────────────────────────────────────────────────────────
+
   openRewardCreator(): void {
     this.rewardDraft.set(this.defaultRewardDraft());
     this.rewardCreatorOpen.set(true);
@@ -179,10 +219,7 @@ export class ProgramDetailPage {
     this.rewardCreatorOpen.set(false);
   }
 
-  patchReward<K extends keyof RewardDraft>(
-    key: K,
-    value: RewardDraft[K],
-  ): void {
+  patchReward<K extends keyof RewardDraft>(key: K, value: RewardDraft[K]): void {
     this.rewardDraft.update(d => ({ ...d, [key]: value }));
   }
 
@@ -232,17 +269,13 @@ export class ProgramDetailPage {
       .update(r.id, { is_active: !r.is_active })
       .pipe(
         catchError(err => {
-          this.notify.error(
-            err?.error?.detail ?? 'Не удалось обновить награду',
-          );
+          this.notify.error(err?.error?.detail ?? 'Не удалось обновить награду');
           return of(null);
         }),
       )
       .subscribe(updated => {
         if (updated) {
-          this.rewards.update(rs =>
-            rs.map(x => (x.id === updated.id ? updated : x)),
-          );
+          this.rewards.update(rs => rs.map(x => (x.id === updated.id ? updated : x)));
           this.notify.success(
             updated.is_active
               ? `Награда «${updated.title}» снова активна`
@@ -265,6 +298,101 @@ export class ProgramDetailPage {
         return `+${v['percent'] ?? '?'}% кэшбэка`;
     }
   }
+
+  // ── Tiers ──────────────────────────────────────────────────────────────────
+
+  openTierCreator(): void {
+    this.editingTierId.set(null);
+    this.tierDraft.set(this.defaultTierDraft());
+    this.tierModalOpen.set(true);
+  }
+
+  openTierEditor(tier: TierRead): void {
+    this.editingTierId.set(tier.id);
+    this.tierDraft.set({
+      name: tier.name,
+      threshold_points: tier.threshold_points,
+      accrual_multiplier: tier.accrual_multiplier,
+    });
+    this.tierModalOpen.set(true);
+  }
+
+  closeTierModal(): void {
+    this.tierModalOpen.set(false);
+  }
+
+  patchTier<K extends keyof TierDraft>(key: K, value: TierDraft[K]): void {
+    this.tierDraft.update(d => ({ ...d, [key]: value }));
+  }
+
+  saveTier(): void {
+    const p = this.program();
+    if (!p) return;
+
+    const d = this.tierDraft();
+    if (!d.name.trim()) {
+      this.notify.error('Укажите название уровня');
+      return;
+    }
+
+    this.tierPending.set(true);
+    const editId = this.editingTierId();
+
+    const request$ = editId
+      ? this.programsApi.updateTier(p.id, editId, {
+          name: d.name.trim(),
+          threshold_points: d.threshold_points,
+          accrual_multiplier: d.accrual_multiplier,
+        } satisfies TierUpdate)
+      : this.programsApi.addTier(p.id, {
+          name: d.name.trim(),
+          threshold_points: d.threshold_points,
+          accrual_multiplier: d.accrual_multiplier,
+        } satisfies TierCreate);
+
+    request$
+      .pipe(
+        catchError(err => {
+          const msg = err?.error?.detail ?? 'Не удалось сохранить уровень';
+          this.notify.error(msg);
+          return of(null);
+        }),
+        finalize(() => this.tierPending.set(false)),
+      )
+      .subscribe(updated => {
+        if (updated) {
+          this.program.set(updated);
+          this.closeTierModal();
+          this.notify.success(editId ? 'Уровень обновлён' : 'Уровень добавлен');
+        }
+      });
+  }
+
+  deleteTier(tier: TierRead): void {
+    const p = this.program();
+    if (!p) return;
+
+    this.programsApi
+      .deleteTier(p.id, tier.id)
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось удалить уровень');
+          return of(null);
+        }),
+      )
+      .subscribe(updated => {
+        if (updated) {
+          this.program.set(updated);
+          this.notify.success(`Уровень «${tier.name}» удалён`);
+        }
+      });
+  }
+
+  tierMultiplierLabel(m: number): string {
+    return m === 1 ? 'базовый' : `×${m}`;
+  }
+
+  // ── Private ────────────────────────────────────────────────────────────────
 
   private transition(
     name: string,
@@ -326,6 +454,10 @@ export class ProgramDetailPage {
     };
   }
 
+  private defaultTierDraft(): TierDraft {
+    return { name: '', threshold_points: 0, accrual_multiplier: 1.0 };
+  }
+
   private formFromProgram(p: ProgramRead): ProgramForm {
     const rule = p.accrual_rule as Record<string, number>;
     return {
@@ -336,6 +468,16 @@ export class ProgramDetailPage {
       visits_required: rule['visits_required'] ?? null,
       points_ttl_days: p.points_ttl_days,
       min_redemption: p.min_redemption,
+      welcome_bonus_points: p.welcome_bonus_points,
+      birthday_bonus_points: p.birthday_bonus_points,
+      birthday_bonus_days: p.birthday_bonus_days ?? 0,
+      referral_bonus_points: p.referral_bonus_points,
+      min_purchase_rub:
+        p.min_purchase_amount != null ? p.min_purchase_amount / 100 : null,
+      max_points_per_transaction: p.max_points_per_transaction,
+      max_redemption_percent: p.max_redemption_percent,
+      valid_from: p.valid_from ?? '',
+      valid_until: p.valid_until ?? '',
     };
   }
 }
