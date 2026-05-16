@@ -52,7 +52,7 @@
         <span class="pos__balance-label">{{ c.program_name }}</span>
         <span class="pos__balance-value">
           {{ formatPoints(c.points_balance) }}
-          <small>баллов</small>
+          <small>{{ pointsWord(c.points_balance) }}</small>
         </span>
         <span class="pos__program">
           {{ programTypeLabel(c.program_type) }} · баланс клиента
@@ -115,7 +115,7 @@
             <span class="pos__preview-label">Будет начислено</span>
             <span class="pos__preview-value">
               +{{ formatPoints(previewPoints()!) }}
-              <small>баллов</small>
+              <small>{{ pointsWord(previewPoints()!) }}</small>
             </span>
           </div>
         }
@@ -172,10 +172,10 @@
         {{ d.kind === 'accrual' ? 'Баллы начислены' : 'Награда выдана' }}
       </h1>
       <p class="pos__done-points">
-        {{ d.kind === 'accrual' ? '+' : '−' }}{{ formatPoints(d.points) }} баллов
+        {{ d.kind === 'accrual' ? '+' : '−' }}{{ formatPointsLabel(d.points) }}
       </p>
       <p class="pos__hint">
-        Баланс клиента: {{ formatPoints(d.balanceAfter) }}
+        Баланс клиента: {{ formatPointsLabel(d.balanceAfter) }}
       </p>
       <button type="button" class="btn btn--primary" (click)="reset()">
         Следующий клиент
@@ -204,8 +204,8 @@
         <p class="pos__modal-text">
           {{
             d.kind === 'accrual'
-              ? 'Начисленные ' + formatPoints(d.points) + ' баллов будут списаны обратно.'
-              : 'Списание будет отменено, ' + formatPoints(d.points) + ' баллов вернутся клиенту.'
+              ? 'Начисленные ' + formatPointsLabel(d.points) + ' будут списаны обратно.'
+              : 'Списание будет отменено, ' + formatPointsLabel(d.points) + ' вернутся клиенту.'
           }}
           Это действие нельзя будет отменить.
         </p>

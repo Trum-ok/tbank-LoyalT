@@ -16,7 +16,13 @@ import jsQR from 'jsqr';
 import { catchError, finalize, of } from 'rxjs';
 
 import { PointsApi } from '../../core/api/points-api.service';
-import { formatPoints, parseEnrollmentCode, programTypeLabel } from '../../core/format';
+import {
+  formatPoints,
+  formatPointsLabel,
+  parseEnrollmentCode,
+  pointsWord,
+  programTypeLabel,
+} from '../../core/format';
 import { NotifyService } from '../../core/notify.service';
 
 type Stage = 'scan' | 'client' | 'done';
@@ -42,6 +48,8 @@ export class PosPage implements OnDestroy {
     viewChild<ElementRef<HTMLVideoElement>>('video');
 
   readonly formatPoints = formatPoints;
+  readonly formatPointsLabel = formatPointsLabel;
+  readonly pointsWord = pointsWord;
   readonly programTypeLabel = programTypeLabel;
 
   readonly stage = signal<Stage>('scan');
@@ -283,7 +291,9 @@ export class PosPage implements OnDestroy {
             transactionId: res.transaction.id,
           });
           this.stage.set('done');
-          this.notify.success(`Начислено ${formatPoints(res.transaction.points)}`);
+          this.notify.success(
+            `Начислено ${formatPointsLabel(res.transaction.points)}`,
+          );
         }
       });
   }

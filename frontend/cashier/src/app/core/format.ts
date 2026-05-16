@@ -2,6 +2,27 @@ export function formatPoints(points: number): string {
   return new Intl.NumberFormat('ru-RU').format(points);
 }
 
+/** Падежная форма слова «балл»: 1 балл, 2 балла, 5 баллов. */
+export function pointsWord(points: number): string {
+  const n = Math.abs(Math.trunc(points)) % 100;
+  if (n >= 11 && n <= 14) return 'баллов';
+  switch (n % 10) {
+    case 1:
+      return 'балл';
+    case 2:
+    case 3:
+    case 4:
+      return 'балла';
+    default:
+      return 'баллов';
+  }
+}
+
+/** «1 234 балла» — число + согласованное слово. */
+export function formatPointsLabel(points: number): string {
+  return `${formatPoints(points)} ${pointsWord(points)}`;
+}
+
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
