@@ -56,3 +56,11 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+
+[dependency-groups]
+dev = [
+    "black>=26.5.0",
+    "isort>=8.0.1",
+    "ruff>=0.15.13",
+    "ty>=0.0.37",
+]
