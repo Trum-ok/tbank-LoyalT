@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.audience import AudienceSegment, resolve_audience
 from app.deps import SessionDep
+from app.domains.analytics import projection
 from app.inbox import handle_event
 
 router = APIRouter(prefix="/internal", tags=["internal"])
@@ -45,3 +46,14 @@ async def ingest_event(event: IncomingEvent, session: SessionDep) -> dict[str, b
     """
     handled = await handle_event(session, event.type, event.payload)
     return {"handled": handled}
+
+
+@router.post("/analytics/rebuild", status_code=status.HTTP_200_OK)
+async def rebuild_analytics(session: SessionDep) -> dict[str, int]:
+    """Полная пересборка read-модели аналитики из transaction.
+
+    Источник истины — transaction. Backfill уже накопленных данных и
+    страховка паритета, если Kafka выключена или событие потерялось
+    (outbox'а нет). Идемпотентна.
+    """
+    return await projection.rebuild_from_transactions(session)

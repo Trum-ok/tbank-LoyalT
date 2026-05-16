@@ -26,12 +26,23 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
       - expiration: -points с баланса
     """
 
+    # Таблица партиционирована HASH(partner_id) (миграция 0003). Поэтому
+    # PK составной — (id, partner_id): ключ секции обязан входить в каждый
+    # уникальный констрейнт. `id` остаётся глобально уникальным (uuid4),
+    # поэтому lookup по одному id корректен (см. transactions.service).
     __tablename__ = "transaction"
     __table_args__ = (
-        Index("ix_transaction_customer_id", "customer_id"),
-        Index("ix_transaction_program_id", "program_id"),
+        Index("ix_transaction_partner_created", "partner_id", "created_at"),
+        Index(
+            "ix_transaction_customer_prog_created",
+            "customer_id",
+            "program_id",
+            "created_at",
+        ),
         Index("ix_transaction_enrollment_id", "enrollment_id"),
-        Index("ix_transaction_expires_at", "expires_at"),
+        # Частичный индекс ix_transaction_expires_at создаётся в миграции
+        # (WHERE is_reversed = false AND type = 'accrual') — в metadata не
+        # выражается, поэтому здесь его нет намеренно.
     )
 
     enrollment_id: Mapped[UUID] = mapped_column(
@@ -39,7 +50,10 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
     )
     customer_id: Mapped[UUID] = mapped_column(ForeignKey("customer.id", ondelete="CASCADE"))
     program_id: Mapped[UUID] = mapped_column(ForeignKey("program.id", ondelete="CASCADE"))
-    partner_id: Mapped[UUID] = mapped_column(ForeignKey("partner.id", ondelete="CASCADE"))
+    # Часть составного PK (ключ HASH-секции).
+    partner_id: Mapped[UUID] = mapped_column(
+        ForeignKey("partner.id", ondelete="CASCADE"), primary_key=True
+    )
 
     type: Mapped[TransactionType] = mapped_column(String(16))
     points: Mapped[int] = mapped_column()
@@ -52,9 +66,9 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
     )
 
     # Для reversal — ссылка на отменяемую транзакцию.
-    reverses_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("transaction.id", ondelete="SET NULL")
-    )
+    # FK снят: на партиционированной таблице нельзя ссылаться на часть
+    # составного PK. Целостность обеспечивает domains.points.service.reverse.
+    reverses_id: Mapped[UUID | None] = mapped_column()
 
     # Срок сгорания начисленных баллов (для accrual). None — бессрочно.
     expires_at: Mapped[datetime | None] = mapped_column()

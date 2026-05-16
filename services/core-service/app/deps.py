@@ -5,12 +5,15 @@ from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.database import get_session
+from app.database import get_read_session, get_session
 from app.jwt_tokens import TokenError, decode
 
 settings = get_settings()
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+# Только для read-only запросов (история, аналитика). Идёт на реплику,
+# если она настроена; иначе прозрачно на primary.
+ReadSessionDep = Annotated[AsyncSession, Depends(get_read_session)]
 
 
 def _partner_id_from_bearer(authorization: str | None) -> UUID | None:

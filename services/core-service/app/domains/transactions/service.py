@@ -8,7 +8,12 @@ from app.errors import ForbiddenError, NotFoundError
 
 
 async def get_transaction(session: AsyncSession, transaction_id: UUID) -> Transaction:
-    transaction = await session.get(Transaction, transaction_id)
+    # PK составной (id, partner_id) из-за партиционирования, но id глобально
+    # уникален (uuid4) — ищем по одному id.
+    result = await session.execute(
+        select(Transaction).where(Transaction.id == transaction_id)
+    )
+    transaction = result.scalar_one_or_none()
     if transaction is None:
         raise NotFoundError("Transaction not found")
     return transaction

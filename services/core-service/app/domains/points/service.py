@@ -146,6 +146,7 @@ async def accrue(
             ),
             "balance_after": enrollment.points_balance,
             "expires_at": expires_at,
+            "created_at": transaction.created_at,
         },
         key=str(req.customer_id),
     )
@@ -202,6 +203,7 @@ async def redeem(
             "reward_title": reward.title,
             "points": reward.cost_points,
             "balance_after": enrollment.points_balance,
+            "created_at": transaction.created_at,
         },
         key=str(req.customer_id),
     )
@@ -214,7 +216,12 @@ async def reverse(
     transaction_id: UUID,
     description: str | None = None,
 ) -> tuple[Transaction, int]:
-    original = await session.get(Transaction, transaction_id)
+    # PK составной (id, partner_id) после партиционирования; id уникален.
+    original = (
+        await session.execute(
+            select(Transaction).where(Transaction.id == transaction_id)
+        )
+    ).scalar_one_or_none()
     if original is None:
         raise NotFoundError("Transaction not found")
     if original.partner_id != partner_id:
@@ -266,12 +273,14 @@ async def reverse(
             "transaction_id": reversal.id,
             "reverses_id": original.id,
             "original_type": original.type,
+            "original_created_at": original.created_at,
             "customer_id": original.customer_id,
             "program_id": original.program_id,
             "partner_id": partner_id,
             "partner_name": await _partner_name(session, partner_id),
             "points": original.points,
             "balance_after": enrollment.points_balance,
+            "created_at": reversal.created_at,
         },
         key=str(original.customer_id),
     )

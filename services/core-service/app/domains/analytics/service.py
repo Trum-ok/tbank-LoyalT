@@ -1,12 +1,14 @@
 """Серверная агрегация метрик дашборда партнёра.
 
-Все тяжёлые расчёты делаются здесь (а не на фронте), чтобы не упираться
-в limit транзакций и не тянуть «сырьё» в браузер. Данные забираются двумя
-минимальными запросами и сворачиваются в Python — для масштабов хакатона
-этого достаточно, при росте легко заменить на SQL group by.
+Тяжёлые метрики считаются из read-модели (analytics_daily / analytics_heatmap,
+см. domains.analytics.projection), а не сканом transaction. Лёгкий запрос
+вступлений остаётся (enrollments на порядки меньше транзакций) — он нужен
+для «новых юзеров» и когорт retention.
 
-Время в created_at наивное (func.now() в БД). Трактуем как UTC и бакетим
-по календарной дате/часу UTC.
+Семантика повторяет прежнюю реализацию (наличие дневной строки = клиент
+активен; reversal исключён; reversed accrual теряет баллы, но активность
+и чек остаются). Окно периода фильтруется по календарной дате UTC —
+небольшое отличие от прежней фильтрации по timestamp осознанное.
 """
 
 from collections import defaultdict
@@ -17,6 +19,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.analytics.projection import AnalyticsDaily, AnalyticsHeatmap
 from app.domains.analytics.schemas import (
     AnalyticsRead,
     DayCount,
@@ -31,7 +34,6 @@ from app.domains.analytics.schemas import (
 )
 from app.domains.enrollments.models import Enrollment
 from app.domains.programs.models import Program
-from app.domains.transactions.models import Transaction, TransactionType
 
 _PERIOD_DAYS: dict[Period, int | None] = {
     Period.D1: 1,
@@ -42,7 +44,6 @@ _PERIOD_DAYS: dict[Period, int | None] = {
     Period.ALL: None,
 }
 
-# Кривую удержания строим максимум на столько дней — дальше шум по краям когорт.
 _MAX_RETENTION_DAY = 90
 
 
@@ -61,9 +62,9 @@ async def build_partner_analytics(
     now = datetime.utcnow()
     today = now.date()
     days = _PERIOD_DAYS[period]
-    window_start_dt = None if days is None else now - timedelta(days=days)
+    window_start = None if days is None else (now - timedelta(days=days)).date()
 
-    # 1. Вступления партнёра (за всё время — нужно для «новых юзеров» и когорт).
+    # 1. Вступления партнёра (за всё время) — для «новых юзеров» и когорт.
     enroll_rows = (
         await session.execute(
             select(Enrollment.customer_id, Enrollment.created_at)
@@ -72,46 +73,56 @@ async def build_partner_analytics(
         )
     ).all()
 
-    # 2. Транзакции партнёра за всё время — для retention по краевым когортам.
-    tx_rows = (
+    # 2. Дневная проекция партнёра (за всё время — нужно для retention).
+    daily_rows = (
         await session.execute(
             select(
-                Transaction.customer_id,
-                Transaction.type,
-                Transaction.purchase_amount,
-                Transaction.points,
-                Transaction.is_reversed,
-                Transaction.created_at,
-            ).where(Transaction.partner_id == partner_id)
+                AnalyticsDaily.customer_id,
+                AnalyticsDaily.day,
+                AnalyticsDaily.accrual_count,
+                AnalyticsDaily.accrued_points,
+                AnalyticsDaily.redeemed_points,
+                AnalyticsDaily.purchase_amount_sum,
+                AnalyticsDaily.purchase_count,
+            ).where(AnalyticsDaily.partner_id == partner_id)
         )
     ).all()
 
-    # --- День первого вступления на клиента (= «новый юзер» для партнёра) ---
+    # 3. Heatmap-проекция партнёра.
+    heat_rows = (
+        await session.execute(
+            select(
+                AnalyticsHeatmap.day,
+                AnalyticsHeatmap.hour,
+                AnalyticsHeatmap.cnt,
+            ).where(AnalyticsHeatmap.partner_id == partner_id)
+        )
+    ).all()
+
+    # День первого вступления на клиента (= «новый юзер» для партнёра).
     first_enroll: dict[UUID, date] = {}
     for cust, created in enroll_rows:
         d = created.date()
         if cust not in first_enroll or d < first_enroll[cust]:
             first_enroll[cust] = d
 
-    # Активность по дням на клиента (любая нереверсная операция = вовлечённость).
+    # Дни активности на клиента (все строки проекции = нереверсная активность).
     activity_days: dict[UUID, set[date]] = defaultdict(set)
-    for cust, ttype, _amount, _pts, _rev, created in tx_rows:
-        if ttype == TransactionType.REVERSAL:
-            continue
-        activity_days[cust].add(created.date())
+    for cust, d, *_rest in daily_rows:
+        activity_days[cust].add(d)
 
     # ---------------- Окно периода ----------------
-    if window_start_dt is None:
-        candidate_dates = [d for d in first_enroll.values()]
-        candidate_dates += [r[5].date() for r in tx_rows]
-        start_date = min(candidate_dates) if candidate_dates else today
+    if window_start is None:
+        candidates: list[date] = list(first_enroll.values())
+        candidates += [r[1] for r in daily_rows]
+        candidates += [r[0] for r in heat_rows]
+        start_date = min(candidates) if candidates else today
     else:
-        start_date = window_start_dt.date()
+        start_date = window_start
     window_days = _day_range(start_date, today)
 
-    in_window = (
-        lambda dt: window_start_dt is None or dt >= window_start_dt
-    )
+    def in_window(d: date) -> bool:
+        return window_start is None or d >= window_start
 
     # ---------------- Новые юзеры по дням ----------------
     new_by_day: dict[date, int] = {d: 0 for d in window_days}
@@ -122,7 +133,7 @@ async def build_partner_analytics(
         DayCount(date=d.isoformat(), count=new_by_day[d]) for d in window_days
     ]
 
-    # ---------------- Покупки / юзер по дням + summary ----------------
+    # ---------------- Summary + покупки/юзер по дням ----------------
     purchases_day: dict[date, int] = {d: 0 for d in window_days}
     users_day: dict[date, set[UUID]] = {d: set() for d in window_days}
     accrued = 0
@@ -130,26 +141,36 @@ async def build_partner_analytics(
     check_sum = Decimal(0)
     check_n = 0
     active_customers: set[UUID] = set()
+    daily_active: dict[date, set[UUID]] = defaultdict(set)
+    wau_set: set[UUID] = set()
+    mau_set: set[UUID] = set()
+    w7 = (now - timedelta(days=7)).date()
+    w30 = (now - timedelta(days=30)).date()
 
-    for cust, ttype, amount, pts, rev, created in tx_rows:
-        if not in_window(created):
+    for (
+        cust,
+        d,
+        accrual_count,
+        accrued_points,
+        redeemed_points,
+        purchase_sum,
+        purchase_count,
+    ) in daily_rows:
+        if not in_window(d):
             continue
-        if ttype == TransactionType.REVERSAL:
-            continue
-        d = created.date()
         active_customers.add(cust)
+        daily_active[d].add(cust)
+        if d >= w7:
+            wau_set.add(cust)
+        if d >= w30:
+            mau_set.add(cust)
         if d in users_day:
             users_day[d].add(cust)
-        if ttype == TransactionType.ACCRUAL:
-            if d in purchases_day:
-                purchases_day[d] += 1
-            if not rev:
-                accrued += pts
-            if amount is not None:
-                check_sum += amount
-                check_n += 1
-        elif ttype == TransactionType.REDEMPTION:
-            redeemed += pts
+            purchases_day[d] += accrual_count
+        accrued += accrued_points
+        redeemed += redeemed_points
+        check_sum += purchase_sum
+        check_n += purchase_count
 
     purchases_per_user_by_day = []
     for d in window_days:
@@ -172,28 +193,8 @@ async def build_partner_analytics(
     )
 
     # ---------------- Stickiness: DAU / WAU / MAU ----------------
-    daily_active: dict[date, set[UUID]] = defaultdict(set)
-    for cust, ttype, _a, _p, _r, created in tx_rows:
-        if ttype == TransactionType.REVERSAL:
-            continue
-        if not in_window(created):
-            continue
-        daily_active[created.date()].add(cust)
-
     n_days = max(len(window_days), 1)
     dau = sum(len(s) for s in daily_active.values()) / n_days
-
-    wau_set: set[UUID] = set()
-    mau_set: set[UUID] = set()
-    w7 = now - timedelta(days=7)
-    w30 = now - timedelta(days=30)
-    for cust, ttype, _a, _p, _r, created in tx_rows:
-        if ttype == TransactionType.REVERSAL:
-            continue
-        if created >= w7:
-            wau_set.add(cust)
-        if created >= w30:
-            mau_set.add(cust)
     wau = len(wau_set)
     mau = len(mau_set)
     stickiness = Stickiness(
@@ -205,14 +206,7 @@ async def build_partner_analytics(
     )
 
     # ---------------- Retention ----------------
-    # Когорта = клиенты, чьё первое вступление попало в окно периода.
-    # Удержание Dn = доля когорты, у кого была активность ровно в день +n
-    # (учитываем только тех, у кого день +n уже физически наступил).
-    cohort = [
-        c
-        for c, d in first_enroll.items()
-        if start_date <= d <= today
-    ]
+    cohort = [c for c, d in first_enroll.items() if start_date <= d <= today]
     cohort_size = len(cohort)
     curve: list[RetentionPoint] = []
     d1 = d7 = d30 = None
@@ -229,7 +223,7 @@ async def build_partner_analytics(
             for c in cohort:
                 base = first_enroll[c]
                 if (today - base).days < offset:
-                    continue  # день +offset ещё не наступил
+                    continue
                 eligible += 1
                 if (base + timedelta(days=offset)) in activity_days.get(c, ()):
                     retained += 1
@@ -260,12 +254,10 @@ async def build_partner_analytics(
 
     # ---------------- Heatmap: день недели × час ----------------
     grid: dict[tuple[int, int], int] = defaultdict(int)
-    for _cust, ttype, _a, _p, _r, created in tx_rows:
-        if ttype == TransactionType.REVERSAL:
+    for d, hour, cnt in heat_rows:
+        if not in_window(d):
             continue
-        if not in_window(created):
-            continue
-        grid[(created.weekday(), created.hour)] += 1
+        grid[(d.weekday(), hour)] += cnt
     cells = [
         HeatCell(dow=dow, hour=hour, count=grid.get((dow, hour), 0))
         for dow in range(7)

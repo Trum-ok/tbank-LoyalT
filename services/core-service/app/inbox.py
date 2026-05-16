@@ -1,7 +1,8 @@
 """Диспетчер входящих событий из Kafka (или /internal/events).
 
-Сейчас слушаем только `partner.*` события из partner-service. По мере
-роста контракта добавятся обработчики для других сервисов.
+`partner.*` — снэпшоты из partner-service; `points.*` — собственные
+события core, проецируемые в read-модель аналитики (см.
+domains.analytics.projection). Хендлеры коммитят сессию сами.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.analytics import projection
 from app.domains.partners.sync import upsert_partner
 
 logger = logging.getLogger("core.inbox")
@@ -27,6 +29,9 @@ HANDLERS: dict[str, Handler] = {
     "partner.approved": _on_partner_event,
     "partner.updated": _on_partner_event,
     "partner.status_changed": _on_partner_event,
+    "points.accrued": projection.apply_accrued,
+    "points.redeemed": projection.apply_redeemed,
+    "points.reversed": projection.apply_reversed,
 }
 
 

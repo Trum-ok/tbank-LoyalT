@@ -18,8 +18,18 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default="postgresql+psycopg://postgres:postgres@localhost:5432/tbank_loyalt"
     )
+    # DSN read-реплики для тяжёлых read-only запросов (история, аналитика).
+    # Пусто → весь трафик идёт в primary (безопасный fallback).
+    database_replica_url: str | None = None
     db_schema: str = "core"
     db_echo: bool = False
+
+    # Пул соединений SQLAlchemy. Под нагрузкой дефолтный пул (5+10) узок;
+    # эти значения — стартовая точка, тюнятся по числу воркеров и max_connections БД.
+    db_pool_size: int = 20
+    db_max_overflow: int = 20
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 1800
 
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
@@ -32,7 +42,11 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_group_id: str = "core-service"
     kafka_topic_core_events: str = "core.events"
-    kafka_subscribe_topics: list[str] = Field(default_factory=lambda: ["partner.events"])
+    # core.events — собственные события points.*, проецируемые в read-модель
+    # аналитики тем же consumer'ом (дедуп идемпотентен).
+    kafka_subscribe_topics: list[str] = Field(
+        default_factory=lambda: ["partner.events", "core.events"]
+    )
 
 
 @lru_cache
