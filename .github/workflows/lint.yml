@@ -19,17 +19,18 @@ jobs:
         run: uv sync
 
       - name: black
-        run: uv run black --check services
+        run: uv run black --check services libs
 
       - name: isort
-        run: uv run isort --check-only services
+        run: uv run isort --check-only services libs
 
       - name: ruff
-        run: uv run ruff check services
+        run: uv run ruff check services libs
 
       - name: ty
         run: |
           set -e
+          uv run ty check libs/loyalt-common/src/loyalt_common
           for s in core partner admin notification; do
             uv run ty check "services/$s-service/app"
           done

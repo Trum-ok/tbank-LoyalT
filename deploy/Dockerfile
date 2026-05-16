@@ -17,8 +17,10 @@ ENV UV_LINK_MODE=copy \
 WORKDIR /app
 
 # Сначала ставим зависимости — это кешируемый слой, который перестраивается
-# только при изменении pyproject.toml / uv.lock.
+# при изменении pyproject.toml / uv.lock или общего пакета libs/.
+# libs/ нужен до sync: loyalt-common — workspace-член, собирается из исходников.
 COPY pyproject.toml uv.lock ./
+COPY libs ./libs
 RUN uv sync --frozen --no-install-project --no-dev
 
 # Затем код сервисов. Один образ — четыре сервиса; WORKDIR/CMD задаём в compose.
