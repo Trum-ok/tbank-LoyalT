@@ -57,6 +57,7 @@ export class PosPage implements OnDestroy {
   readonly amount = signal('');
   readonly visits = signal(1);
   readonly manualPoints = signal('');
+  readonly accrueError = signal<string | null>(null);
 
   private stream: MediaStream | null = null;
   private rafId: number | null = null;
@@ -171,6 +172,7 @@ export class PosPage implements OnDestroy {
           this.amount.set('');
           this.visits.set(1);
           this.manualPoints.set('');
+          this.accrueError.set(null);
           this.stage.set('client');
         }
       });
@@ -178,9 +180,27 @@ export class PosPage implements OnDestroy {
 
   // ===== Начисление / списание =====
 
+  private accrueErrorMessage(err: unknown): string {
+    const e = err as { status?: number; error?: { detail?: string } };
+    const detail = e?.error?.detail ?? '';
+    if (detail.includes('non-positive')) {
+      return this.accrualMode() === 'amount'
+        ? 'Сумма чека слишком мала — по правилу программы баллы не начисляются. Введите большую сумму или укажите баллы вручную.'
+        : 'По правилу программы за это начислять нечего. Укажите баллы вручную.';
+    }
+    if (detail.includes('Program is not active')) {
+      return 'Программа сейчас неактивна — начисление недоступно.';
+    }
+    if (detail.includes('accrual rule is misconfigured')) {
+      return 'Правило начисления в программе настроено некорректно. Сообщите партнёру.';
+    }
+    return detail || 'Не удалось начислить баллы';
+  }
+
   accrue(): void {
     const c = this.client();
     if (!c || this.busy()) return;
+    this.accrueError.set(null);
 
     const body: AccruePayload = {
       customer_id: c.customer_id,
@@ -206,9 +226,9 @@ export class PosPage implements OnDestroy {
       .accrue(body)
       .pipe(
         catchError(err => {
-          this.notify.error(
-            err?.error?.detail ?? 'Не удалось начислить баллы',
-          );
+          const msg = this.accrueErrorMessage(err);
+          this.accrueError.set(msg);
+          this.notify.error(msg);
           return of(null);
         }),
         finalize(() => this.busy.set(false)),
@@ -303,6 +323,7 @@ export class PosPage implements OnDestroy {
     this.client.set(null);
     this.done.set(null);
     this.manualCode.set('');
+    this.accrueError.set(null);
     this.stage.set('scan');
   }
 }
