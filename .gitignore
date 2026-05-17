@@ -13,6 +13,7 @@ venv/
 .idea/
 
 # Python tooling
+.ruff_cache/
 .poetry/
 .mypy_cache/
 .pytype/
