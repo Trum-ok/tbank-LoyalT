@@ -93,7 +93,7 @@
           ></textarea>
         </label>
 
-        <div class="row row--3">
+        <div class="row row--2">
           @switch (p.type) {
             @case ('accrual') {
               <label class="field">
@@ -155,6 +155,27 @@
               [value]="f.min_redemption"
               (input)="patch('min_redemption', +$any($event.target).value)"
             />
+          </label>
+        </div>
+
+        <!-- ── Сгорание баллов ────────────────────────────────────── -->
+        <h3 class="card__section-title">Сгорание баллов</h3>
+
+        <div class="row row--2">
+          <label class="field">
+            <span class="field__label">Предупредить за, дней</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              placeholder="не предупреждать"
+              [disabled]="!f.points_ttl_days"
+              [value]="f.expire_warn_days ?? ''"
+              (input)="patch('expire_warn_days', $any($event.target).value ? +$any($event.target).value : null)"
+            />
+            <span class="field__hint">
+              push клиенту до сгорания баллов; требует заданного TTL
+            </span>
           </label>
         </div>
 

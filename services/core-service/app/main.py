@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -9,10 +10,12 @@ from loyalt_common import RequestIdMiddleware, configure_logging
 from app import models  # noqa: F401 — регистрация моделей для Alembic
 from app.config import get_settings
 from app.consumer import consumer
+from app.database import SessionLocal
 from app.domains.analytics.router import partner_router as analytics_router
 from app.domains.catalog.router import router as catalog_router
 from app.domains.enrollments.router import router as enrollments_router
 from app.domains.partners.router import router as partners_router
+from app.domains.points.expiration import run_expiration
 from app.domains.points.router import customer_router as balance_router
 from app.domains.points.router import partner_router as points_router
 from app.domains.programs.router import router as programs_router
@@ -53,13 +56,37 @@ OPENAPI_TAGS = [
 ]
 
 
+async def _expiration_loop() -> None:
+    """Периодический прогон сгорания баллов (если джоб включён)."""
+    interval = max(60, settings.expire_job_interval_seconds)
+    log = logging.getLogger("core-service")
+    while True:
+        try:
+            async with SessionLocal() as session:
+                await run_expiration(session)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("Scheduled points expiration run failed")
+        await asyncio.sleep(interval)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await publisher.start()
     await consumer.start()
+    expire_task: asyncio.Task[None] | None = None
+    if settings.expire_job_enabled:
+        expire_task = asyncio.create_task(_expiration_loop(), name="points-expiration")
     try:
         yield
     finally:
+        if expire_task is not None:
+            expire_task.cancel()
+            try:
+                await expire_task
+            except asyncio.CancelledError:
+                pass
         await consumer.stop()
         await publisher.stop()
 

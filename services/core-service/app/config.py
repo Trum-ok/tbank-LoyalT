@@ -51,6 +51,11 @@ class Settings(BaseSettings):
         default_factory=lambda: ["partner.events", "core.events"]
     )
 
+    # Фоновый джоб сгорания баллов. Когда выключен — сгорание запускается
+    # только вручную через POST /internal/jobs/expire-points (cron/демо).
+    expire_job_enabled: bool = False
+    expire_job_interval_seconds: int = 3600
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.audience import AudienceSegment, resolve_audience
 from app.deps import SessionDep
 from app.domains.analytics import projection
+from app.domains.points.expiration import run_expiration
 from app.inbox import handle_event
 
 router = APIRouter(prefix="/internal", tags=["internal"])
@@ -46,6 +47,17 @@ async def ingest_event(event: IncomingEvent, session: SessionDep) -> dict[str, b
     """
     handled = await handle_event(session, event.type, event.payload)
     return {"handled": handled}
+
+
+@router.post("/jobs/expire-points", status_code=status.HTTP_200_OK)
+async def expire_points(session: SessionDep) -> dict[str, int]:
+    """Ручной прогон сгорания баллов по TTL + предупреждений.
+
+    Внутренний эндпоинт: дёргается cron'ом (или вручную для демо),
+    когда фоновый джоб выключен (`CORE_EXPIRE_JOB_ENABLED=false`).
+    Идемпотентен — повторный вызов ничего лишнего не спишет.
+    """
+    return await run_expiration(session)
 
 
 @router.post("/analytics/rebuild", status_code=status.HTTP_200_OK)

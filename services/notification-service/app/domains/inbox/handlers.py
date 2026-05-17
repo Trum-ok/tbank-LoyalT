@@ -80,6 +80,25 @@ async def _on_points_expiring(session: AsyncSession, payload: dict[str, Any]) ->
     )
 
 
+async def _on_points_expired(session: AsyncSession, payload: dict[str, Any]) -> None:
+    customer_id = UUID(payload["customer_id"])
+    points = int(payload["points"])
+    partner_name = payload.get("partner_name") or "Партнёр"
+    await notifications_service.create_and_deliver(
+        session,
+        NotificationCreate(
+            customer_id=customer_id,
+            type=NotificationType.POINTS_EXPIRED,
+            title=f"{points} баллов сгорели · {partner_name}",
+            body=(
+                f"Срок действия {points} баллов в программе «{partner_name}» "
+                f"истёк, и они сгорели."
+            ),
+            payload=payload,
+        ),
+    )
+
+
 async def _on_reward_available(session: AsyncSession, payload: dict[str, Any]) -> None:
     customer_id = UUID(payload["customer_id"])
     reward_title = payload.get("reward_title") or "награду"
@@ -157,6 +176,7 @@ HANDLERS: dict[str, Handler] = {
     "points.accrued": _on_points_accrued,
     "points.redeemed": _on_points_redeemed,
     "points.expiring": _on_points_expiring,
+    "points.expired": _on_points_expired,
     "reward.available": _on_reward_available,
     "partner.new_promotion": _on_new_promotion,
     "partner.broadcast": _on_partner_broadcast,
