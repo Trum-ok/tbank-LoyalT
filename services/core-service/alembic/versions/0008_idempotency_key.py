@@ -26,7 +26,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0008_idempotency_key"
-down_revision: str | Sequence[str] | None = "0007_" # TODO
+down_revision: str | Sequence[str] | None = "0007_customer_birthday_bonus_triggers"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
