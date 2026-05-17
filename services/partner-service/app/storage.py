@@ -67,6 +67,7 @@ def detect_content_type(data: bytes) -> str:
         "Файл не является корректным PNG, JPEG или WebP изображением"
     )
 
+
 # Bucket-политику достаточно проставить один раз на процесс.
 _bucket_ready = False
 
