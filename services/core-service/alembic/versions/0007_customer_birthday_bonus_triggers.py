@@ -1,6 +1,6 @@
 """customer.birthday + bonus_trigger + bonus_trigger_log
 
-Revision ID: 0007_customer_birthday_bonus_triggers
+Revision ID: 0007_bonus_campaigns
 Revises: 0006_points_expiration
 Create Date: 2026-05-17
 
@@ -15,7 +15,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0007_customer_birthday_bonus_triggers"
+revision: str = "0007_bonus_campaigns"
 down_revision: str | Sequence[str] | None = "0006_points_expiration"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
