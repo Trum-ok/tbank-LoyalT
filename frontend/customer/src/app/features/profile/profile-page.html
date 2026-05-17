@@ -1,27 +1,33 @@
 <section class="profile-page">
   @if (loading()) {
-    <div class="card">Загрузка профиля…</div>
+    <div class="profile-page__loader">Загрузка профиля…</div>
   } @else {
-    <div class="card">
-      <h2 class="card__title">Мой профиль</h2>
+    <div class="profile-page__card">
+      <h2 class="profile-page__title">Мой профиль</h2>
 
-      <form (ngSubmit)="save(); $event.preventDefault()">
-        <label class="field">
-          <span class="field__label">Дата рождения</span>
+      <form (submit)="save(); $event.preventDefault()" class="profile-page__form">
+        <div class="profile-page__field">
           <tui-textfield>
+            <label tuiLabel>Дата рождения</label>
             <input
               tuiInputDate
               [formControl]="birthdayControl"
-              placeholder="дд.мм.гггг"
+              [max]="maxDate"
             />
           </tui-textfield>
-          <span class="field__hint">
+          <span class="profile-page__hint">
             Используется для начисления бонусов в день рождения
           </span>
-        </label>
+        </div>
 
-        <div class="card__actions">
-          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+        <div class="profile-page__actions">
+          <button
+            tuiButton
+            type="submit"
+            appearance="primary"
+            size="m"
+            [disabled]="saving()"
+          >
             {{ saving() ? 'Сохраняем…' : 'Сохранить' }}
           </button>
         </div>

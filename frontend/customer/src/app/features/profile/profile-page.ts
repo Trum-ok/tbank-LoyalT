@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TuiDay } from '@taiga-ui/cdk';
+import { TuiButton } from '@taiga-ui/core';
 import { TuiInputDate } from '@taiga-ui/kit';
 import { catchError, finalize, of } from 'rxjs';
 
@@ -10,7 +11,7 @@ import { NotifyService } from '../../core/notify.service';
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [ReactiveFormsModule, TuiInputDate],
+  imports: [ReactiveFormsModule, TuiInputDate, TuiButton],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',
 })
@@ -21,6 +22,7 @@ export class ProfilePage {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly birthdayControl = new FormControl<TuiDay | null>(null);
+  readonly maxDate = TuiDay.currentLocal();
 
   constructor() {
     this.profileApi
