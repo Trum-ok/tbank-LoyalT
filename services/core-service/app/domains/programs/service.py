@@ -6,7 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.partners.models import Partner
 from app.domains.programs.models import Program, ProgramStatus
-from app.domains.programs.schemas import ProgramCreate, ProgramUpdate
+from app.domains.programs.schemas import (
+    ProgramCreate,
+    ProgramUpdate,
+    _validate_expire_warn,
+)
 from app.errors import BadRequestError, ForbiddenError, NotFoundError
 
 
@@ -64,6 +68,12 @@ async def update_program(
         raise BadRequestError("Archived program cannot be updated")
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(program, field, value)
+    # Кросс-валидация против итогового состояния: патч мог изменить
+    # только одно из полей (TTL / предупреждение).
+    try:
+        _validate_expire_warn(program.points_ttl_days, program.expire_warn_days)
+    except ValueError as exc:
+        raise BadRequestError(str(exc)) from exc
     await session.commit()
     await session.refresh(program)
     return program

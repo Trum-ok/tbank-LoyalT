@@ -43,6 +43,7 @@ interface ProgramForm {
   points_per_visit: number | null;
   visits_required: number | null;
   points_ttl_days: number | null;
+  expire_warn_days: number | null;
   min_redemption: number;
 }
 
@@ -127,6 +128,7 @@ export class ProgramDetailPage {
       description: f.description || null,
       accrual_rule: this.buildRule(p, f),
       points_ttl_days: f.points_ttl_days,
+      expire_warn_days: f.points_ttl_days ? f.expire_warn_days : null,
       min_redemption: f.min_redemption,
     };
 
@@ -335,6 +337,7 @@ export class ProgramDetailPage {
       points_per_visit: rule['points_per_visit'] ?? null,
       visits_required: rule['visits_required'] ?? null,
       points_ttl_days: p.points_ttl_days,
+      expire_warn_days: p.expire_warn_days,
       min_redemption: p.min_redemption,
     };
   }

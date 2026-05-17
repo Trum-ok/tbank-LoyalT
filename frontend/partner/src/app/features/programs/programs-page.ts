@@ -27,6 +27,7 @@ interface DraftForm {
   points_per_visit: number;
   visits_required: number;
   points_ttl_days: number | null;
+  expire_warn_days: number | null;
   min_redemption: number;
 }
 
@@ -127,6 +128,7 @@ export class ProgramsPage {
       type: d.type,
       accrual_rule,
       points_ttl_days: d.points_ttl_days,
+      expire_warn_days: d.points_ttl_days ? d.expire_warn_days : null,
       min_redemption: d.min_redemption,
     };
 
@@ -193,6 +195,7 @@ export class ProgramsPage {
       points_per_visit: 50,
       visits_required: 8,
       points_ttl_days: 365,
+      expire_warn_days: 7,
       min_redemption: 100,
     };
   }

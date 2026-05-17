@@ -92,7 +92,7 @@
           ></textarea>
         </label>
 
-        <div class="row row--3">
+        <div class="row row--2">
           @switch (p.type) {
             @case ('accrual') {
               <label class="field">
@@ -134,18 +134,6 @@
           }
 
           <label class="field">
-            <span class="field__label">TTL баллов, дней</span>
-            <input
-              class="field__input"
-              type="number"
-              min="0"
-              placeholder="пусто = бессрочно"
-              [value]="f.points_ttl_days ?? ''"
-              (input)="patch('points_ttl_days', $any($event.target).value ? +$any($event.target).value : null)"
-            />
-          </label>
-
-          <label class="field">
             <span class="field__label">Мин. для списания</span>
             <input
               class="field__input"
@@ -156,6 +144,41 @@
             />
           </label>
         </div>
+
+        <fieldset class="field-group">
+          <legend class="field-group__title">Сгорание баллов</legend>
+          <p class="field-group__hint">
+            Баллы сгорают через указанный срок после начисления. Клиента
+            можно предупредить пушем заранее. Оставьте срок пустым —
+            баллы будут бессрочными.
+          </p>
+          <div class="row row--2">
+            <label class="field">
+              <span class="field__label">Срок жизни баллов, дней</span>
+              <input
+                class="field__input"
+                type="number"
+                min="1"
+                placeholder="пусто = бессрочно"
+                [value]="f.points_ttl_days ?? ''"
+                (input)="patch('points_ttl_days', $any($event.target).value ? +$any($event.target).value : null)"
+              />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Предупредить за, дней</span>
+              <input
+                class="field__input"
+                type="number"
+                min="1"
+                placeholder="не предупреждать"
+                [disabled]="!f.points_ttl_days"
+                [value]="f.expire_warn_days ?? ''"
+                (input)="patch('expire_warn_days', $any($event.target).value ? +$any($event.target).value : null)"
+              />
+            </label>
+          </div>
+        </fieldset>
 
         <div class="card__actions">
           <button type="submit" class="btn btn--primary" [disabled]="saving()">

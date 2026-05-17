@@ -43,7 +43,11 @@ class Program(UUIDPKMixin, TimestampsMixin, Base):
     #   stamps:  {"visits_required": 8}
     accrual_rule: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
 
+    # Срок жизни начисленных баллов в днях. None — баллы бессрочны.
     points_ttl_days: Mapped[int | None] = mapped_column()
+    # За сколько дней до сгорания предупредить клиента push-уведомлением.
+    # None — не предупреждать. Имеет смысл только вместе с points_ttl_days.
+    expire_warn_days: Mapped[int | None] = mapped_column()
     min_redemption: Mapped[int] = mapped_column(default=0, server_default="0")
 
     status: Mapped[ProgramStatus] = mapped_column(

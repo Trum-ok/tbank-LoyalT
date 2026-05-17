@@ -14,6 +14,7 @@ class NotificationType(StrEnum):
     POINTS_ACCRUED = "points_accrued"  # «+80 баллов · Кофе Хауз»
     POINTS_REDEEMED = "points_redeemed"  # «Списано 300 баллов · Капучино в подарок»
     POINTS_EXPIRING = "points_expiring"  # «120 баллов сгорят через 3 дня»
+    POINTS_EXPIRED = "points_expired"  # «150 баллов сгорели · Кофе Хауз»
     REWARD_AVAILABLE = "reward_available"  # «Накопили на бесплатный кофе!»
     NEW_PROMOTION = "new_promotion"  # «Двойные баллы по средам у Кофе Хауза»
     BROADCAST = "broadcast"  # ручная рассылка партнёра из ЛК

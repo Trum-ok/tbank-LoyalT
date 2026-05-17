@@ -76,4 +76,10 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
     # Признак, что accrual-транзакция была отменена (reversal/expiration).
     is_reversed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
+    # Для accrual: по этим баллам уже отправлено push-предупреждение о
+    # скором сгорании — чтобы джоб не слал его повторно каждый прогон.
+    expiry_warned: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+
     description: Mapped[str | None] = mapped_column(String(500))
