@@ -17,6 +17,10 @@ os.environ.setdefault(
     "postgresql+psycopg://postgres:postgres@localhost:5433/tbank_loyalt",
 )
 os.environ.setdefault("CORE_KAFKA_ENABLED", "false")
+# Явный тестовый секрет: тесты идут с debug=False, поэтому дефолтный
+# sentinel привёл бы к фейл-фасту в Settings. Должен совпадать с
+# PARTNER_JWT_SECRET из tests/partner_service/conftest.py.
+os.environ.setdefault("CORE_JWT_SECRET", "test-jwt-secret")
 
 import app.models  # noqa: F401, E402 — registers all ORM models in Base.metadata
 from app.database import Base  # noqa: E402

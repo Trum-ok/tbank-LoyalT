@@ -30,6 +30,9 @@ docker-build:
 	docker build -f deploy/Dockerfile -t tbank-loyalt:local .
 
 # Локальный аналог job test из CI. Нужен Postgres на localhost:5433
-# (см. tests/core_service/conftest.py) — например, из local/.
+# (см. tests/*/conftest.py) — например, из local/.
 test:
-	uv run pytest
+	uv run pytest tests/core_service
+	uv run pytest tests/partner_service
+	uv run pytest tests/admin_service
+	uv run pytest tests/notification_service
