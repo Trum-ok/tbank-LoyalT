@@ -36,9 +36,7 @@ _CATEGORIES_SUBQ = (
     select(
         func.coalesce(
             func.array_agg(
-                aggregate_order_by(
-                    PartnerCategory_.category, PartnerCategory_.category
-                )
+                aggregate_order_by(PartnerCategory_.category, PartnerCategory_.category)
             ),
             literal_column("ARRAY[]::varchar[]"),
         )
@@ -144,8 +142,6 @@ async def list_categories(session: AsyncSession) -> list[CatalogCategory]:
     result = await session.execute(stmt)
     counts: dict[str, int] = {row[0]: row[1] for row in result.all()}
     return [
-        CatalogCategory(
-            code=cat, label=label, programs_count=counts.get(cat.value, 0)
-        )
+        CatalogCategory(code=cat, label=label, programs_count=counts.get(cat.value, 0))
         for cat, label in _CATEGORY_LABELS.items()
     ]
