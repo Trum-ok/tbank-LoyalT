@@ -380,6 +380,76 @@
       }
     </section>
 
+    <!-- ── Кампании ─────────────────────────────────────────────────── -->
+    <section class="card">
+      <header class="card__title-row">
+        <div>
+          <h2 class="card__title">Кампании</h2>
+          <p class="card__sub">
+            Автоматическое начисление баллов по событиям: день рождения, интервалы,
+            неактивность или вручную.
+          </p>
+        </div>
+        @if (!isArchived()) {
+          <button type="button" class="btn btn--ghost" (click)="openCampaignCreator()">
+            + Кампания
+          </button>
+        }
+      </header>
+
+      @if (campaigns().length === 0) {
+        <div class="empty-box empty-box--soft">
+          Кампаний нет. Добавьте первую, чтобы автоматически начислять баллы.
+        </div>
+      } @else {
+        <ul class="rewards">
+          @for (c of campaigns(); track c.id) {
+            <li class="rewards__item" [class.is-inactive]="!c.is_active">
+              <div class="rewards__main">
+                <div class="rewards__head">
+                  <span class="rewards__type">{{ triggerTypeLabel(c.type) }}</span>
+                  @if (!c.is_active) {
+                    <span class="rewards__off">отключена</span>
+                  }
+                </div>
+                <h3 class="rewards__title">{{ c.name }}</h3>
+              </div>
+              <div class="rewards__right">
+                <span class="rewards__cost">{{ c.points }} баллов</span>
+                @if (!isArchived()) {
+                  <div class="tiers__actions">
+                    @if (c.type === 'manual') {
+                      <button
+                        type="button"
+                        class="btn btn--ghost btn--small"
+                        (click)="fireCampaign(c)"
+                      >
+                        Запустить
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="btn btn--ghost btn--small"
+                      (click)="openCampaignEditor(c)"
+                    >
+                      Изменить
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--danger btn--small"
+                      (click)="deleteCampaign(c)"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
     <!-- ── Награды ────────────────────────────────────────────────── -->
     <section class="card">
       <header class="card__title-row">
@@ -501,6 +571,167 @@
         </button>
         <button type="submit" class="btn btn--primary" [disabled]="tierPending()">
           {{ tierPending() ? 'Сохраняем…' : 'Сохранить' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+}
+
+<!-- ── Модалка кампании ───────────────────────────────────────────────── -->
+@if (campaignModalOpen()) {
+  <div class="modal" (click)="closeCampaignModal()">
+    <form
+      class="modal__panel"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="saveCampaign(); $event.preventDefault()"
+    >
+      <header class="modal__head">
+        <h2 class="modal__title">
+          {{ editingCampaignId() ? 'Редактировать кампанию' : 'Новая кампания' }}
+        </h2>
+        <button
+          type="button"
+          class="modal__close"
+          (click)="closeCampaignModal()"
+          aria-label="Закрыть"
+        >
+          ✕
+        </button>
+      </header>
+
+      <div class="field">
+        <span class="field__label">Тип кампании</span>
+        <div class="type-grid type-grid--rewards">
+          @for (t of triggerTypeOptions; track t.code) {
+            <button
+              type="button"
+              class="type-grid__item"
+              [class.is-active]="campaignDraft().type === t.code"
+              (click)="patchCampaign('type', t.code)"
+            >
+              <span class="type-grid__name">{{ t.label }}</span>
+              <span class="type-grid__hint">{{ t.hint }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Название *</span>
+        <input
+          class="field__input"
+          placeholder="Бонус в день рождения"
+          [value]="campaignDraft().name"
+          (input)="patchCampaign('name', $any($event.target).value)"
+          required
+        />
+      </label>
+
+      <div class="row row--2">
+        <label class="field">
+          <span class="field__label">Баллы *</span>
+          <input
+            class="field__input"
+            type="number"
+            min="1"
+            [value]="campaignDraft().points"
+            (input)="patchCampaign('points', +$any($event.target).value)"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Активна</span>
+          <input
+            class="field__input"
+            type="checkbox"
+            [checked]="campaignDraft().is_active"
+            (change)="patchCampaign('is_active', $any($event.target).checked)"
+          />
+        </label>
+      </div>
+
+      @switch (campaignDraft().type) {
+        @case ('birthday') {
+          <label class="field">
+            <span class="field__label">За сколько дней до ДР, дней</span>
+            <input
+              class="field__input"
+              type="number"
+              min="0"
+              max="30"
+              [value]="campaignDraft().days_before"
+              (input)="patchCampaign('days_before', +$any($event.target).value)"
+            />
+            <span class="field__hint">0 = только в день рождения</span>
+          </label>
+        }
+        @case ('fixed_date') {
+          <div class="row row--2">
+            <label class="field">
+              <span class="field__label">Дата срабатывания</span>
+              <input
+                class="field__input"
+                type="date"
+                [value]="campaignDraft().fire_date"
+                (input)="patchCampaign('fire_date', $any($event.target).value)"
+              />
+            </label>
+            <label class="field">
+              <span class="field__label">Повторять ежегодно</span>
+              <input
+                class="field__input"
+                type="checkbox"
+                [checked]="campaignDraft().repeat_yearly"
+                (change)="patchCampaign('repeat_yearly', $any($event.target).checked)"
+              />
+            </label>
+          </div>
+        }
+        @case ('interval') {
+          <div class="row row--2">
+            <label class="field">
+              <span class="field__label">Интервал, дней</span>
+              <input
+                class="field__input"
+                type="number"
+                min="1"
+                [value]="campaignDraft().interval_days"
+                (input)="patchCampaign('interval_days', +$any($event.target).value)"
+              />
+              <span class="field__hint">от даты вступления в программу</span>
+            </label>
+            <label class="field">
+              <span class="field__label">Повторять каждые N дней</span>
+              <input
+                class="field__input"
+                type="checkbox"
+                [checked]="campaignDraft().repeat_interval"
+                (change)="patchCampaign('repeat_interval', $any($event.target).checked)"
+              />
+            </label>
+          </div>
+        }
+        @case ('inactivity') {
+          <label class="field">
+            <span class="field__label">Дней без активности</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              [value]="campaignDraft().interval_days"
+              (input)="patchCampaign('interval_days', +$any($event.target).value)"
+            />
+            <span class="field__hint">начислить если не было покупок N дней</span>
+          </label>
+        }
+      }
+
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" (click)="closeCampaignModal()">
+          Отмена
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="campaignPending()">
+          {{ campaignPending() ? 'Сохраняем…' : 'Сохранить' }}
         </button>
       </footer>
     </form>

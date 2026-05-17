@@ -15,6 +15,7 @@ from app.domains.analytics.router import partner_router as analytics_router
 from app.domains.catalog.router import router as catalog_router
 from app.domains.enrollments.router import router as enrollments_router
 from app.domains.partners.router import router as partners_router
+from app.domains.points.bonus_campaigns import run_bonus_campaigns
 from app.domains.points.expiration import run_expiration
 from app.domains.points.router import customer_router as balance_router
 from app.domains.points.router import partner_router as points_router
@@ -71,22 +72,43 @@ async def _expiration_loop() -> None:
         await asyncio.sleep(interval)
 
 
+async def _bonus_campaigns_loop() -> None:
+    """Периодический прогон бонусных кампаний (если джоб включён)."""
+    interval = max(60, settings.bonus_campaigns_job_interval_seconds)
+    log = logging.getLogger("core-service")
+    while True:
+        try:
+            async with SessionLocal() as session:
+                await run_bonus_campaigns(session)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("Scheduled bonus campaigns run failed")
+        await asyncio.sleep(interval)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await publisher.start()
     await consumer.start()
     expire_task: asyncio.Task[None] | None = None
+    bonus_task: asyncio.Task[None] | None = None
     if settings.expire_job_enabled:
         expire_task = asyncio.create_task(_expiration_loop(), name="points-expiration")
+    if settings.bonus_campaigns_job_enabled:
+        bonus_task = asyncio.create_task(
+            _bonus_campaigns_loop(), name="bonus-campaigns"
+        )
     try:
         yield
     finally:
-        if expire_task is not None:
-            expire_task.cancel()
-            try:
-                await expire_task
-            except asyncio.CancelledError:
-                pass
+        for task in (expire_task, bonus_task):
+            if task is not None:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
         await consumer.stop()
         await publisher.stop()
 

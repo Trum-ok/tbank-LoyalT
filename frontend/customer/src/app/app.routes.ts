@@ -42,5 +42,11 @@ export const routes: Routes = [
       ),
     title: 'Уведомления',
   },
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./features/profile/profile-page').then(m => m.ProfilePage),
+    title: 'Мой профиль',
+  },
   { path: '**', redirectTo: 'my-programs' },
 ];

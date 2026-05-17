@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     expire_job_enabled: bool = False
     expire_job_interval_seconds: int = 3600
 
+    # Фоновый джоб бонусных кампаний. Запускается раз в сутки.
+    bonus_campaigns_job_enabled: bool = False
+    bonus_campaigns_job_interval_seconds: int = 86400
+
 
 @lru_cache
 def get_settings() -> Settings:

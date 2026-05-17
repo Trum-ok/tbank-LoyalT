@@ -628,3 +628,62 @@ export interface AdminBannerUpdate {
 export interface AdminDecisionRequest {
   comment?: string | null;
 }
+
+// ===== Бонусные кампании =====
+
+export type TriggerType =
+  | 'birthday'
+  | 'fixed_date'
+  | 'interval'
+  | 'inactivity'
+  | 'manual';
+
+export interface BonusTriggerRead {
+  id: UUID;
+  program_id: UUID;
+  type: TriggerType;
+  name: string;
+  points: number;
+  is_active: boolean;
+  days_before: number | null;
+  fire_date: string | null;
+  repeat_yearly: boolean;
+  interval_days: number | null;
+  repeat_interval: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BonusTriggerCreate {
+  type: TriggerType;
+  name: string;
+  points: number;
+  is_active?: boolean;
+  days_before?: number | null;
+  fire_date?: string | null;
+  repeat_yearly?: boolean;
+  interval_days?: number | null;
+  repeat_interval?: boolean;
+}
+
+export interface BonusTriggerUpdate {
+  type?: TriggerType | null;
+  name?: string | null;
+  points?: number | null;
+  is_active?: boolean | null;
+  days_before?: number | null;
+  fire_date?: string | null;
+  repeat_yearly?: boolean | null;
+  interval_days?: number | null;
+  repeat_interval?: boolean | null;
+}
+
+// ===== Профиль клиента =====
+
+export interface CustomerProfileRead {
+  birthday: string | null;
+}
+
+export interface CustomerProfileUpdate {
+  birthday?: string | null;
+}
