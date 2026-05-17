@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.domains.programs.schemas import TierRead
+
 
 class EnrollmentCreate(BaseModel):
     program_id: UUID
@@ -26,3 +28,4 @@ class EnrollmentRead(BaseModel):
     points_balance: int
     created_at: datetime
     updated_at: datetime
+    current_tier: TierRead | None = None

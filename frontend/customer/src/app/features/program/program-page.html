@@ -143,6 +143,48 @@
       </ul>
     </section>
 
+    @if (p.tiers && p.tiers.length > 0) {
+      <section class="program__section">
+        <h2 class="program__section-title">Уровни лояльности</h2>
+        <ul class="program__tiers">
+          @for (tier of p.tiers; track tier.id) {
+            <li
+              class="program__tier"
+              [class.program__tier--active]="existingEnrollment() && existingEnrollment()!.current_tier?.id === tier.id"
+            >
+              <div class="program__tier-name">{{ tier.name }}</div>
+              <div class="program__tier-meta">
+                <span class="program__tier-threshold">
+                  от {{ formatPoints(tier.threshold_points) }} баллов
+                </span>
+                @if (tier.accrual_multiplier !== 1) {
+                  <span class="program__tier-multiplier">
+                    ×{{ tier.accrual_multiplier }}
+                  </span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (p.rewards && p.rewards.length > 0) {
+      <section class="program__section">
+        <h2 class="program__section-title">Награды</h2>
+        <ul class="program__rewards-list">
+          @for (reward of p.rewards; track reward.id) {
+            <li class="program__reward-item">
+              <span class="program__reward-title">{{ reward.title }}</span>
+              <span class="program__reward-cost">
+                {{ formatPoints(reward.cost_points) }} б.
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     @if (error()) {
       <div class="program__error">{{ error() }}</div>
     }

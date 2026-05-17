@@ -45,6 +45,11 @@
                     {{ formatPoints(enrollment.points_balance) }}
                   </span>
                   <span class="my-programs__balance-label">баллов</span>
+                  @if (enrollment.current_tier) {
+                    <span class="my-programs__tier-badge">
+                      {{ enrollment.current_tier.name }}
+                    </span>
+                  }
                 </div>
               </a>
             </li>
