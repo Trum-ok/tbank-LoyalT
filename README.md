@@ -1,6 +1,4 @@
-# LoyalT — платформа лояльности
-
-> Команда **LLM Chads**. Решение кейса LoyalT.
+# LoyalT — платформа лояльности | LLM Chads <img src="docs/assets/chad.webp" alt="chad" height="25" valign="middle">
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
@@ -14,16 +12,16 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-D97757" alt="License: MIT"></a>
 </p>
 
-**LoyalT** — встраиваемая в приложение Т-Банка (раздел «Город») платформа лояльности.
-Малый бизнес за пару минут собирает программу вознаграждений без кода, анализирует
-поведение клиентов и удерживает их; клиенты копят и тратят баллы через **T-ID** —
-без отдельных приложений, карт и регистраций.
+## TL;DR
 
-## Зачем это нужно
+**LoyalT** — встраиваемая в приложение Т-Банка (клиентская часть в раздел «Город») платформа лояльности.
 
-- Удержание клиента — ключевая задача любого бизнеса, но механик лояльности немного и они повторяются.
-- Малый бизнес вынужден строить системы лояльности сам или интегрировать тяжёлые сторонние решения (Stamp, Loyverse) с отдельным приложением.
-- LoyalT даёт бесшовный, нативный для банковской экосистемы опыт: бизнес — в ЛК, клиент — внутри уже установленного приложения Т-Банка.
+- **Проблема.** Удержание клиента — ключевая задача бизнеса, но механик лояльности немного и они повторяются. Малый
+  бизнес либо строит систему сам, либо тащит тяжёлые сторонние решения (Stamp, Loyverse) с отдельным приложением.
+- **Решение.** Бизнес за пару минут собирает программу вознаграждений без кода, анализирует поведение клиентов и
+  удерживает их; клиенты копят и тратят баллы через **T-ID** — без отдельных приложений, карт и регистраций.
+- **Фишка.** Бесшовный, нативный для банковской экосистемы опыт: бизнес — в ЛК, клиент — внутри уже установленного
+  приложения Т-Банка.
 
 Полный перечень возможностей: [docs/functional_requirements.md](docs/functional_requirements.md).
 
@@ -53,27 +51,29 @@ Python 3.13, FastAPI (полностью `async`), SQLAlchemy + `psycopg`, Alemb
 сервис `migrate` (`alembic upgrade head` по всем схемам) до старта сервисов;
 остальные ждут его через `depends_on: service_completed_successfully`.
 
-| Сервис | Что делает | Порт | Расположение | Тех-док |
-|---|---|---|---|---|
-| `core-service` | Программы лояльности и правила начисления, каталог наград, начисление/списание баллов, история транзакций, отмена, профиль и баланс клиента, аналитика | 8001 | [services/core-service](services/core-service) | [README](services/core-service/README.md) |
-| `partner-service` | ЛК партнёра: регистрация бизнеса, заявка на модерацию, профиль одобренного партнёра, собственная авторизация | 8002 | [services/partner-service](services/partner-service) | [README](services/partner-service/README.md) |
-| `notification-service` | Push-уведомления: начисление баллов, доступная награда, сгорание баллов, новые акции | 8003 | [services/notification-service](services/notification-service) | [README](services/notification-service/README.md) |
-| `admin-service` | Панель Т-Банка: модерация заявок (прокси в `partner-service`), управление каталогом, метрики платформы (read-only в чужие схемы) | 8004 | [services/admin-service](services/admin-service) | [README](services/admin-service/README.md) |
+| Сервис                 | Что делает                                                                                                                                             | Порт | Расположение                                                   | Тех-док                                           |
+|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|------|----------------------------------------------------------------|---------------------------------------------------|
+| `core-service`         | Программы лояльности и правила начисления, каталог наград, начисление/списание баллов, история транзакций, отмена, профиль и баланс клиента, аналитика | 8001 | [services/core-service](services/core-service)                 | [README](services/core-service/README.md)         |
+| `partner-service`      | ЛК партнёра: регистрация бизнеса, заявка на модерацию, профиль одобренного партнёра, собственная авторизация                                           | 8002 | [services/partner-service](services/partner-service)           | [README](services/partner-service/README.md)      |
+| `notification-service` | Push-уведомления: начисление баллов, доступная награда, сгорание баллов, новые акции                                                                   | 8003 | [services/notification-service](services/notification-service) | [README](services/notification-service/README.md) |
+| `admin-service`        | Панель Т-Банка: модерация заявок (прокси в `partner-service`), управление каталогом, метрики платформы (read-only в чужие схемы)                       | 8004 | [services/admin-service](services/admin-service)               | [README](services/admin-service/README.md)        |
 
-Общий код сервисов — в [libs/](libs).
+Внутри каждого сервиса код нарезан по доменам в стиле **vertical slice** —
+каждый домен самодостаточен: `models.py`, `schemas.py`, `service.py`, `router.py`. Общий код сервисов — в [libs/](libs).
 
 ### Фронтенд
 
-TypeScript + Angular (standalone-компоненты, signals, esbuild) на **Taiga UI** —
-банковском UI-ките Т-Банка. Все приложения — pnpm-workspace под `frontend/`.
+**TypeScript** + **Angular** на [**Taiga UI**](https://github.com/taiga-family/taiga-ui) — банковском UI-ките Т-Банка.
+Все
+приложения — pnpm-workspace под `frontend/`.
 
-| Приложение | Для кого | Расположение |
-|---|---|---|
+| Приложение | Для кого                                                                                    | Расположение                           |
+|------------|---------------------------------------------------------------------------------------------|----------------------------------------|
 | `customer` | Клиент: программы, баланс, история, QR на кассе, каталог — экран «как в приложении Т-Банка» | [frontend/customer](frontend/customer) |
-| `partner` | Бизнес: no-code конструктор программы, награды, акции, рассылки, дашборд и аналитика | [frontend/partner](frontend/partner) |
-| `cashier` | Касса/официант: сканирование QR клиента, начисление и списание баллов | [frontend/cashier](frontend/cashier) |
-| `admin` | Т-Банк: очередь модерации, каталог, метрики платформы | [frontend/admin](frontend/admin) |
-| `shared` | Общий пакет (`@tbank-loyalt/shared`): UI, API-клиенты, типы | [frontend/shared](frontend/shared) |
+| `partner`  | Бизнес: no-code конструктор программы, награды, акции, рассылки, дашборд и аналитика        | [frontend/partner](frontend/partner)   |
+| `cashier`  | Касса/официант: сканирование QR клиента, начисление и списание баллов                       | [frontend/cashier](frontend/cashier)   |
+| `admin`    | Т-Банк: очередь модерации, каталог, метрики платформы                                       | [frontend/admin](frontend/admin)       |
+| `shared`   | Общий пакет (`@tbank-loyalt/shared`): UI, API-клиенты, типы                                 | [frontend/shared](frontend/shared)     |
 
 ### CI/CD
 
@@ -88,6 +88,16 @@ TypeScript + Angular (standalone-компоненты, signals, esbuild) на **
 - `lint` - black + isort + ruff + ty;
 - `test` - pytest по бэку с сервис-контейнером PostgreSQL;
 - `docker-build` - проверка, что Docker-образ собирается.
+
+## API-документация
+
+После запуска документация доступна автоматически:
+
+|                  | URL                                          |
+|------------------|----------------------------------------------|
+| **Swagger UI**   | `http://localhost:SERVICE_PORT/docs`         |
+| **ReDoc**        | `http://localhost:SERVICE_PORT/redoc`        |
+| **OpenAPI JSON** | `http://localhost:SERVICE_PORT/openapi.json` |
 
 ---
 
@@ -110,6 +120,7 @@ docker compose up --build      # первый запуск ~3–5 мин (сбо
 
 ```bash
 pnpm install
+
 pnpm customer   # клиентское приложение
 pnpm partner    # ЛК партнёра
 pnpm cashier    # касса
@@ -130,6 +141,18 @@ uv run uvicorn app.main:app --reload   # один сервис локально
 `kafka`, а нужный сервис гонять локально с `--reload`.
 
 ---
+
+## Best Practice
+
+*асинхронность · микросервисы · schema-per-service · vertical slice по доменам · Alembic-миграции (нет ручных DDL) ·
+единый API Gateway + s2s REST/Kafka · Kafka со stub-режимом и /internal/events для локалки · идемпотентные
+обработчики событий и джобы · сквозной X-Request-ID через HTTP и Kafka · структурное JSON-логирование · общий пакет
+loyalt-common (DRY) · единый контракт ошибок {"detail": …} + типобезопасные OpenAPI-ответы · богатый Swagger/ReDoc ·
+JWT (HS256) · запросы в транзакциях · HASH-партиционирование горячей таблицы транзакций · read-реплика для тяжёлых
+выборок · тюнингуемый пул соединений · линт-гейт (black/isort/ruff/ty) + pytest с PostgreSQL-контейнером + проверка
+сборки Docker в CI · one-shot migrate-сервис.*
+
+Вроде все написали...
 
 ## Команда LLM Chads
 

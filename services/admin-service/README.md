@@ -10,7 +10,7 @@ read-only выборки по соседним схемам в той же БД.
 
 ```
 app/
-  config.py             ADMIN_* префикс, URL соседних сервисов, имена чужих схем
+  config.py             ADMIN_* префикс, URL partner-service, имена чужих схем
   database.py
   deps.py               X-Admin-Id → AdminAccount (проверка в БД, is_active)
   errors.py             + UpstreamError для прокси-ошибок
@@ -67,15 +67,15 @@ curl -X POST localhost:8004/moderation/partners/$PARTNER_ID/block \
 В предположении одна БД / разные схемы (см. CLAUDE.md). Имена схем
 конфигурируемы (`ADMIN_CORE_SCHEMA`, `ADMIN_PARTNER_SCHEMA`).
 
-| Эндпоинт | Источник |
-|---|---|
-| `GET /metrics/overview` | агрегация из всех ниже |
-| `GET /metrics/partners` | `core.partner`, `partner.application` |
-| `GET /metrics/customers` | `core.customer`, `core.enrollment` |
-| `GET /metrics/transactions?days=N` | `core.transaction` (с фильтром по дате) |
-| `GET /metrics/top-partners?limit=N&days=N` | `core.partner` + `core.transaction` |
-| `GET /metrics/new-customers?days=N` | `core.customer` |
-| `GET /metrics/new-partners?days=N` | `core.partner` |
+| Эндпоинт                                   | Источник                                |
+|--------------------------------------------|-----------------------------------------|
+| `GET /metrics/overview`                    | агрегация из всех ниже                  |
+| `GET /metrics/partners`                    | `core.partner`, `partner.application`   |
+| `GET /metrics/customers`                   | `core.customer`, `core.enrollment`      |
+| `GET /metrics/transactions?days=N`         | `core.transaction` (с фильтром по дате) |
+| `GET /metrics/top-partners?limit=N&days=N` | `core.partner` + `core.transaction`     |
+| `GET /metrics/new-customers?days=N`        | `core.customer`                         |
+| `GET /metrics/new-partners?days=N`         | `core.partner`                          |
 
 ## Каталог
 
@@ -94,6 +94,35 @@ cd services/admin-service
 uv run alembic upgrade head
 uv run uvicorn app.main:app --reload --port 8004
 ```
+
+### API-документация
+
+|                  | URL                                  |
+|------------------|--------------------------------------|
+| **Swagger UI**   | `http://localhost:8004/docs`         |
+| **ReDoc**        | `http://localhost:8004/redoc`        |
+| **OpenAPI JSON** | `http://localhost:8004/openapi.json` |
+
+### Переменные окружения (префикс `ADMIN_`)
+
+| Переменная                                   | По умолчанию                    | Назначение             |
+|----------------------------------------------|---------------------------------|------------------------|
+| `ADMIN_DATABASE_URL`                         | `…@localhost:5432/tbank_loyalt` | DSN (psycopg, async)   |
+| `ADMIN_DB_SCHEMA`                            | `admin`                         | собственная схема      |
+| `ADMIN_CORE_SCHEMA` / `ADMIN_PARTNER_SCHEMA` | `core` / `partner`              | чужие схемы для метрик |
+| `ADMIN_PARTNER_SERVICE_URL`                  | `http://localhost:8002`         | upstream модерации     |
+| `ADMIN_LOG_LEVEL`                            | `INFO`                          | уровень логирования    |
+| `ADMIN_CORS_ORIGINS`                         | `["*"]`                         | разрешённые origin'ы   |
+
+## Эндпоинты
+
+| Группа                | Ручки                                                                                                                                                                                                                                             |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `admins`              | `POST /admins` (bootstrap/создание), `GET /admins`, `GET /admins/me`, `PATCH /admins/{id}`                                                                                                                                                        |
+| `moderation` (прокси) | `GET /moderation/applications`, `GET /moderation/applications/{id}`, `POST /moderation/applications/{id}/{approve,reject}`, `GET /moderation/partners`, `GET /moderation/partners/{id}`, `POST /moderation/partners/{id}/{suspend,block,unblock}` |
+| `metrics`             | `GET /metrics/{overview,partners,customers,transactions,top-partners,new-customers,new-partners}`                                                                                                                                                 |
+| `catalog`             | `GET/PUT /catalog/categories[/{code}]`, `GET/POST /catalog/featured`, `DELETE /catalog/featured/{id}`, `GET/POST /catalog/banners`, `PATCH/DELETE /catalog/banners/{id}`                                                                          |
+| `meta`                | `GET /health`                                                                                                                                                                                                                                     |
 
 ## TODO
 
