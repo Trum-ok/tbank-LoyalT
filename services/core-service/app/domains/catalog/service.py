@@ -15,9 +15,8 @@ from app.domains.partners.models import (
     PartnerCategory_,
     PartnerStatus,
 )
-from app.domains.programs.models import Program, ProgramStatus
+from app.domains.programs.models import Program, ProgramStatus, ProgramTier
 from app.domains.programs.schemas import TierRead
-from app.domains.programs.service import get_program
 from app.domains.rewards.schemas import RewardRead
 from app.domains.rewards.service import list_rewards
 
@@ -94,9 +93,16 @@ async def get_catalog_program(
         return None
     detail = CatalogProgramDetail.model_validate(row, from_attributes=True)
 
-    # Загружаем тиры и награды через репозитории программ и наград.
-    program = await get_program(session, program_id)
-    detail.tiers = [TierRead.model_validate(t) for t in program.tiers]
+    # Тиры — отдельным запросом (программа/партнёр уже получены выше одним
+    # JOIN'ом, повторно тянуть их через get_program не нужно).
+    tiers = (
+        await session.execute(
+            select(ProgramTier)
+            .where(ProgramTier.program_id == program_id)
+            .order_by(ProgramTier.threshold_points)
+        )
+    ).scalars()
+    detail.tiers = [TierRead.model_validate(t) for t in tiers]
 
     rewards = await list_rewards(session, program_id, only_active=True)
     detail.rewards = [RewardRead.model_validate(r) for r in rewards]

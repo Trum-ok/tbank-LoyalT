@@ -4,6 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, status
 from loyalt_common import error_responses
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.deps import CurrentCustomerId, SessionDep
 from app.domains.enrollments import service
@@ -13,6 +15,7 @@ from app.domains.enrollments.schemas import (
     EnrollmentUpdate,
 )
 from app.domains.partners.models import Partner
+from app.domains.programs.models import Program
 from app.domains.programs.schemas import TierRead
 from app.domains.programs.service import get_current_tier, get_program
 
@@ -27,19 +30,57 @@ class CustomerProfileUpdate(BaseModel):
     birthday: date | None = None
 
 
-async def _enrollment_read(session, enrollment) -> EnrollmentRead:
-    """Собирает EnrollmentRead с вычисленным current_tier."""
-    program = await get_program(session, enrollment.program_id)
+def _build_enrollment_read(enrollment, program, partner) -> EnrollmentRead:
+    """Собирает EnrollmentRead из уже загруженных program/partner."""
     tier = get_current_tier(enrollment.points_balance, program.tiers)
     result = EnrollmentRead.model_validate(enrollment)
     result.current_tier = TierRead.model_validate(tier) if tier is not None else None
     result.program_name = program.name
-    partner = await session.get(Partner, program.partner_id)
     if partner is not None:
         result.partner_name = partner.name
         result.partner_logo_url = partner.logo_url
         result.partner_brand_color = partner.brand_color
     return result
+
+
+async def _enrollment_read(session, enrollment) -> EnrollmentRead:
+    """Собирает EnrollmentRead с вычисленным current_tier (одно подключение)."""
+    program = await get_program(session, enrollment.program_id)
+    partner = await session.get(Partner, program.partner_id)
+    return _build_enrollment_read(enrollment, program, partner)
+
+
+async def _enrollment_reads(session, enrollments) -> list[EnrollmentRead]:
+    """Батч-сборка списка без N+1: программы (с тирами) и партнёры
+    загружаются пакетно по всем подключениям сразу."""
+    if not enrollments:
+        return []
+    program_ids = {e.program_id for e in enrollments}
+    programs = {
+        p.id: p
+        for p in (
+            await session.execute(
+                select(Program)
+                .where(Program.id.in_(program_ids))
+                .options(selectinload(Program.tiers))
+            )
+        ).scalars()
+    }
+    partner_ids = {p.partner_id for p in programs.values()}
+    partners = {
+        p.id: p
+        for p in (
+            await session.execute(select(Partner).where(Partner.id.in_(partner_ids)))
+        ).scalars()
+    }
+    return [
+        _build_enrollment_read(
+            e,
+            programs[e.program_id],
+            partners.get(programs[e.program_id].partner_id),
+        )
+        for e in enrollments
+    ]
 
 
 @router.post(
@@ -76,7 +117,7 @@ async def list_enrollments(
     enrollments = await service.list_enrollments(
         session, customer_id, include_archived=include_archived
     )
-    return [await _enrollment_read(session, e) for e in enrollments]
+    return await _enrollment_reads(session, enrollments)
 
 
 @router.get(
