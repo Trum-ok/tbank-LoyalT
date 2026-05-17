@@ -1,9 +1,3 @@
-# docker-compose для локального запуска всей платформы.
-# Запуск: cd deploy && docker compose up --build
-#
-# Включает: PostgreSQL (одна БД, schema-per-service), Kafka (KRaft, без ZooKeeper),
-# и все 4 микросервиса с применением Alembic-миграций при старте.
-
 name: tbank-loyalt
 
 x-service-base: &service-base
@@ -16,6 +10,19 @@ x-service-base: &service-base
       condition: service_healthy
     kafka:
       condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+
+  healthcheck:
+    test:
+      - CMD
+      - /app/.venv/bin/python
+      - -c
+      - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=2).status == 200 else 1)"
+    interval: 10s
+    timeout: 3s
+    start_period: 5s
+    retries: 10
 
 services:
   postgres:
@@ -25,7 +32,6 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: tbank_loyalt
     ports:
-      # хост:контейнер. 5433 на хосте, чтобы не конфликтовать с локальным Postgres.
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -77,13 +83,46 @@ services:
     volumes:
       - minio_data:/data
 
+  # One-shot: прогоняет alembic upgrade head по всем четырём схемам в одной БД.
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      CORE_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      CORE_DB_SCHEMA: core
+      PARTNER_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      PARTNER_DB_SCHEMA: partner
+      NOTIFICATION_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      NOTIFICATION_DB_SCHEMA: notification
+      ADMIN_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
+      ADMIN_DB_SCHEMA: admin
+    command:
+      - sh
+      - -ec
+      - |
+        for s in core partner notification admin; do
+          echo "alembic upgrade head: $$s-service"
+          (cd "/app/services/$$s-service" && uv run alembic upgrade head)
+        done
+
   core-service:
     <<: *service-base
     working_dir: /app/services/core-service
     command:
-      - sh
-      - -c
-      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      - uv
+      - run
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
     environment:
       CORE_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
       CORE_DB_SCHEMA: core
@@ -99,9 +138,14 @@ services:
     <<: *service-base
     working_dir: /app/services/partner-service
     command:
-      - sh
-      - -c
-      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      - uv
+      - run
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
     environment:
       PARTNER_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
       PARTNER_DB_SCHEMA: partner
@@ -125,6 +169,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "8002:8000"
 
@@ -132,9 +178,14 @@ services:
     <<: *service-base
     working_dir: /app/services/notification-service
     command:
-      - sh
-      - -c
-      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      - uv
+      - run
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
     environment:
       NOTIFICATION_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
       NOTIFICATION_DB_SCHEMA: notification
@@ -149,9 +200,14 @@ services:
     <<: *service-base
     working_dir: /app/services/admin-service
     command:
-      - sh
-      - -c
-      - "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      - uv
+      - run
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
     environment:
       ADMIN_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/tbank_loyalt
       ADMIN_DB_SCHEMA: admin
@@ -165,6 +221,8 @@ services:
         condition: service_healthy
       partner-service:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "8004:8000"
 
