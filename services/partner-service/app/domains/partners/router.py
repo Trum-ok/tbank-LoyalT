@@ -57,20 +57,14 @@ async def upload_my_logo(
     session: SessionDep,
     file: UploadFile = File(...),
 ) -> PartnerRead:
-    """Загрузить кастомный логотип (PNG/SVG/JPEG/WebP) в MinIO.
+    """Загрузить кастомный логотип (PNG/JPEG/WebP) в MinIO.
 
     Файл кладётся в публичный bucket, `logo_url` проставляется на прямую
-    ссылку — каталог клиента покажет аватар вместо инициалов. 400 — пустой
-    файл; 404 — партнёр не найден; 415 — неподдерживаемый тип файла;
-    413 — файл больше лимита.
+    ссылку — каталог клиента покажет аватар вместо инициалов. Тип
+    проверяется по содержимому, не по заголовку (SVG не поддерживается:
+    риск XSS). 400 — пустой файл; 404 — партнёр не найден;
+    415 — неподдерживаемый тип файла; 413 — файл больше лимита.
     """
-    content_type = (file.content_type or "").split(";")[0].strip().lower()
-    if content_type not in storage.EXT_BY_CONTENT_TYPE:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Поддерживаются только PNG, SVG, JPEG и WebP",
-        )
-
     settings = get_settings()
     data = await file.read()
     if not data:
@@ -87,7 +81,15 @@ async def upload_my_logo(
 
     # partner_id нужен как стабильный ключ объекта в хранилище.
     partner = await service.get_partner_by_account(session, account_id)
-    logo_url = await storage.upload_logo(partner.id, data, content_type)
+    try:
+        # Тип определяется по сигнатуре байтов внутри upload_logo —
+        # клиентскому Content-Type не доверяем (вектор stored XSS).
+        logo_url = await storage.upload_logo(partner.id, data)
+    except storage.UnsupportedImageError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Поддерживаются только PNG, JPEG и WebP",
+        ) from exc
     partner = await service.set_logo_url(session, account_id, logo_url)
     return PartnerRead.model_validate(partner)
 
