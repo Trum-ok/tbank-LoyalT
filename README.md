@@ -94,7 +94,7 @@ Python 3.13, FastAPI (полностью `async`), SQLAlchemy + `psycopg`, Alemb
 
 ```bash
 cd deploy
-docker compose up --build      # первый запуск ~3–5 мин (сборка образа)
+docker compose --profile app up -d
 ```
 
 Сервисы будут на `localhost:8001–8004`. Подробности, отладка Kafka и
