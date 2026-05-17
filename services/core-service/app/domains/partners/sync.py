@@ -13,19 +13,32 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.partners.models import Partner, PartnerCategory, PartnerStatus
+from app.domains.partners.models import (
+    Partner,
+    PartnerCategory,
+    PartnerStatus,
+)
 
 logger = logging.getLogger("core.partner_sync")
 
 
-def _coerce_category(value: str | None) -> PartnerCategory:
-    if value is None:
-        return PartnerCategory.SERVICES
-    try:
-        return PartnerCategory(value)
-    except ValueError:
-        logger.warning("Unknown partner category from upstream: %r", value)
-        return PartnerCategory.SERVICES
+def _coerce_categories(payload: dict[str, Any]) -> list[str]:
+    """Список категорий из payload.
+
+    Поддерживает новый контракт (`categories: list`) и старый
+    (`category: str`) для обратной совместимости со старыми событиями.
+    Неизвестные значения отбрасываются; пустой результат → SERVICES.
+    """
+    raw = payload.get("categories")
+    if raw is None and payload.get("category") is not None:
+        raw = [payload["category"]]
+    out: list[str] = []
+    for value in raw or []:
+        try:
+            out.append(PartnerCategory(value).value)
+        except ValueError:
+            logger.warning("Unknown partner category from upstream: %r", value)
+    return out or [PartnerCategory.SERVICES.value]
 
 
 def _coerce_status(value: str | None) -> PartnerStatus:
@@ -55,7 +68,7 @@ async def upsert_partner(session: AsyncSession, payload: dict[str, Any]) -> Part
             id=partner_id,
             inn=payload["inn"],
             name=payload["name"],
-            category=_coerce_category(payload.get("category")),
+            categories=_coerce_categories(payload),
             logo_url=payload.get("logo_url"),
             brand_color=payload.get("brand_color"),
             status=_coerce_status(payload.get("status")),
@@ -64,7 +77,8 @@ async def upsert_partner(session: AsyncSession, payload: dict[str, Any]) -> Part
     else:
         partner.inn = payload.get("inn", partner.inn)
         partner.name = payload.get("name", partner.name)
-        partner.category = _coerce_category(payload.get("category", partner.category))
+        if "categories" in payload or "category" in payload:
+            partner.categories = _coerce_categories(payload)
         if "logo_url" in payload:
             partner.logo_url = payload["logo_url"]
         if "brand_color" in payload:

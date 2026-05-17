@@ -17,7 +17,7 @@ class CatalogProgram(BaseModel):
     partner_name: str
     partner_logo_url: str | None
     partner_brand_color: str | None
-    category: PartnerCategory
+    categories: list[PartnerCategory]
     program_name: str
     description: str | None
     type: ProgramType

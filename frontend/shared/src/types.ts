@@ -15,7 +15,7 @@ export interface CatalogProgram {
   partner_name: string;
   partner_logo_url: string | null;
   partner_brand_color: string | null;
-  category: PartnerCategory;
+  categories: PartnerCategory[];
   program_name: string;
   description: string | null;
   type: ProgramType;
@@ -125,7 +125,7 @@ export interface ApplicationRead {
   account_id: UUID;
   business_name: string;
   inn: string;
-  category: PartnerCategory;
+  categories: PartnerCategory[];
   contact_email: string;
   contact_phone: string | null;
   description: string | null;
@@ -140,7 +140,7 @@ export interface ApplicationRead {
 export interface ApplicationCreate {
   business_name: string;
   inn: string;
-  category: PartnerCategory;
+  categories: PartnerCategory[];
   contact_email: string;
   contact_phone?: string | null;
   description?: string | null;
@@ -149,7 +149,7 @@ export interface ApplicationCreate {
 export interface ApplicationUpdate {
   business_name?: string | null;
   inn?: string | null;
-  category?: PartnerCategory | null;
+  categories?: PartnerCategory[] | null;
   contact_email?: string | null;
   contact_phone?: string | null;
   description?: string | null;
@@ -163,7 +163,7 @@ export interface PartnerRead {
   application_id: UUID;
   name: string;
   inn: string;
-  category: PartnerCategory;
+  categories: PartnerCategory[];
   logo_url: string | null;
   brand_color: string | null;
   contact_email: string;
@@ -175,6 +175,7 @@ export interface PartnerRead {
 
 export interface PartnerUpdate {
   name?: string | null;
+  categories?: PartnerCategory[] | null;
   logo_url?: string | null;
   brand_color?: string | null;
   contact_email?: string | null;

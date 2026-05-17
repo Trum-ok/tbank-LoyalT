@@ -3,8 +3,8 @@
     <div>
       <h1 class="page-title">Профиль партнёра</h1>
       <p class="page-subtitle">
-        Видимые клиентам имя, логотип и контакты. ИНН и категория задаются один
-        раз при регистрации и редактируются только через поддержку.
+        Видимые клиентам имя, логотип, категории и контакты. ИНН задаётся один
+        раз при регистрации и редактируется только через поддержку.
       </p>
     </div>
   </header>
@@ -36,7 +36,7 @@
         <div>
           <h2 class="profile__name">{{ p.name }}</h2>
           <p class="profile__sub">
-            {{ partnerCategoryLabel(p.category) }} · ИНН {{ p.inn }}
+            {{ partnerCategoriesLabel(p.categories) }} · ИНН {{ p.inn }}
           </p>
         </div>
       </div>
@@ -77,6 +77,22 @@
           </div>
         </label>
       </div>
+
+      <fieldset class="field">
+        <span class="field__label">Категории (можно несколько)</span>
+        <div class="category-chips">
+          @for (c of categories; track c.code) {
+            <button
+              type="button"
+              class="category-chip"
+              [class.is-active]="isCategorySelected(c.code)"
+              (click)="toggleCategory(c.code)"
+            >
+              {{ c.label }}
+            </button>
+          }
+        </div>
+      </fieldset>
 
       <div class="field">
         <span class="field__label">Логотип</span>

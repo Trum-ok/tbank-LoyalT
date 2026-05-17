@@ -181,3 +181,31 @@
     }
   }
 }
+
+.profile .category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.profile .category-chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.profile .category-chip:hover {
+  border-color: rgba(0, 0, 0, 0.32);
+}
+
+.profile .category-chip.is-active {
+  background: #ffdd2d;
+  border-color: #ffdd2d;
+  color: #1a1a1a;
+  font-weight: 600;
+}

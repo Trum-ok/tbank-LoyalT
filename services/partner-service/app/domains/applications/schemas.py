@@ -9,7 +9,7 @@ from app.domains.applications.models import ApplicationStatus, PartnerCategory
 class ApplicationCreate(BaseModel):
     business_name: str = Field(min_length=1, max_length=255)
     inn: str = Field(min_length=10, max_length=12)
-    category: PartnerCategory
+    categories: list[PartnerCategory] = Field(min_length=1)
     contact_email: EmailStr
     contact_phone: str | None = Field(default=None, max_length=32)
     description: str | None = Field(default=None, max_length=2000)
@@ -20,7 +20,7 @@ class ApplicationCreate(BaseModel):
                 {
                     "business_name": "Кофейня «Тёплый угол»",
                     "inn": "7701234567",
-                    "category": "food",
+                    "categories": ["food", "services"],
                     "contact_email": "owner@coffee-point.ru",
                     "contact_phone": "+79001234567",
                     "description": "Сеть кофеен в центре города",
@@ -33,7 +33,7 @@ class ApplicationCreate(BaseModel):
 class ApplicationUpdate(BaseModel):
     business_name: str | None = Field(default=None, min_length=1, max_length=255)
     inn: str | None = Field(default=None, min_length=10, max_length=12)
-    category: PartnerCategory | None = None
+    categories: list[PartnerCategory] | None = Field(default=None, min_length=1)
     contact_email: EmailStr | None = None
     contact_phone: str | None = Field(default=None, max_length=32)
     description: str | None = Field(default=None, max_length=2000)
@@ -50,7 +50,7 @@ class ApplicationRead(BaseModel):
     account_id: UUID
     business_name: str
     inn: str
-    category: PartnerCategory
+    categories: list[PartnerCategory]
     contact_email: str
     contact_phone: str | None
     description: str | None

@@ -9,14 +9,14 @@ from app.domains.partners.models import PartnerCategory, PartnerStatus
 class PartnerCreate(BaseModel):
     inn: str = Field(min_length=10, max_length=12)
     name: str = Field(min_length=1, max_length=255)
-    category: PartnerCategory
+    categories: list[PartnerCategory] = Field(min_length=1)
     logo_url: str | None = None
     brand_color: str | None = Field(default=None, max_length=16)
 
 
 class PartnerUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
-    category: PartnerCategory | None = None
+    categories: list[PartnerCategory] | None = Field(default=None, min_length=1)
     logo_url: str | None = None
     brand_color: str | None = Field(default=None, max_length=16)
     status: PartnerStatus | None = None
@@ -28,7 +28,7 @@ class PartnerRead(BaseModel):
     id: UUID
     inn: str
     name: str
-    category: PartnerCategory
+    categories: list[PartnerCategory]
     logo_url: str | None
     brand_color: str | None
     status: PartnerStatus

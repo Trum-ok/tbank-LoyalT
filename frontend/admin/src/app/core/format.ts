@@ -47,6 +47,13 @@ export function partnerCategoryLabel(code: string): string {
   }
 }
 
+export function partnerCategoriesLabel(
+  codes: string[] | null | undefined,
+): string {
+  if (!codes || codes.length === 0) return '—';
+  return codes.map(partnerCategoryLabel).join(', ');
+}
+
 export function partnerStatusLabel(status: string): string {
   switch (status) {
     case 'active':

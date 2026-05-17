@@ -3,7 +3,8 @@ from enum import StrEnum
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, Index, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, TimestampsMixin, UUIDPKMixin
 
@@ -28,6 +29,17 @@ class ApplicationStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class ApplicationCategory(Base):
+    """Категория заявки (заявка может относиться к нескольким категориям)."""
+
+    __tablename__ = "application_category"
+
+    application_id: Mapped[UUID] = mapped_column(
+        ForeignKey("application.id", ondelete="CASCADE"), primary_key=True
+    )
+    category: Mapped[str] = mapped_column(String(32), primary_key=True)
+
+
 class Application(UUIDPKMixin, TimestampsMixin, Base):
     __tablename__ = "application"
     __table_args__ = (
@@ -41,7 +53,6 @@ class Application(UUIDPKMixin, TimestampsMixin, Base):
 
     business_name: Mapped[str] = mapped_column(String(255))
     inn: Mapped[str] = mapped_column(String(12))
-    category: Mapped[PartnerCategory] = mapped_column(String(32))
     contact_email: Mapped[str] = mapped_column(String(255))
     contact_phone: Mapped[str | None] = mapped_column(String(32))
     description: Mapped[str | None] = mapped_column(String(2000))
@@ -55,3 +66,15 @@ class Application(UUIDPKMixin, TimestampsMixin, Base):
     decided_at: Mapped[datetime | None] = mapped_column()
     decided_by: Mapped[UUID | None] = mapped_column()
     decision_comment: Mapped[str | None] = mapped_column(String(2000))
+
+    category_links: Mapped[list[ApplicationCategory]] = relationship(
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        passive_deletes=True,
+        order_by="ApplicationCategory.category",
+    )
+    categories: AssociationProxy[list[str]] = association_proxy(
+        "category_links",
+        "category",
+        creator=lambda c: ApplicationCategory(category=str(c)),
+    )

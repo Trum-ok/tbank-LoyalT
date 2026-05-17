@@ -15,7 +15,7 @@ import { PartnerApi } from '../../core/api/partner-api.service';
 import {
   applicationStatusLabel,
   formatDateTime,
-  partnerCategoryLabel,
+  partnerCategoriesLabel,
 } from '../../core/format';
 import { IdentityService } from '../../core/identity.service';
 import { NotifyService } from '../../core/notify.service';
@@ -37,7 +37,7 @@ interface AccountForm {
 interface ApplicationForm {
   business_name: string;
   inn: string;
-  category: PartnerCategory;
+  categories: PartnerCategory[];
   contact_email: string;
   contact_phone: string;
   description: string;
@@ -58,7 +58,7 @@ export class OnboardingPage {
   private readonly notify = inject(NotifyService);
 
   readonly categories = CATEGORIES;
-  readonly partnerCategoryLabel = partnerCategoryLabel;
+  readonly partnerCategoriesLabel = partnerCategoriesLabel;
   readonly applicationStatusLabel = applicationStatusLabel;
   readonly formatDateTime = formatDateTime;
 
@@ -70,7 +70,7 @@ export class OnboardingPage {
   readonly applicationForm = signal<ApplicationForm>({
     business_name: '',
     inn: '',
-    category: 'food',
+    categories: ['food'],
     contact_email: '',
     contact_phone: '',
     description: '',
@@ -130,7 +130,7 @@ export class OnboardingPage {
     this.applicationForm.set({
       business_name: 'ООО «Кофейня Утро»',
       inn: '7708123456',
-      category: 'food',
+      categories: ['food', 'services'],
       contact_email: current.contact_email || 'contact@coffee-utro.ru',
       contact_phone: current.contact_phone || '+7 (495) 123-45-67',
       description:
@@ -143,6 +143,21 @@ export class OnboardingPage {
     value: ApplicationForm[K],
   ): void {
     this.applicationForm.update(f => ({ ...f, [key]: value }));
+  }
+
+  isCategorySelected(code: PartnerCategory): boolean {
+    return this.applicationForm().categories.includes(code);
+  }
+
+  toggleCategory(code: PartnerCategory): void {
+    this.applicationForm.update(f => {
+      const has = f.categories.includes(code);
+      const categories = has
+        ? f.categories.filter(c => c !== code)
+        : [...f.categories, code];
+      // Минимум одна категория — не даём снять последнюю.
+      return { ...f, categories: categories.length ? categories : f.categories };
+    });
   }
 
   submitAccount(): void {
@@ -200,7 +215,7 @@ export class OnboardingPage {
       const patch: ApplicationUpdate = {
         business_name: f.business_name,
         inn: f.inn,
-        category: f.category,
+        categories: f.categories,
         contact_email: f.contact_email,
         contact_phone: f.contact_phone || null,
         description: f.description || null,
@@ -229,7 +244,7 @@ export class OnboardingPage {
     const body: ApplicationCreate = {
       business_name: f.business_name,
       inn: f.inn,
-      category: f.category,
+      categories: f.categories,
       contact_email: f.contact_email,
       contact_phone: f.contact_phone || null,
       description: f.description || null,
@@ -257,7 +272,7 @@ export class OnboardingPage {
     this.applicationForm.set({
       business_name: app.business_name,
       inn: app.inn,
-      category: app.category,
+      categories: app.categories,
       contact_email: app.contact_email,
       contact_phone: app.contact_phone ?? '',
       description: app.description ?? '',
@@ -283,7 +298,7 @@ export class OnboardingPage {
           this.applicationForm.set({
             business_name: '',
             inn: '',
-            category: 'food',
+            categories: ['food'],
             contact_email: '',
             contact_phone: '',
             description: '',

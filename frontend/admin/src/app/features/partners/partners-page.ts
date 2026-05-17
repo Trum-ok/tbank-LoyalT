@@ -6,7 +6,7 @@ import { catchError, finalize, of } from 'rxjs';
 import { ModerationApi } from '../../core/api/moderation-api.service';
 import {
   formatDate,
-  partnerCategoryLabel,
+  partnerCategoriesLabel,
   partnerStatusLabel,
 } from '../../core/format';
 import { NotifyService } from '../../core/notify.service';
@@ -30,7 +30,7 @@ export class PartnersPage {
   private readonly notify = inject(NotifyService);
 
   readonly partnerStatusLabel = partnerStatusLabel;
-  readonly partnerCategoryLabel = partnerCategoryLabel;
+  readonly partnerCategoriesLabel = partnerCategoriesLabel;
   readonly formatDate = formatDate;
 
   readonly filters: FilterOption[] = [

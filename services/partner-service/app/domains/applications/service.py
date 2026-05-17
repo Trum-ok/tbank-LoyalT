@@ -33,7 +33,7 @@ async def submit_application(
         account_id=account_id,
         business_name=data.business_name,
         inn=data.inn,
-        category=data.category,
+        categories=[c.value for c in data.categories],
         contact_email=str(data.contact_email).lower(),
         contact_phone=data.contact_phone,
         description=data.description,
@@ -144,6 +144,11 @@ async def update_my_pending(
     payload = data.model_dump(exclude_unset=True)
     if "contact_email" in payload and payload["contact_email"] is not None:
         payload["contact_email"] = str(payload["contact_email"]).lower()
+    # categories — association proxy: присваиваем списком строк, коллекция
+    # пересоберётся (старые ApplicationCategory удалятся каскадом).
+    new_categories = payload.pop("categories", None)
+    if new_categories is not None:
+        application.categories = [str(c) for c in new_categories]
     for key, value in payload.items():
         setattr(application, key, value)
 

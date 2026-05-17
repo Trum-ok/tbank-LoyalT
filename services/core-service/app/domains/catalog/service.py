@@ -1,6 +1,7 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, literal_column, select
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.catalog.schemas import (
@@ -8,7 +9,12 @@ from app.domains.catalog.schemas import (
     CatalogProgram,
     CatalogProgramDetail,
 )
-from app.domains.partners.models import Partner, PartnerCategory, PartnerStatus
+from app.domains.partners.models import (
+    Partner,
+    PartnerCategory,
+    PartnerCategory_,
+    PartnerStatus,
+)
 from app.domains.programs.models import Program, ProgramStatus
 from app.domains.programs.schemas import TierRead
 from app.domains.programs.service import get_program
@@ -24,13 +30,31 @@ _CATEGORY_LABELS: dict[PartnerCategory, str] = {
 }
 
 
+# Категории партнёра одним массивом через коррелированный подзапрос —
+# чтобы не плодить строки JOIN'ом и сохранить колоночный select.
+_CATEGORIES_SUBQ = (
+    select(
+        func.coalesce(
+            func.array_agg(
+                aggregate_order_by(
+                    PartnerCategory_.category, PartnerCategory_.category
+                )
+            ),
+            literal_column("ARRAY[]::varchar[]"),
+        )
+    )
+    .where(PartnerCategory_.partner_id == Partner.id)
+    .correlate(Partner)
+    .scalar_subquery()
+)
+
 _BASE_COLUMNS = (
     Program.id.label("program_id"),
     Partner.id.label("partner_id"),
     Partner.name.label("partner_name"),
     Partner.logo_url.label("partner_logo_url"),
     Partner.brand_color.label("partner_brand_color"),
-    Partner.category.label("category"),
+    _CATEGORIES_SUBQ.label("categories"),
     Program.name.label("program_name"),
     Program.description.label("description"),
     Program.type.label("type"),
@@ -91,7 +115,12 @@ async def search_catalog(
 ) -> list[CatalogProgram]:
     stmt = _base_query()
     if category is not None:
-        stmt = stmt.where(Partner.category == category)
+        stmt = stmt.where(
+            exists().where(
+                PartnerCategory_.partner_id == Partner.id,
+                PartnerCategory_.category == category.value,
+            )
+        )
     if query:
         like = f"%{query.lower()}%"
         stmt = stmt.where(func.lower(Partner.name).like(like))
@@ -102,17 +131,21 @@ async def search_catalog(
 
 async def list_categories(session: AsyncSession) -> list[CatalogCategory]:
     stmt = (
-        select(Partner.category, func.count(Program.id))
+        select(PartnerCategory_.category, func.count(Program.id))
+        .select_from(PartnerCategory_)
+        .join(Partner, Partner.id == PartnerCategory_.partner_id)
         .join(Program, Program.partner_id == Partner.id)
         .where(
             Program.status == ProgramStatus.PUBLISHED,
             Partner.status == PartnerStatus.ACTIVE,
         )
-        .group_by(Partner.category)
+        .group_by(PartnerCategory_.category)
     )
     result = await session.execute(stmt)
-    counts: dict[PartnerCategory, int] = {row[0]: row[1] for row in result.all()}
+    counts: dict[str, int] = {row[0]: row[1] for row in result.all()}
     return [
-        CatalogCategory(code=cat, label=label, programs_count=counts.get(cat, 0))
+        CatalogCategory(
+            code=cat, label=label, programs_count=counts.get(cat.value, 0)
+        )
         for cat, label in _CATEGORY_LABELS.items()
     ]

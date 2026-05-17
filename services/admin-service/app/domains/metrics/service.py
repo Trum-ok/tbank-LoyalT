@@ -35,7 +35,10 @@ async def partners_overview(session: AsyncSession) -> PartnersOverview:
     ).all()
     rows_category = (
         await session.execute(
-            text(f"SELECT category, COUNT(*) FROM {CORE}.partner GROUP BY category")
+            text(
+                f"SELECT category, COUNT(*) FROM {CORE}.partner_category "
+                f"GROUP BY category"
+            )
         )
     ).all()
     pending = (

@@ -7,7 +7,7 @@ import { ModerationApi } from '../../core/api/moderation-api.service';
 import {
   applicationStatusLabel,
   formatDateTime,
-  partnerCategoryLabel,
+  partnerCategoriesLabel,
 } from '../../core/format';
 import { NotifyService } from '../../core/notify.service';
 
@@ -30,7 +30,7 @@ export class ModerationPage {
   private readonly notify = inject(NotifyService);
 
   readonly applicationStatusLabel = applicationStatusLabel;
-  readonly partnerCategoryLabel = partnerCategoryLabel;
+  readonly partnerCategoriesLabel = partnerCategoriesLabel;
   readonly formatDateTime = formatDateTime;
 
   readonly filters: FilterOption[] = [

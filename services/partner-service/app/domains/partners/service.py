@@ -5,20 +5,31 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.applications.service import approve as approve_application
-from app.domains.partners.models import Partner, PartnerStatus
+from app.domains.partners.models import Partner, PartnerCategory_, PartnerStatus
 from app.domains.partners.schemas import PartnerUpdate
 from app.errors import ConflictError, NotFoundError
 from app.events import publisher
 
 
-def _to_event_payload(partner: Partner) -> dict:
+async def _partner_categories(session: AsyncSession, partner_id: UUID) -> list[str]:
+    """Категории партнёра отдельным запросом — надёжнее, чем lazy-доступ
+    к association proxy после session.refresh в async-контексте."""
+    result = await session.execute(
+        select(PartnerCategory_.category)
+        .where(PartnerCategory_.partner_id == partner_id)
+        .order_by(PartnerCategory_.category)
+    )
+    return [row[0] for row in result]
+
+
+def _to_event_payload(partner: Partner, categories: list[str]) -> dict:
     return {
         "partner_id": partner.id,
         "account_id": partner.account_id,
         "application_id": partner.application_id,
         "name": partner.name,
         "inn": partner.inn,
-        "category": partner.category,
+        "categories": categories,
         "logo_url": partner.logo_url,
         "brand_color": partner.brand_color,
         "status": partner.status,
@@ -41,7 +52,7 @@ async def approve_application_and_create_partner(
         application_id=application.id,
         name=application.business_name,
         inn=application.inn,
-        category=application.category,
+        categories=list(application.categories),
         contact_email=application.contact_email,
         contact_phone=application.contact_phone,
     )
@@ -53,9 +64,10 @@ async def approve_application_and_create_partner(
         raise ConflictError("Partner with this INN or account already exists") from exc
     await session.refresh(partner)
 
+    categories = await _partner_categories(session, partner.id)
     await publisher.publish(
         "partner.approved",
-        _to_event_payload(partner),
+        _to_event_payload(partner, categories),
         key=str(partner.id),
     )
     return partner
@@ -99,12 +111,16 @@ async def update_partner_profile(
     changes = data.model_dump(exclude_unset=True)
     if not changes:
         return partner
+    new_categories = changes.pop("categories", None)
+    if new_categories is not None:
+        partner.categories = [str(c) for c in new_categories]
     for field, value in changes.items():
         setattr(partner, field, value)
     await session.commit()
     await session.refresh(partner)
+    categories = await _partner_categories(session, partner.id)
     await publisher.publish(
-        "partner.updated", _to_event_payload(partner), key=str(partner.id)
+        "partner.updated", _to_event_payload(partner, categories), key=str(partner.id)
     )
     return partner
 
@@ -118,8 +134,9 @@ async def set_logo_url(
     partner.logo_url = logo_url
     await session.commit()
     await session.refresh(partner)
+    categories = await _partner_categories(session, partner.id)
     await publisher.publish(
-        "partner.updated", _to_event_payload(partner), key=str(partner.id)
+        "partner.updated", _to_event_payload(partner, categories), key=str(partner.id)
     )
     return partner
 
@@ -133,9 +150,10 @@ async def set_status(
     partner.status = target
     await session.commit()
     await session.refresh(partner)
+    categories = await _partner_categories(session, partner.id)
     await publisher.publish(
         "partner.status_changed",
-        _to_event_payload(partner),
+        _to_event_payload(partner, categories),
         key=str(partner.id),
     )
     return partner

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   AccountRead,
+  PartnerCategory,
   PartnerRead,
   PartnerUpdate,
 } from '@tbank-loyalt/shared';
@@ -12,9 +13,17 @@ import { AccountsApi } from '../../core/api/accounts-api.service';
 import { PartnerApi } from '../../core/api/partner-api.service';
 import {
   formatDateTime,
-  partnerCategoryLabel,
+  partnerCategoriesLabel,
   partnerStatusLabel,
 } from '../../core/format';
+
+const CATEGORIES: { code: PartnerCategory; label: string }[] = [
+  { code: 'food', label: 'Кафе и еда' },
+  { code: 'beauty', label: 'Красота' },
+  { code: 'retail', label: 'Магазины' },
+  { code: 'services', label: 'Услуги' },
+  { code: 'entertainment', label: 'Развлечения' },
+];
 import { IdentityService } from '../../core/identity.service';
 import { NotifyService } from '../../core/notify.service';
 
@@ -32,8 +41,9 @@ export class ProfilePage {
   private readonly notify = inject(NotifyService);
 
   readonly formatDateTime = formatDateTime;
-  readonly partnerCategoryLabel = partnerCategoryLabel;
+  readonly partnerCategoriesLabel = partnerCategoriesLabel;
   readonly partnerStatusLabel = partnerStatusLabel;
+  readonly categories = CATEGORIES;
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -79,6 +89,7 @@ export class ProfilePage {
         if (p) {
           this.form.set({
             name: p.name,
+            categories: [...p.categories],
             logo_url: p.logo_url ?? '',
             brand_color: p.brand_color ?? '',
             contact_email: p.contact_email,
@@ -98,6 +109,22 @@ export class ProfilePage {
 
   patch<K extends keyof PartnerUpdate>(key: K, value: PartnerUpdate[K]): void {
     this.form.update(f => ({ ...f, [key]: value }));
+  }
+
+  isCategorySelected(code: PartnerCategory): boolean {
+    return (this.form().categories ?? []).includes(code);
+  }
+
+  toggleCategory(code: PartnerCategory): void {
+    this.form.update(f => {
+      const current = f.categories ?? [];
+      const has = current.includes(code);
+      const categories = has
+        ? current.filter(c => c !== code)
+        : [...current, code];
+      // Минимум одна категория — не даём снять последнюю.
+      return { ...f, categories: categories.length ? categories : current };
+    });
   }
 
   onLogoSelected(event: Event): void {

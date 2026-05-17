@@ -100,7 +100,7 @@
         <span class="submitted__pill">Заявка отправлена</span>
         <h2 class="submitted__title">{{ app.business_name }}</h2>
         <p class="submitted__sub">
-          ИНН {{ app.inn }} · {{ partnerCategoryLabel(app.category) }}
+          ИНН {{ app.inn }} · {{ partnerCategoriesLabel(app.categories) }}
         </p>
         <p class="submitted__hint">
           <span>Ждём решения модератора Т-Банка.</span>
@@ -170,18 +170,21 @@
         </label>
       </div>
 
-      <label class="field">
-        <span class="field__label">Категория</span>
-        <select
-          class="field__select"
-          [value]="applicationForm().category"
-          (change)="patchApplication('category', $any($event.target).value)"
-        >
+      <fieldset class="field">
+        <span class="field__label">Категории (можно несколько)</span>
+        <div class="category-chips">
           @for (c of categories; track c.code) {
-            <option [value]="c.code">{{ c.label }}</option>
+            <button
+              type="button"
+              class="category-chip"
+              [class.is-active]="isCategorySelected(c.code)"
+              (click)="toggleCategory(c.code)"
+            >
+              {{ c.label }}
+            </button>
           }
-        </select>
-      </label>
+        </div>
+      </fieldset>
 
       <div class="row row--2">
         <label class="field">
@@ -258,7 +261,7 @@
         <div>
           <h3 class="application__title">{{ app.business_name }}</h3>
           <p class="application__sub">
-            ИНН {{ app.inn }} · {{ partnerCategoryLabel(app.category) }}
+            ИНН {{ app.inn }} · {{ partnerCategoriesLabel(app.categories) }}
           </p>
         </div>
         <span class="status-pill" [class]="'status-pill--' + app.status">
