@@ -153,7 +153,7 @@ async def list_triggers(
     partner_id: CurrentPartnerId,
     session: SessionDep,
 ) -> list[BonusTriggerRead]:
-    triggers = await trigger_service.list_triggers(session, program_id)
+    triggers = await trigger_service.list_triggers(session, program_id, partner_id)
     return [BonusTriggerRead.model_validate(t) for t in triggers]
 
 

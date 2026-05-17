@@ -31,7 +31,13 @@ async def _get_program_for_partner(
     return program
 
 
-async def list_triggers(session: AsyncSession, program_id: UUID) -> list[BonusTrigger]:
+async def list_triggers(
+    session: AsyncSession, program_id: UUID, partner_id: UUID
+) -> list[BonusTrigger]:
+    # Проверяем владение программой так же, как create/update/delete/fire —
+    # иначе любой партнёр читал бы чужие кампании по UUID программы (IDOR).
+    await _get_program_for_partner(session, program_id, partner_id)
+
     result = await session.execute(
         select(BonusTrigger)
         .where(BonusTrigger.program_id == program_id)
