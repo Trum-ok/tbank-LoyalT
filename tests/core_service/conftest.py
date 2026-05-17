@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 SERVICE_ROOT = Path(__file__).parents[2] / "services" / "core-service"
 sys.path.insert(0, str(SERVICE_ROOT))
@@ -40,9 +41,13 @@ TEST_DB_URL = "postgresql+psycopg://postgres:postgres@localhost:5433/tbank_loyal
 
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
+    # NullPool: каждая сессия берёт свежее соединение и сразу его закрывает.
+    # Иначе pooled-соединения живут между тестами на разных event loop'ах и
+    # teardown-TRUNCATE одного теста дедлочится с INSERT следующего.
     engine = create_async_engine(
         TEST_DB_URL,
         echo=False,
+        poolclass=NullPool,
         execution_options={"schema_translate_map": {"core": TEST_SCHEMA}},
     )
 
@@ -64,6 +69,10 @@ async def session(test_engine) -> AsyncIterator[AsyncSession]:
     )
     async with factory() as sess:
         yield sess
+        # Тест мог оставить транзакцию в aborted-состоянии (сервис ловит
+        # IntegrityError, но не делает rollback) — сбрасываем, иначе TRUNCATE
+        # не выполнится и partner «протечёт» в следующий тест.
+        await sess.rollback()
         for table in (
             "bonus_trigger_log",
             "bonus_trigger",

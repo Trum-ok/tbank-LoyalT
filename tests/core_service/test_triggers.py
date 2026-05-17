@@ -49,7 +49,7 @@ class TestTriggerCRUD:
         await trigger_service.create_trigger(session, program.id, partner_id, _manual("A"))
         await trigger_service.create_trigger(session, program.id, partner_id, _manual("B"))
 
-        triggers = await trigger_service.list_triggers(session, program.id)
+        triggers = await trigger_service.list_triggers(session, program.id, partner_id)
         assert len(triggers) == 2
         names = {t.name for t in triggers}
         assert names == {"A", "B"}
@@ -57,8 +57,19 @@ class TestTriggerCRUD:
     async def test_list_empty_for_new_program(
         self, session: AsyncSession, program, partner_id
     ):
-        triggers = await trigger_service.list_triggers(session, program.id)
+        triggers = await trigger_service.list_triggers(session, program.id, partner_id)
         assert triggers == []
+
+    async def test_list_rejects_foreign_partner(
+        self, session: AsyncSession, program, partner_id
+    ):
+        # IDOR-регрессия: чужой партнёр не должен видеть кампании по UUID
+        # программы — list_triggers обязан проверять владение.
+        await trigger_service.create_trigger(
+            session, program.id, partner_id, _manual("A")
+        )
+        with pytest.raises(ForbiddenError):
+            await trigger_service.list_triggers(session, program.id, uuid4())
 
     async def test_update_name_and_points(
         self, session: AsyncSession, program, partner_id
@@ -96,7 +107,7 @@ class TestTriggerCRUD:
         await trigger_service.delete_trigger(
             session, program.id, trigger.id, partner_id
         )
-        triggers = await trigger_service.list_triggers(session, program.id)
+        triggers = await trigger_service.list_triggers(session, program.id, partner_id)
         assert triggers == []
 
     async def test_update_nonexistent_trigger_raises(
