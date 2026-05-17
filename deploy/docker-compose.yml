@@ -133,6 +133,9 @@ services:
       CORE_KAFKA_GROUP_ID: core-service
       CORE_KAFKA_TOPIC_CORE_EVENTS: core.events
       CORE_KAFKA_SUBSCRIBE_TOPICS: '["partner.events"]'
+      # Общий секрет токена кассы. ДОЛЖЕН совпадать с PARTNER_JWT_SECRET.
+      # Это dev-значение для локального стека — в проде переопределить.
+      CORE_JWT_SECRET: ${CORE_JWT_SECRET:-compose-dev-shared-cashier-secret}
     ports:
       - "8001:8000"
 
@@ -154,6 +157,9 @@ services:
       PARTNER_KAFKA_ENABLED: "true"
       PARTNER_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PARTNER_KAFKA_TOPIC_PARTNER_EVENTS: partner.events
+      # Общий секрет токена кассы. ДОЛЖЕН совпадать с CORE_JWT_SECRET.
+      # Это dev-значение для локального стека — в проде переопределить.
+      PARTNER_JWT_SECRET: ${PARTNER_JWT_SECRET:-compose-dev-shared-cashier-secret}
       # Резолв аудитории рассылок: внутренний REST-вызов в core-service
       # (внутри сети контейнеров — порт 8000, не хостовый 8001).
       PARTNER_CORE_BASE_URL: http://core-service:8000

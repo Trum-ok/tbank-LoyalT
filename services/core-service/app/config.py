@@ -1,7 +1,11 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Публично известный sentinel из репозитория. Используется ТОЛЬКО как
+# маркер «секрет не переопределён». Любое другое значение проходит.
+_DEV_JWT_SECRET = "dev-tbank-loyalt-cashier-jwt-secret-change-in-prod"
 
 
 class Settings(BaseSettings):
@@ -37,7 +41,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
     # JWT кассира (HS256). Секрет ОБЯЗАН совпадать с PARTNER_JWT_SECRET.
-    jwt_secret: str = "dev-tbank-loyalt-cashier-jwt-secret-change-in-prod"
+    # При debug=False дефолтный sentinel приводит к фейл-фасту (см. ниже).
+    jwt_secret: str = _DEV_JWT_SECRET
 
     # Kafka. Если выключена, publisher логирует события, а consumer не стартует.
     # События принимаются вручную через POST /internal/events.
@@ -59,6 +64,19 @@ class Settings(BaseSettings):
     # Фоновый джоб бонусных кампаний. Запускается раз в сутки.
     bonus_campaigns_job_enabled: bool = False
     bonus_campaigns_job_interval_seconds: int = 86400
+
+    @model_validator(mode="after")
+    def _forbid_default_jwt_secret_in_prod(self) -> "Settings":
+        # Фейл-фаст: вне dev (debug=False) запрещаем работать на публично
+        # известном секрете — иначе кто угодно подделает токен кассы.
+        if not self.debug and self.jwt_secret == _DEV_JWT_SECRET:
+            raise ValueError(
+                "CORE_JWT_SECRET не переопределён (используется публичный "
+                "dev-секрет из репозитория). Задайте CORE_JWT_SECRET "
+                "(совпадающий с PARTNER_JWT_SECRET) или включите CORE_DEBUG=true "
+                "для локальной разработки."
+            )
+        return self
 
 
 @lru_cache
