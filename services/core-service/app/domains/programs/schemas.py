@@ -70,8 +70,9 @@ class ProgramCreate(BaseModel):
     referral_bonus_points: int | None = Field(default=None, ge=1)
 
     # Ограничения начисления
-    min_purchase_amount: int | None = Field(default=None, ge=1,
-                                            description="Минимальная сумма покупки в копейках")
+    min_purchase_amount: int | None = Field(
+        default=None, ge=1, description="Минимальная сумма покупки в копейках"
+    )
     max_points_per_transaction: int | None = Field(default=None, ge=1)
 
     # Ограничения списания

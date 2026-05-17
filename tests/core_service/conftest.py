@@ -1,11 +1,3 @@
-"""
-Тестовая инфраструктура для core-service.
-
-Использует реальный PostgreSQL из docker-compose (localhost:5433).
-Схема test_core создаётся один раз на сессию, очищается между тестами
-через TRUNCATE ... CASCADE, чтобы тесты не мешали друг другу.
-"""
-
 import os
 import sys
 from collections.abc import AsyncIterator
@@ -20,8 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 SERVICE_ROOT = Path(__file__).parents[2] / "services" / "core-service"
 sys.path.insert(0, str(SERVICE_ROOT))
 
-# Устанавливаем env до любого импорта app.*, чтобы lru_cached settings
-# прочитали правильный URL (engine создаётся лениво — реального подключения нет).
+# Must be set before any app.* import so lru_cached settings pick up the right URL.
 os.environ.setdefault(
     "CORE_DATABASE_URL",
     "postgresql+psycopg://postgres:postgres@localhost:5433/tbank_loyalt",
@@ -29,7 +20,14 @@ os.environ.setdefault(
 os.environ.setdefault("CORE_KAFKA_ENABLED", "false")
 
 from app.database import Base  # noqa: E402
-from app.domains.partners.models import Partner, PartnerCategory, PartnerStatus  # noqa: E402
+from app.domains.partners.models import (
+    Partner,
+    PartnerCategory,
+    PartnerStatus,
+)  # noqa: E402
+from app.domains.programs import service as program_service  # noqa: E402
+from app.domains.programs.schemas import ProgramCreate  # noqa: E402
+from app.domains.programs.models import ProgramType  # noqa: E402
 
 TEST_SCHEMA = "test_core"
 TEST_DB_URL = "postgresql+psycopg://postgres:postgres@localhost:5433/tbank_loyalt"
@@ -37,7 +35,6 @@ TEST_DB_URL = "postgresql+psycopg://postgres:postgres@localhost:5433/tbank_loyal
 
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
-    """Движок с тестовой схемой; схема создаётся/сносится один раз за сессию."""
     engine = create_async_engine(
         TEST_DB_URL,
         echo=False,
@@ -57,11 +54,11 @@ async def test_engine():
 
 @pytest_asyncio.fixture
 async def session(test_engine) -> AsyncIterator[AsyncSession]:
-    """Сессия к тестовой схеме; после каждого теста чистим таблицы."""
-    factory = async_sessionmaker(test_engine, expire_on_commit=False, class_=AsyncSession)
+    factory = async_sessionmaker(
+        test_engine, expire_on_commit=False, class_=AsyncSession
+    )
     async with factory() as sess:
         yield sess
-        # Очищаем в правильном порядке, CASCADE снимает зависимости FK
         await sess.execute(text(f"TRUNCATE {TEST_SCHEMA}.program_tier CASCADE"))
         await sess.execute(text(f"TRUNCATE {TEST_SCHEMA}.program CASCADE"))
         await sess.execute(text(f"TRUNCATE {TEST_SCHEMA}.partner CASCADE"))
@@ -70,7 +67,6 @@ async def session(test_engine) -> AsyncIterator[AsyncSession]:
 
 @pytest_asyncio.fixture
 async def partner_id(session: AsyncSession) -> UUID:
-    """Создаёт партнёра и возвращает его id."""
     pid = uuid4()
     partner = Partner(
         id=pid,
@@ -84,3 +80,16 @@ async def partner_id(session: AsyncSession) -> UUID:
     session.add(partner)
     await session.commit()
     return pid
+
+
+@pytest_asyncio.fixture
+async def program(session: AsyncSession, partner_id: UUID):
+    return await program_service.create_program(
+        session,
+        partner_id,
+        ProgramCreate(
+            name="Тест",
+            type=ProgramType.ACCRUAL,
+            accrual_rule={"percent": 5},
+        ),
+    )

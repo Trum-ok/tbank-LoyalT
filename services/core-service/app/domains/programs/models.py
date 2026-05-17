@@ -106,7 +106,9 @@ class ProgramTier(UUIDPKMixin, Base):
     # Отображаемое название уровня, например «Бронзовый», «Серебряный»
     name: Mapped[str] = mapped_column(String(100))
     # Накопленные баллы за всё время, необходимые для входа в уровень
-    threshold_points: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    threshold_points: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0"
+    )
     # Множитель начисления относительно базового правила (1.0 = без изменений)
     accrual_multiplier: Mapped[float] = mapped_column(
         Float, default=1.0, server_default="1.0"
