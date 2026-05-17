@@ -1,7 +1,7 @@
 """idempotency: transaction.idempotency_key + request_fingerprint
 
-Revision ID: 0007_idempotency_key
-Revises: 0006_points_expiration
+Revision ID: 0008_idempotency_key
+Revises: 0007_bonus_campaigns
 Create Date: 2026-05-17
 
 Идемпотентность операций начисления/списания. Касса/ЛК передаёт
@@ -26,7 +26,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0008_idempotency_key"
-down_revision: str | Sequence[str] | None = "0007_customer_birthday_bonus_triggers"
+down_revision: str | Sequence[str] | None = "0007_bonus_campaigns"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

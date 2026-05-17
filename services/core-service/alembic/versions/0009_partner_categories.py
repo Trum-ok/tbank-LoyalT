@@ -1,7 +1,7 @@
 """multi-category: core.partner_category
 
-Revision ID: 0008_partner_categories
-Revises: 0007_idempotency_key
+Revision ID: 0009_partner_categories
+Revises: 0008_idempotency_key
 Create Date: 2026-05-17
 
 Снэпшот партнёра в core теперь хранит несколько категорий в join-таблице
