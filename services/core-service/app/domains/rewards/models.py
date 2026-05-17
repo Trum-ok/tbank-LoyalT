@@ -20,7 +20,9 @@ class Reward(UUIDPKMixin, TimestampsMixin, Base):
     __tablename__ = "reward"
     __table_args__ = (Index("ix_reward_program_id", "program_id"),)
 
-    program_id: Mapped[UUID] = mapped_column(ForeignKey("program.id", ondelete="CASCADE"))
+    program_id: Mapped[UUID] = mapped_column(
+        ForeignKey("program.id", ondelete="CASCADE")
+    )
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(String(2000))
     cost_points: Mapped[int] = mapped_column()
@@ -33,4 +35,6 @@ class Reward(UUIDPKMixin, TimestampsMixin, Base):
     #   cashback_boost:   {"multiplier": 2, "days": 7}
     value: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
 
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )

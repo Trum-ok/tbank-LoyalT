@@ -15,6 +15,7 @@ from typing import Any
 from uuid import UUID
 
 from aiokafka import AIOKafkaProducer
+from loyalt_common import with_request_id
 
 from app.config import get_settings
 
@@ -58,11 +59,13 @@ class EventPublisher:
         *,
         key: str | None = None,
     ) -> None:
-        envelope = {
-            "type": event_type,
-            "occurred_at": datetime.now(UTC).isoformat(),
-            "payload": payload,
-        }
+        envelope = with_request_id(
+            {
+                "type": event_type,
+                "occurred_at": datetime.now(UTC).isoformat(),
+                "payload": payload,
+            }
+        )
         if self._producer is None:
             logger.info(
                 "event(stub) topic=%s key=%s body=%s",

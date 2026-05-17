@@ -1,7 +1,7 @@
 """points expiration: program.expire_warn_days + transaction.expiry_warned
 
-Revision ID: 0005_points_expiration
-Revises: 0004_analytics_projection
+Revision ID: 0006_points_expiration
+Revises: 0005_program_settings
 Create Date: 2026-05-17
 
 Сгорание баллов по TTL уже моделировалось (program.points_ttl_days,
@@ -22,8 +22,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0005_points_expiration"
-down_revision: str | Sequence[str] | None = "0004_analytics_projection"
+revision: str = "0006_points_expiration"
+down_revision: str | Sequence[str] | None = "0005_program_settings"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

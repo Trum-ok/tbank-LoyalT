@@ -13,6 +13,7 @@ import json
 import logging
 
 from aiokafka import AIOKafkaConsumer
+from loyalt_common import bind_request_id
 
 from app.config import get_settings
 from app.database import SessionLocal
@@ -69,12 +70,14 @@ class EventConsumer:
             logger.exception("Consumer loop crashed")
 
     async def _process_message(self, msg) -> None:  # type: ignore[no-untyped-def]
+        assert self._consumer is not None
         envelope = msg.value or {}
+        bind_request_id(envelope)
         event_type = envelope.get("type")
         payload = envelope.get("payload") or {}
         if not event_type:
             logger.warning("Skip message without type: %s", envelope)
-            await self._consumer.commit()  # type: ignore[union-attr]
+            await self._consumer.commit()
             return
         async with SessionLocal() as session:
             try:
@@ -85,7 +88,7 @@ class EventConsumer:
                     "Failed to process event type=%s offset=%s", event_type, msg.offset
                 )
                 return
-        await self._consumer.commit()  # type: ignore[union-attr]
+        await self._consumer.commit()
 
 
 consumer = EventConsumer()

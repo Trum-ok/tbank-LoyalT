@@ -99,7 +99,9 @@ async def accrue(
     await ensure_customer(session, req.customer_id)
     # Авто-подключение клиента к программе, если он не подключён.
     try:
-        enrollment = await get_enrollment_by_pair(session, req.customer_id, req.program_id)
+        enrollment = await get_enrollment_by_pair(
+            session, req.customer_id, req.program_id
+        )
     except NotFoundError:
         enrollment = Enrollment(
             customer_id=req.customer_id,

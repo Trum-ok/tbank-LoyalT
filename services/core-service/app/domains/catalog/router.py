@@ -28,9 +28,7 @@ async def search_programs(
 
 
 @router.get("/programs/{program_id}", response_model=CatalogProgramDetail)
-async def get_program(
-    session: SessionDep, program_id: UUID
-) -> CatalogProgramDetail:
+async def get_program(session: SessionDep, program_id: UUID) -> CatalogProgramDetail:
     program = await service.get_catalog_program(session, program_id)
     if program is None:
         raise HTTPException(

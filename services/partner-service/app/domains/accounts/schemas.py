@@ -9,6 +9,18 @@ class AccountCreate(BaseModel):
     full_name: str | None = Field(default=None, max_length=255)
     phone: str | None = Field(default=None, max_length=32)
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "owner@coffee-point.ru",
+                    "full_name": "Иван Петров",
+                    "phone": "+79001234567",
+                }
+            ]
+        }
+    }
+
 
 class AccountUpdate(BaseModel):
     full_name: str | None = Field(default=None, max_length=255)

@@ -51,9 +51,7 @@ async def list_active_for_customer(
     return await list_devices(session, customer_id)
 
 
-async def deactivate(
-    session: AsyncSession, customer_id: UUID, device_id: UUID
-) -> None:
+async def deactivate(session: AsyncSession, customer_id: UUID, device_id: UUID) -> None:
     device = await session.get(Device, device_id)
     if device is None or device.customer_id != customer_id:
         raise NotFoundError("Device not found")

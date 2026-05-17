@@ -25,4 +25,6 @@ class Device(UUIDPKMixin, TimestampsMixin, Base):
     customer_id: Mapped[UUID] = mapped_column()
     token: Mapped[str] = mapped_column(String(512))
     platform: Mapped[DevicePlatform] = mapped_column(String(16))
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )

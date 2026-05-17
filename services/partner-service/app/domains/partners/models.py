@@ -41,5 +41,7 @@ class Partner(UUIDPKMixin, TimestampsMixin, Base):
     contact_phone: Mapped[str | None] = mapped_column(String(32))
 
     status: Mapped[PartnerStatus] = mapped_column(
-        String(16), default=PartnerStatus.ACTIVE, server_default=PartnerStatus.ACTIVE.value
+        String(16),
+        default=PartnerStatus.ACTIVE,
+        server_default=PartnerStatus.ACTIVE.value,
     )

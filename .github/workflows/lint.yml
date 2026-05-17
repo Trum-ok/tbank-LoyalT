@@ -1,0 +1,36 @@
+name: lint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync deps
+        run: uv sync
+
+      - name: black
+        run: uv run black --check services libs
+
+      - name: isort
+        run: uv run isort --check-only services libs
+
+      - name: ruff
+        run: uv run ruff check services libs
+
+      - name: ty
+        run: |
+          set -e
+          uv run ty check libs/loyalt-common/src/loyalt_common
+          for s in core partner admin notification; do
+            uv run ty check "services/$s-service/app"
+          done

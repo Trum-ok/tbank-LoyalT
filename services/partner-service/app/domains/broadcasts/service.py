@@ -21,9 +21,7 @@ from app.errors import BadRequestError, ForbiddenError, NotFoundError
 from app.events import publisher
 
 
-async def list_broadcasts(
-    session: AsyncSession, partner_id: UUID
-) -> list[Broadcast]:
+async def list_broadcasts(session: AsyncSession, partner_id: UUID) -> list[Broadcast]:
     stmt = (
         select(Broadcast)
         .where(Broadcast.partner_id == partner_id)

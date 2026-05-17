@@ -50,4 +50,6 @@ class Notification(UUIDPKMixin, TimestampsMixin, Base):
     )
     delivered_at: Mapped[datetime | None] = mapped_column()
     delivery_error: Mapped[str | None] = mapped_column(String(2000))
-    is_read: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    is_read: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )

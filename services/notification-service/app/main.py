@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from loyalt_common import RequestIdMiddleware, configure_logging
 
 from app import models  # noqa: F401
 from app.config import get_settings
@@ -13,6 +14,37 @@ from app.domains.inbox.router import router as inbox_router
 from app.domains.notifications.router import router as notifications_router
 
 settings = get_settings()
+configure_logging(settings.app_name, settings.log_level)
+
+API_DESCRIPTION = """
+Сервис уведомлений платформы лояльности **LoyalT**: формирование и доставка
+push-уведомлений клиентам Т-Банка.
+
+* **Регистрация устройств** (`/devices`) — приложение Т-Банка по T-ID
+  присылает push-токен; повторная регистрация того же токена идемпотентна.
+* **Inbox клиента** (`/notifications`) — список уведомлений и отметка
+  «прочитано» для экрана уведомлений в приложении.
+* **`/internal`** — приём событий (начисление баллов, новые акции,
+  сгорание баллов) из Kafka/HTTP; не для внешних клиентов.
+
+По событию сервис создаёт запись уведомления и доставляет её на все
+активные устройства клиента. Каждый запрос помечается `X-Request-ID`
+(сквозной через HTTP и Kafka), ошибки возвращаются единым телом
+`{"detail": "..."}`.
+""".strip()
+
+OPENAPI_TAGS = [
+    {"name": "devices", "description": "Регистрация push-устройств клиента."},
+    {
+        "name": "notifications",
+        "description": "Inbox клиента: список и отметка о прочтении.",
+    },
+    {
+        "name": "internal",
+        "description": "Служебный приём событий, не для внешних клиентов.",
+    },
+    {"name": "meta", "description": "Здоровье сервиса."},
+]
 
 
 @asynccontextmanager
@@ -26,10 +58,21 @@ async def lifespan(_app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title=settings.app_name,
+        title="LoyalT · Notification API",
+        summary="Push-уведомления: начисление баллов, акции, сгорание баллов.",
+        description=API_DESCRIPTION,
         version="0.1.0",
         debug=settings.debug,
         lifespan=lifespan,
+        openapi_tags=OPENAPI_TAGS,
+        contact={
+            "name": "Команда LLM Chads",
+            "url": "https://github.com/Trum-ok/tbank-loyalt",
+        },
+        license_info={
+            "name": "MIT",
+            "url": "https://github.com/Trum-ok/tbank-loyalt/blob/master/LICENSE",
+        },
     )
     app.add_middleware(
         CORSMiddleware,
@@ -38,6 +81,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Добавлен последним → внешний слой: request_id проставляется до CORS,
+    # роутинга и обработчика 500, поэтому есть во всех логах запроса.
+    app.add_middleware(RequestIdMiddleware)
 
     # Starlette по умолчанию формирует 500 минуя CORSMiddleware, из-за чего
     # браузер блокирует ответ как нарушающий CORS. Перехватываем все

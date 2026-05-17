@@ -244,28 +244,6 @@ a {
   }
 }
 
-.field-group {
-  margin: 18px 0 0;
-  padding: 16px;
-  border: 1px solid var(--tbank-divider-strong);
-  border-radius: var(--tbank-radius-sm);
-  display: grid;
-  gap: 12px;
-}
-
-.field-group__title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--tbank-text);
-  padding: 0 6px;
-}
-
-.field-group__hint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--tbank-text-muted);
-}
-
 .status-pill {
   display: inline-flex;
   align-items: center;

@@ -11,6 +11,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "fastapi>=0.136.1",
     "greenlet>=3.5.0",
+    "loyalt-common",
     "httpx>=0.28.1",
     "psycopg[binary]>=3.3.4",
     "pydantic-settings>=2.14.1",
@@ -19,6 +20,12 @@ dependencies = [
     "sqlalchemy>=2.0.49",
     "uvicorn[standard]>=0.46.0",
 ]
+
+[tool.uv.workspace]
+members = ["libs/*"]
+
+[tool.uv.sources]
+loyalt-common = { workspace = true }
 
 [tool.black]
 extend-exclude = "env|.env|venv|.venv"
@@ -50,17 +57,25 @@ ignore = [
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+known_first_party = ["app"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.20.0",
     "black>=26.5.0",
     "isort>=8.0.1",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
     "ruff>=0.15.13",
     "ty>=0.0.37",
 ]

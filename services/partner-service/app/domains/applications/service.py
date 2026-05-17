@@ -27,9 +27,7 @@ async def submit_application(
     )
     existing = result.scalar_one_or_none()
     if existing is not None:
-        raise ConflictError(
-            f"Account already has a {existing.status} application"
-        )
+        raise ConflictError(f"Account already has a {existing.status} application")
 
     application = Application(
         account_id=account_id,
@@ -119,9 +117,7 @@ async def reject(
     return application
 
 
-async def withdraw_my_pending(
-    session: AsyncSession, account_id: UUID
-) -> None:
+async def withdraw_my_pending(session: AsyncSession, account_id: UUID) -> None:
     result = await session.execute(
         select(Application).where(
             Application.account_id == account_id,
@@ -143,9 +139,7 @@ async def update_my_pending(
     if application.account_id != account_id:
         raise ForbiddenError("Application does not belong to this account")
     if application.status != ApplicationStatus.PENDING:
-        raise BadRequestError(
-            f"Application is {application.status}, cannot edit"
-        )
+        raise BadRequestError(f"Application is {application.status}, cannot edit")
 
     payload = data.model_dump(exclude_unset=True)
     if "contact_email" in payload and payload["contact_email"] is not None:

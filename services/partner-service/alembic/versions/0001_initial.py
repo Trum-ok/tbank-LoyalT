@@ -28,8 +28,12 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("full_name", sa.String(length=255), nullable=True),
         sa.Column("phone", sa.String(length=32), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.UniqueConstraint("email", name="uq_account_email"),
         schema=SCHEMA,
     )
@@ -53,8 +57,12 @@ def upgrade() -> None:
         sa.Column("decided_at", sa.DateTime(), nullable=True),
         sa.Column("decided_by", sa.Uuid(), nullable=True),
         sa.Column("decision_comment", sa.String(length=2000), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["account_id"], [f"{SCHEMA}.account.id"], ondelete="CASCADE"
         ),
@@ -83,8 +91,12 @@ def upgrade() -> None:
             nullable=False,
             server_default="active",
         ),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["account_id"], [f"{SCHEMA}.account.id"], ondelete="CASCADE"
         ),

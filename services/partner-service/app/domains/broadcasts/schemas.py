@@ -20,7 +20,18 @@ class BroadcastBase(BaseModel):
 
 
 class BroadcastCreate(BroadcastBase):
-    pass
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "title": "Скидка 20% на выходных",
+                    "body": "Только в эти выходные — двойные баллы за каждую покупку!",
+                    "segment": "all_enrolled",
+                    "program_id": None,
+                }
+            ]
+        }
+    )
 
 
 class BroadcastUpdate(BaseModel):

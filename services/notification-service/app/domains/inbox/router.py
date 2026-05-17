@@ -7,7 +7,11 @@ from app.domains.inbox.schemas import IncomingEvent
 router = APIRouter(prefix="/internal", tags=["internal"])
 
 
-@router.post("/events", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/events",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Принять событие (имитация Kafka)",
+)
 async def ingest_event(event: IncomingEvent, session: SessionDep) -> dict[str, bool]:
     """Точка имитации входящих Kafka-событий для локальной разработки.
 

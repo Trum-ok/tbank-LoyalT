@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, status
+from loyalt_common import error_responses
 
 from app.deps import CurrentCustomerId, CurrentPartnerId, SessionDep
 from app.domains.points import service
@@ -23,10 +24,20 @@ customer_router = APIRouter(prefix="/balance", tags=["balance"])
     "/accrue",
     response_model=PointsOperationResult,
     status_code=status.HTTP_201_CREATED,
+    summary="Начислить баллы",
+    responses=error_responses(400, 403, 404),
 )
 async def accrue(
     req: AccrueRequest, partner_id: CurrentPartnerId, session: SessionDep
 ) -> PointsOperationResult:
+    """Начисляет баллы клиенту по программе.
+
+    Касса передаёт **ровно один** источник: сумму чека `purchase_amount`
+    (баллы считаются по правилу программы), фиксированное `points` или
+    `visits` для программ со штампами. Возвращает созданную транзакцию и
+    новый баланс. 404 — клиент не подключён к программе, 403 — программа
+    другого партнёра, 400 — программа неактивна / некорректное правило.
+    """
     transaction, balance = await service.accrue(session, partner_id, req)
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
@@ -59,20 +70,34 @@ def _build_lookup(enrollment, program, rewards) -> EnrollmentLookup:
     )
 
 
-@partner_router.get("/lookup/{enrollment_id}", response_model=EnrollmentLookup)
+@partner_router.get(
+    "/lookup/{enrollment_id}",
+    response_model=EnrollmentLookup,
+    summary="Карточка клиента по enrollment_id",
+    responses=error_responses(403, 404),
+)
 async def lookup(
     enrollment_id: UUID, partner_id: CurrentPartnerId, session: SessionDep
 ) -> EnrollmentLookup:
+    """Что касса видит после сканирования QR клиента: программа, баланс,
+    доступные награды. 404 — подключение не найдено, 403 — чужая программа."""
     enrollment, program, rewards = await service.lookup_enrollment(
         session, partner_id, enrollment_id
     )
     return _build_lookup(enrollment, program, rewards)
 
 
-@partner_router.get("/lookup-code/{code}", response_model=EnrollmentLookup)
+@partner_router.get(
+    "/lookup-code/{code}",
+    response_model=EnrollmentLookup,
+    summary="Карточка клиента по короткому коду",
+    responses=error_responses(403, 404),
+)
 async def lookup_by_code(
     code: str, partner_id: CurrentPartnerId, session: SessionDep
 ) -> EnrollmentLookup:
+    """То же, что `/lookup`, но по короткому коду подключения (если QR
+    не сканируется). 404 — код не найден, 403 — чужая программа."""
     enrollment, program, rewards = await service.lookup_by_short_code(
         session, partner_id, code
     )
@@ -83,10 +108,18 @@ async def lookup_by_code(
     "/redeem",
     response_model=PointsOperationResult,
     status_code=status.HTTP_201_CREATED,
+    summary="Списать баллы за награду",
+    responses=error_responses(400, 403, 404, 409),
 )
 async def redeem(
     req: RedeemRequest, partner_id: CurrentPartnerId, session: SessionDep
 ) -> PointsOperationResult:
+    """Списывает баллы клиента в обмен на награду каталога.
+
+    409 — недостаточно баллов; 400 — награда не из этой программы / неактивна
+    / стоимость ниже порога `min_redemption`; 404 — клиент не подключён;
+    403 — программа другого партнёра.
+    """
     transaction, balance = await service.redeem(session, partner_id, req)
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
@@ -98,6 +131,8 @@ async def redeem(
     "/transactions/{transaction_id}/reverse",
     response_model=PointsOperationResult,
     status_code=status.HTTP_201_CREATED,
+    summary="Отменить транзакцию",
+    responses=error_responses(400, 403, 404, 409),
 )
 async def reverse(
     transaction_id: UUID,
@@ -105,6 +140,12 @@ async def reverse(
     partner_id: CurrentPartnerId,
     session: SessionDep,
 ) -> PointsOperationResult:
+    """Создаёт компенсирующую транзакцию, откатывающую начисление/списание.
+
+    404 — транзакция не найдена; 403 — транзакция другого партнёра;
+    400 — нельзя отменить отмену / уже отменена; 409 — конфликт состояния
+    баланса при откате.
+    """
     transaction, balance = await service.reverse(
         session, partner_id, transaction_id, req.description
     )
@@ -114,10 +155,15 @@ async def reverse(
     )
 
 
-@customer_router.get("", response_model=list[BalanceRead])
+@customer_router.get(
+    "",
+    response_model=list[BalanceRead],
+    summary="Мои балансы по всем программам",
+)
 async def list_my_balances(
     customer_id: CurrentCustomerId, session: SessionDep
 ) -> list[BalanceRead]:
+    """Балансы клиента по всем подключённым программам (для приложения)."""
     enrollments = await service.list_balances(session, customer_id)
     return [
         BalanceRead(
@@ -131,10 +177,16 @@ async def list_my_balances(
     ]
 
 
-@customer_router.get("/{program_id}", response_model=BalanceRead)
+@customer_router.get(
+    "/{program_id}",
+    response_model=BalanceRead,
+    summary="Мой баланс по программе",
+    responses=error_responses(404),
+)
 async def get_my_balance(
     program_id: UUID, customer_id: CurrentCustomerId, session: SessionDep
 ) -> BalanceRead:
+    """Баланс клиента по конкретной программе. 404 — не подключён."""
     enrollment = await service.get_balance(session, customer_id, program_id)
     return BalanceRead(
         enrollment_id=enrollment.id,
