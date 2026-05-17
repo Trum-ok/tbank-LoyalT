@@ -16,23 +16,31 @@
 
 ## Команды
 
+Прикладные сервисы (`migrate`, `*-service`) вынесены под профиль `app`.
+Без флага `docker compose up` поднимает только инфраструктуру
+(`postgres/kafka/minio`) — это режим для локальной разработки сервисов
+через `uv run uvicorn`. Полный стек — с `--profile app`.
+
 ```bash
 cd deploy
 
 # Поднять весь стек (первый запуск собирает образ ~3-5 мин)
-docker compose up --build
+docker compose --profile app up --build
 
 # В фоне
-docker compose up -d --build
+docker compose --profile app up -d --build
+
+# Только инфраструктура (postgres + kafka + minio), сервисы — локально
+docker compose up -d
 
 # Логи одного сервиса
 docker compose logs -f notification-service
 
-# Остановить
-docker compose down
+# Остановить (--profile app, чтобы погасить и сервисы тоже)
+docker compose --profile app down
 
 # Остановить + удалить тома (полный сброс БД и Kafka)
-docker compose down -v
+docker compose --profile app down -v
 ```
 
 Каждый сервис на старте делает `alembic upgrade head` и поднимает uvicorn.
@@ -68,8 +76,8 @@ docker compose down -v
 
 ## Базовый сценарий
 
-После `docker compose up --build` подождать ~30 секунд, пока все
-healthchecks станут `healthy`, и:
+После `docker compose --profile app up --build` подождать ~30 секунд, пока
+все healthchecks станут `healthy`, и:
 
 ```bash
 # 1. Создать первого админа (bootstrap)
@@ -151,5 +159,5 @@ docker compose build core-service && docker compose up -d core-service
 ```
 
 Для итеративной разработки удобнее запускать сервис локально через
-`uv run uvicorn app.main:app --reload`, оставив в compose только
-postgres + kafka.
+`uv run uvicorn app.main:app --reload`, подняв инфраструктуру без профиля:
+`docker compose up -d` (только postgres + kafka + minio).

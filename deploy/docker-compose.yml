@@ -1,6 +1,7 @@
 name: tbank-loyalt
 
 x-service-base: &service-base
+  profiles: ["app"]
   build:
     context: ..
     dockerfile: deploy/Dockerfile
@@ -85,6 +86,7 @@ services:
 
   # One-shot: прогоняет alembic upgrade head по всем четырём схемам в одной БД.
   migrate:
+    profiles: ["app"]
     build:
       context: ..
       dockerfile: deploy/Dockerfile
