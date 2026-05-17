@@ -182,7 +182,7 @@
         <!-- ── Бонусные механики ──────────────────────────────────── -->
         <h3 class="card__section-title">Бонусные механики</h3>
 
-        <div class="row row--3">
+        <div class="row row--2">
           <label class="field">
             <span class="field__label">Велком-бонус, баллов</span>
             <input
@@ -196,34 +196,6 @@
             <span class="field__hint">при первом вступлении</span>
           </label>
 
-          <label class="field">
-            <span class="field__label">Бонус в день рождения, баллов</span>
-            <input
-              class="field__input"
-              type="number"
-              min="1"
-              placeholder="пусто = отключено"
-              [value]="f.birthday_bonus_points ?? ''"
-              (input)="patch('birthday_bonus_points', $any($event.target).value ? +$any($event.target).value : null)"
-            />
-          </label>
-
-          <label class="field">
-            <span class="field__label">Окно ДР, дней заранее</span>
-            <input
-              class="field__input"
-              type="number"
-              min="0"
-              max="30"
-              [value]="f.birthday_bonus_days"
-              (input)="patch('birthday_bonus_days', +$any($event.target).value)"
-              [disabled]="f.birthday_bonus_points === null"
-            />
-            <span class="field__hint">0 = только в день рождения</span>
-          </label>
-        </div>
-
-        <div class="row row--2">
           <label class="field">
             <span class="field__label">Реферальный бонус, баллов</span>
             <input
@@ -430,6 +402,13 @@
                     <button
                       type="button"
                       class="btn btn--ghost btn--small"
+                      (click)="toggleCampaign(c)"
+                    >
+                      {{ c.is_active ? 'Пауза' : 'Возобновить' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--ghost btn--small"
                       (click)="openCampaignEditor(c)"
                     >
                       Изменить
@@ -488,13 +467,22 @@
               </div>
               <div class="rewards__right">
                 <span class="rewards__cost">{{ r.cost_points }} баллов</span>
-                <button
-                  type="button"
-                  class="btn btn--ghost btn--small"
-                  (click)="toggleReward(r)"
-                >
-                  {{ r.is_active ? 'Отключить' : 'Включить' }}
-                </button>
+                <div class="tiers__actions">
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--small"
+                    (click)="toggleReward(r)"
+                  >
+                    {{ r.is_active ? 'Отключить' : 'Включить' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger btn--small"
+                    (click)="deleteReward(r)"
+                  >
+                    Удалить
+                  </button>
+                </div>
               </div>
             </li>
           }

@@ -74,8 +74,6 @@ interface ProgramForm {
   min_redemption: number;
   // Бонусные механики
   welcome_bonus_points: number | null;
-  birthday_bonus_points: number | null;
-  birthday_bonus_days: number;
   referral_bonus_points: number | null;
   // Ограничения
   min_purchase_rub: number | null;
@@ -195,8 +193,6 @@ export class ProgramDetailPage {
       expire_warn_days: f.points_ttl_days ? f.expire_warn_days : null,
       min_redemption: f.min_redemption,
       welcome_bonus_points: f.welcome_bonus_points,
-      birthday_bonus_points: f.birthday_bonus_points,
-      birthday_bonus_days: f.birthday_bonus_days,
       referral_bonus_points: f.referral_bonus_points,
       min_purchase_amount:
         f.min_purchase_rub != null ? Math.round(f.min_purchase_rub * 100) : null,
@@ -299,6 +295,21 @@ export class ProgramDetailPage {
           this.closeRewardCreator();
           this.notify.success(`Награда «${r.title}» добавлена`);
         }
+      });
+  }
+
+  deleteReward(r: RewardRead): void {
+    this.rewardsApi
+      .delete(r.id)
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось удалить награду');
+          return of(null as unknown as void);
+        }),
+      )
+      .subscribe(() => {
+        this.rewards.update(rs => rs.filter(x => x.id !== r.id));
+        this.notify.success(`Награда «${r.title}» удалена`);
       });
   }
 
@@ -431,6 +442,31 @@ export class ProgramDetailPage {
   }
 
   // ── Campaigns ──────────────────────────────────────────────────────────────
+
+  toggleCampaign(c: BonusTriggerRead): void {
+    const p = this.program();
+    if (!p) return;
+    this.programsApi
+      .updateTrigger(p.id, c.id, { is_active: !c.is_active })
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось обновить кампанию');
+          return of(null);
+        }),
+      )
+      .subscribe(updated => {
+        if (updated) {
+          this.campaigns.update(cs =>
+            cs.map(x => (x.id === c.id ? (updated as BonusTriggerRead) : x)),
+          );
+          this.notify.success(
+            (updated as BonusTriggerRead).is_active
+              ? `Кампания «${c.name}» возобновлена`
+              : `Кампания «${c.name}» приостановлена`,
+          );
+        }
+      });
+  }
 
   openCampaignCreator(): void {
     this.editingCampaignId.set(null);
@@ -655,8 +691,6 @@ export class ProgramDetailPage {
       expire_warn_days: p.expire_warn_days,
       min_redemption: p.min_redemption,
       welcome_bonus_points: p.welcome_bonus_points,
-      birthday_bonus_points: p.birthday_bonus_points,
-      birthday_bonus_days: p.birthday_bonus_days ?? 0,
       referral_bonus_points: p.referral_bonus_points,
       min_purchase_rub:
         p.min_purchase_amount != null ? p.min_purchase_amount / 100 : null,

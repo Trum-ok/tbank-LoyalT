@@ -84,17 +84,31 @@
             <span class="phone__brand-text">Т-Лояльность</span>
           </a>
 
-          @if (!isMyPrograms()) {
-            <a routerLink="/my-programs" class="phone__balance">
-              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <div class="phone__header-right">
+            @if (!isMyPrograms()) {
+              <a routerLink="/my-programs" class="phone__balance">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                  <path
+                    d="M4 5h16v3H4V5zm0 5.5h16v3H4v-3zm0 5.5h16v3H4v-3z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span class="phone__balance-value">Мои программы</span>
+              </a>
+            }
+            <a routerLink="/profile" class="phone__profile-btn" aria-label="Профиль">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" fill="currentColor" />
                 <path
-                  d="M4 5h16v3H4V5zm0 5.5h16v3H4v-3zm0 5.5h16v3H4v-3z"
-                  fill="currentColor"
+                  d="M4 20c0-4 3.6-7 8-7s8 3 8 7"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
                 />
               </svg>
-              <span class="phone__balance-value">Мои программы</span>
             </a>
-          }
+          </div>
         }
       </header>
 
@@ -142,19 +156,6 @@
             />
           </svg>
           <span>События</span>
-        </a>
-        <a routerLink="/profile" routerLinkActive="is-active" class="phone__tab">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <circle cx="12" cy="8" r="4" fill="currentColor" />
-            <path
-              d="M4 20c0-4 3.6-7 8-7s8 3 8 7"
-              stroke="currentColor"
-              stroke-width="2"
-              fill="none"
-              stroke-linecap="round"
-            />
-          </svg>
-          <span>Профиль</span>
         </a>
       </nav>
       }
