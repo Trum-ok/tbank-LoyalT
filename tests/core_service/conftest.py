@@ -83,7 +83,7 @@ async def partner_id(session: AsyncSession) -> UUID:
         id=pid,
         inn="1234567890",
         name="Test Coffee",
-        category=PartnerCategory.FOOD,
+        categories=[PartnerCategory.FOOD],
         logo_url=None,
         brand_color=None,
         status=PartnerStatus.ACTIVE,
