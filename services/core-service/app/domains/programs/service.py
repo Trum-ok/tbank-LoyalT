@@ -151,7 +151,8 @@ async def add_tier(
         raise BadRequestError(
             "Tier with this name or threshold already exists in the program"
         ) from exc
-    return await get_program(session, program.id)
+    session.expire(program)
+    return await get_program(session, program_id)
 
 
 async def update_tier(
@@ -178,7 +179,8 @@ async def update_tier(
         raise BadRequestError(
             "Tier with this name or threshold already exists in the program"
         ) from exc
-    return await get_program(session, program.id)
+    session.expire(program)
+    return await get_program(session, program_id)
 
 
 async def delete_tier(
@@ -197,4 +199,5 @@ async def delete_tier(
 
     await session.delete(tier)
     await session.commit()
-    return await get_program(session, program.id)
+    session.expire(program)
+    return await get_program(session, program_id)

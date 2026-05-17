@@ -1,6 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
+  BonusTriggerCreate,
+  BonusTriggerRead,
+  BonusTriggerUpdate,
   ProgramCreate,
   ProgramRead,
   ProgramUpdate,
@@ -77,6 +80,49 @@ export class ProgramsApi {
   deleteTier(programId: string, tierId: string): Observable<ProgramRead> {
     return this.http.delete<ProgramRead>(
       `${this.base}/programs/${programId}/tiers/${tierId}`,
+    );
+  }
+
+  listTriggers(programId: string): Observable<BonusTriggerRead[]> {
+    return this.http.get<BonusTriggerRead[]>(
+      `${this.base}/programs/${programId}/triggers`,
+    );
+  }
+
+  createTrigger(
+    programId: string,
+    body: BonusTriggerCreate,
+  ): Observable<BonusTriggerRead> {
+    return this.http.post<BonusTriggerRead>(
+      `${this.base}/programs/${programId}/triggers`,
+      body,
+    );
+  }
+
+  updateTrigger(
+    programId: string,
+    triggerId: string,
+    body: BonusTriggerUpdate,
+  ): Observable<BonusTriggerRead> {
+    return this.http.patch<BonusTriggerRead>(
+      `${this.base}/programs/${programId}/triggers/${triggerId}`,
+      body,
+    );
+  }
+
+  deleteTrigger(programId: string, triggerId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.base}/programs/${programId}/triggers/${triggerId}`,
+    );
+  }
+
+  fireTrigger(
+    programId: string,
+    triggerId: string,
+  ): Observable<{ fired_count: number }> {
+    return this.http.post<{ fired_count: number }>(
+      `${this.base}/programs/${programId}/triggers/${triggerId}/fire`,
+      {},
     );
   }
 }

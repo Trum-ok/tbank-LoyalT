@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.deps import CurrentPartnerId, SessionDep
-from app.domains.programs import service
+from app.domains.programs import service, trigger_service
 from app.domains.programs.models import ProgramStatus
 from app.domains.programs.schemas import (
     ProgramCreate,
@@ -11,6 +11,11 @@ from app.domains.programs.schemas import (
     ProgramUpdate,
     TierCreate,
     TierUpdate,
+)
+from app.domains.programs.trigger_schemas import (
+    BonusTriggerCreate,
+    BonusTriggerRead,
+    BonusTriggerUpdate,
 )
 
 router = APIRouter(prefix="/programs", tags=["programs"])
@@ -133,3 +138,86 @@ async def delete_tier(
     Нельзя удалять уровни архивированной программы."""
     program = await service.delete_tier(session, program_id, tier_id, partner_id)
     return ProgramRead.model_validate(program)
+
+
+# ── Бонусные кампании ────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/{program_id}/triggers",
+    response_model=list[BonusTriggerRead],
+    summary="Список бонусных кампаний программы",
+)
+async def list_triggers(
+    program_id: UUID,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> list[BonusTriggerRead]:
+    triggers = await trigger_service.list_triggers(session, program_id)
+    return [BonusTriggerRead.model_validate(t) for t in triggers]
+
+
+@router.post(
+    "/{program_id}/triggers",
+    response_model=BonusTriggerRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать бонусную кампанию",
+)
+async def create_trigger(
+    program_id: UUID,
+    data: BonusTriggerCreate,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> BonusTriggerRead:
+    trigger = await trigger_service.create_trigger(
+        session, program_id, partner_id, data
+    )
+    return BonusTriggerRead.model_validate(trigger)
+
+
+@router.patch(
+    "/{program_id}/triggers/{trigger_id}",
+    response_model=BonusTriggerRead,
+    summary="Обновить бонусную кампанию",
+)
+async def update_trigger(
+    program_id: UUID,
+    trigger_id: UUID,
+    data: BonusTriggerUpdate,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> BonusTriggerRead:
+    trigger = await trigger_service.update_trigger(
+        session, program_id, trigger_id, partner_id, data
+    )
+    return BonusTriggerRead.model_validate(trigger)
+
+
+@router.delete(
+    "/{program_id}/triggers/{trigger_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить бонусную кампанию",
+)
+async def delete_trigger(
+    program_id: UUID,
+    trigger_id: UUID,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> None:
+    await trigger_service.delete_trigger(session, program_id, trigger_id, partner_id)
+
+
+@router.post(
+    "/{program_id}/triggers/{trigger_id}/fire",
+    summary="Запустить MANUAL-кампанию вручную",
+)
+async def fire_trigger(
+    program_id: UUID,
+    trigger_id: UUID,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+) -> dict[str, int]:
+    fired_count = await trigger_service.fire_trigger(
+        session, trigger_id, program_id, partner_id
+    )
+    return {"fired_count": fired_count}

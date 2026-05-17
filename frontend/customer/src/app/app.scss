@@ -161,6 +161,34 @@
     font-variant-numeric: tabular-nums;
   }
 
+  &__header-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--tbank-surface);
+    color: var(--tbank-text);
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--tbank-divider);
+    }
+
+    &.is-active,
+    &[aria-current='page'] {
+      background: var(--tbank-yellow);
+      color: #1c1c1e;
+    }
+  }
+
   &__main {
     flex: 1;
     overflow-y: auto;

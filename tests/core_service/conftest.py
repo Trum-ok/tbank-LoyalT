@@ -4,7 +4,6 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from uuid import UUID, uuid4
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -19,14 +18,16 @@ os.environ.setdefault(
 )
 os.environ.setdefault("CORE_KAFKA_ENABLED", "false")
 
+import app.models  # noqa: F401, E402 — registers all ORM models in Base.metadata
 from app.database import Base  # noqa: E402
+from app.domains.enrollments.models import Customer, Enrollment  # noqa: E402
 from app.domains.partners.models import (  # noqa: E402
     Partner,
     PartnerCategory,
     PartnerStatus,
 )
 from app.domains.programs import service as program_service  # noqa: E402
-from app.domains.programs.models import ProgramType  # noqa: E402
+from app.domains.programs.models import ProgramStatus, ProgramType  # noqa: E402
 from app.domains.programs.schemas import ProgramCreate  # noqa: E402
 
 TEST_SCHEMA = "test_core"
@@ -59,9 +60,19 @@ async def session(test_engine) -> AsyncIterator[AsyncSession]:
     )
     async with factory() as sess:
         yield sess
-        await sess.execute(text(f"TRUNCATE {TEST_SCHEMA}.program_tier CASCADE"))
-        await sess.execute(text(f"TRUNCATE {TEST_SCHEMA}.program CASCADE"))
-        await sess.execute(text(f"TRUNCATE {TEST_SCHEMA}.partner CASCADE"))
+        for table in (
+            "bonus_trigger_log",
+            "bonus_trigger",
+            "transaction",
+            "enrollment",
+            "customer",
+            "program_tier",
+            "program",
+            "partner",
+        ):
+            await sess.execute(
+                text(f"TRUNCATE {TEST_SCHEMA}.{table} CASCADE")
+            )
         await sess.commit()
 
 
@@ -93,3 +104,37 @@ async def program(session: AsyncSession, partner_id: UUID):
             accrual_rule={"percent": 5},
         ),
     )
+
+
+@pytest_asyncio.fixture
+async def published_program(session: AsyncSession, partner_id: UUID):
+    p = await program_service.create_program(
+        session,
+        partner_id,
+        ProgramCreate(name="Опубликованная", type=ProgramType.ACCRUAL, accrual_rule={"percent": 5}),
+    )
+    return await program_service.transition_status(
+        session, p.id, partner_id, ProgramStatus.PUBLISHED
+    )
+
+
+@pytest_asyncio.fixture
+async def customer_id(session: AsyncSession) -> UUID:
+    cid = uuid4()
+    customer = Customer(id=cid)
+    session.add(customer)
+    await session.commit()
+    return cid
+
+
+@pytest_asyncio.fixture
+async def enrollment(session: AsyncSession, published_program, customer_id: UUID):
+    e = Enrollment(
+        customer_id=customer_id,
+        program_id=published_program.id,
+        short_code="1000",
+    )
+    session.add(e)
+    await session.commit()
+    await session.refresh(e)
+    return e

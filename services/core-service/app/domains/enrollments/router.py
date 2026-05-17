@@ -1,7 +1,9 @@
+from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, status
 from loyalt_common import error_responses
+from pydantic import BaseModel
 
 from app.deps import CurrentCustomerId, SessionDep
 from app.domains.enrollments import service
@@ -15,6 +17,14 @@ from app.domains.programs.schemas import TierRead
 from app.domains.programs.service import get_current_tier, get_program
 
 router = APIRouter(prefix="/enrollments", tags=["enrollments"])
+
+
+class CustomerProfileRead(BaseModel):
+    birthday: date | None
+
+
+class CustomerProfileUpdate(BaseModel):
+    birthday: date | None = None
 
 
 async def _enrollment_read(session, enrollment) -> EnrollmentRead:
@@ -115,3 +125,41 @@ async def delete_enrollment(
 ) -> None:
     """Архивирует подключение клиента. 404 — не найдено, 403 — чужое."""
     await service.delete_enrollment(session, enrollment_id, customer_id)
+
+
+# ── Профиль клиента ──────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/me/profile",
+    response_model=CustomerProfileRead,
+    summary="Профиль клиента (дата рождения)",
+    tags=["enrollments"],
+)
+async def get_profile(
+    customer_id: CurrentCustomerId,
+    session: SessionDep,
+) -> CustomerProfileRead:
+    """Возвращает профиль клиента. Создаёт запись если её нет."""
+    customer = await service.ensure_customer(session, customer_id)
+    await session.commit()
+    return CustomerProfileRead(birthday=customer.birthday)
+
+
+@router.put(
+    "/me/profile",
+    response_model=CustomerProfileRead,
+    summary="Обновить профиль клиента (дата рождения)",
+    tags=["enrollments"],
+)
+async def update_profile(
+    data: CustomerProfileUpdate,
+    customer_id: CurrentCustomerId,
+    session: SessionDep,
+) -> CustomerProfileRead:
+    """Обновляет дату рождения клиента. Создаёт запись если её нет."""
+    customer = await service.ensure_customer(session, customer_id)
+    customer.birthday = data.birthday
+    await session.commit()
+    await session.refresh(customer)
+    return CustomerProfileRead(birthday=customer.birthday)

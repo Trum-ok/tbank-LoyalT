@@ -1,6 +1,7 @@
+from datetime import date
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import Boolean, Date, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base, TimestampsMixin, UUIDPKMixin
@@ -14,6 +15,8 @@ class Customer(UUIDPKMixin, TimestampsMixin, Base):
     """
 
     __tablename__ = "customer"
+
+    birthday: Mapped[date | None] = mapped_column(Date, nullable=True)
 
 
 class Enrollment(UUIDPKMixin, TimestampsMixin, Base):

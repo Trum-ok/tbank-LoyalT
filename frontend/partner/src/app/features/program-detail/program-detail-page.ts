@@ -2,6 +2,9 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
+  BonusTriggerCreate,
+  BonusTriggerRead,
+  BonusTriggerUpdate,
   ProgramRead,
   ProgramUpdate,
   RewardCreate,
@@ -10,6 +13,7 @@ import {
   TierCreate,
   TierRead,
   TierUpdate,
+  TriggerType,
 } from '@tbank-loyalt/shared';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 
@@ -29,6 +33,26 @@ const REWARD_TYPE_OPTIONS: { code: RewardType; label: string; hint: string }[] =
   { code: 'free_item', label: 'Бесплатный товар', hint: 'позиция в подарок' },
   { code: 'cashback_boost', label: 'Boost кэшбэка', hint: 'повышенный процент' },
 ];
+
+const TRIGGER_TYPE_OPTIONS: { code: TriggerType; label: string; hint: string }[] = [
+  { code: 'birthday', label: 'День рождения', hint: 'баллы в ДР клиента' },
+  { code: 'fixed_date', label: 'Фикс. дата', hint: 'конкретный день' },
+  { code: 'interval', label: 'Интервал', hint: 'через N дней от вступления' },
+  { code: 'inactivity', label: 'Неактивность', hint: 'нет покупок N дней' },
+  { code: 'manual', label: 'Вручную', hint: 'запускается партнёром' },
+];
+
+interface CampaignDraft {
+  type: TriggerType;
+  name: string;
+  points: number;
+  is_active: boolean;
+  days_before: number;
+  fire_date: string;
+  repeat_yearly: boolean;
+  interval_days: number;
+  repeat_interval: boolean;
+}
 
 interface RewardDraft {
   title: string;
@@ -50,8 +74,6 @@ interface ProgramForm {
   min_redemption: number;
   // Бонусные механики
   welcome_bonus_points: number | null;
-  birthday_bonus_points: number | null;
-  birthday_bonus_days: number;
   referral_bonus_points: number | null;
   // Ограничения
   min_purchase_rub: number | null;
@@ -84,6 +106,7 @@ export class ProgramDetailPage {
   private readonly notify = inject(NotifyService);
 
   readonly rewardTypeOptions = REWARD_TYPE_OPTIONS;
+  readonly triggerTypeOptions = TRIGGER_TYPE_OPTIONS;
   readonly programTypeLabel = programTypeLabel;
   readonly programStatusLabel = programStatusLabel;
   readonly rewardTypeLabel = rewardTypeLabel;
@@ -106,6 +129,13 @@ export class ProgramDetailPage {
   readonly editingTierId = signal<string | null>(null);
   readonly tierDraft = signal<TierDraft>(this.defaultTierDraft());
   readonly tierPending = signal(false);
+
+  // Campaign management
+  readonly campaigns = signal<BonusTriggerRead[]>([]);
+  readonly campaignModalOpen = signal(false);
+  readonly editingCampaignId = signal<string | null>(null);
+  readonly campaignDraft = signal<CampaignDraft>(this.defaultCampaignDraft());
+  readonly campaignPending = signal(false);
 
   readonly canPublish = computed(() => {
     const p = this.program();
@@ -131,11 +161,15 @@ export class ProgramDetailPage {
     forkJoin({
       program: this.programsApi.get(id).pipe(catchError(() => of(null))),
       rewards: this.rewardsApi.list(id).pipe(catchError(() => of([] as RewardRead[]))),
+      campaigns: this.programsApi
+        .listTriggers(id)
+        .pipe(catchError(() => of([] as BonusTriggerRead[]))),
     })
       .pipe(finalize(() => this.loading.set(false)))
-      .subscribe(({ program, rewards }) => {
+      .subscribe(({ program, rewards, campaigns }) => {
         this.program.set(program);
         this.rewards.set(rewards);
+        this.campaigns.set(campaigns);
         if (program) {
           this.form.set(this.formFromProgram(program));
         }
@@ -159,8 +193,6 @@ export class ProgramDetailPage {
       expire_warn_days: f.points_ttl_days ? f.expire_warn_days : null,
       min_redemption: f.min_redemption,
       welcome_bonus_points: f.welcome_bonus_points,
-      birthday_bonus_points: f.birthday_bonus_points,
-      birthday_bonus_days: f.birthday_bonus_days,
       referral_bonus_points: f.referral_bonus_points,
       min_purchase_amount:
         f.min_purchase_rub != null ? Math.round(f.min_purchase_rub * 100) : null,
@@ -263,6 +295,21 @@ export class ProgramDetailPage {
           this.closeRewardCreator();
           this.notify.success(`Награда «${r.title}» добавлена`);
         }
+      });
+  }
+
+  deleteReward(r: RewardRead): void {
+    this.rewardsApi
+      .delete(r.id)
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось удалить награду');
+          return of(null as unknown as void);
+        }),
+      )
+      .subscribe(() => {
+        this.rewards.update(rs => rs.filter(x => x.id !== r.id));
+        this.notify.success(`Награда «${r.title}» удалена`);
       });
   }
 
@@ -394,6 +441,164 @@ export class ProgramDetailPage {
     return m === 1 ? 'базовый' : `×${m}`;
   }
 
+  // ── Campaigns ──────────────────────────────────────────────────────────────
+
+  toggleCampaign(c: BonusTriggerRead): void {
+    const p = this.program();
+    if (!p) return;
+    this.programsApi
+      .updateTrigger(p.id, c.id, { is_active: !c.is_active })
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось обновить кампанию');
+          return of(null);
+        }),
+      )
+      .subscribe(updated => {
+        if (updated) {
+          this.campaigns.update(cs =>
+            cs.map(x => (x.id === c.id ? (updated as BonusTriggerRead) : x)),
+          );
+          this.notify.success(
+            (updated as BonusTriggerRead).is_active
+              ? `Кампания «${c.name}» возобновлена`
+              : `Кампания «${c.name}» приостановлена`,
+          );
+        }
+      });
+  }
+
+  openCampaignCreator(): void {
+    this.editingCampaignId.set(null);
+    this.campaignDraft.set(this.defaultCampaignDraft());
+    this.campaignModalOpen.set(true);
+  }
+
+  openCampaignEditor(c: BonusTriggerRead): void {
+    this.editingCampaignId.set(c.id);
+    this.campaignDraft.set({
+      type: c.type,
+      name: c.name,
+      points: c.points,
+      is_active: c.is_active,
+      days_before: c.days_before ?? 0,
+      fire_date: c.fire_date ?? '',
+      repeat_yearly: c.repeat_yearly,
+      interval_days: c.interval_days ?? 1,
+      repeat_interval: c.repeat_interval,
+    });
+    this.campaignModalOpen.set(true);
+  }
+
+  closeCampaignModal(): void {
+    this.campaignModalOpen.set(false);
+  }
+
+  patchCampaign<K extends keyof CampaignDraft>(
+    key: K,
+    value: CampaignDraft[K],
+  ): void {
+    this.campaignDraft.update(d => ({ ...d, [key]: value }));
+  }
+
+  triggerTypeLabel(t: TriggerType): string {
+    return TRIGGER_TYPE_OPTIONS.find(o => o.code === t)?.label ?? t;
+  }
+
+  saveCampaign(): void {
+    const p = this.program();
+    if (!p) return;
+
+    const d = this.campaignDraft();
+    if (!d.name.trim() || d.points <= 0) {
+      this.notify.error('Название и количество баллов обязательны');
+      return;
+    }
+
+    this.campaignPending.set(true);
+    const editId = this.editingCampaignId();
+
+    const body: BonusTriggerCreate | BonusTriggerUpdate = {
+      type: d.type,
+      name: d.name.trim(),
+      points: d.points,
+      is_active: d.is_active,
+      days_before: d.type === 'birthday' ? d.days_before : null,
+      fire_date: d.type === 'fixed_date' ? d.fire_date || null : null,
+      repeat_yearly: d.type === 'fixed_date' ? d.repeat_yearly : false,
+      interval_days:
+        d.type === 'interval' || d.type === 'inactivity' ? d.interval_days : null,
+      repeat_interval: d.type === 'interval' ? d.repeat_interval : false,
+    };
+
+    const request$ = editId
+      ? this.programsApi.updateTrigger(p.id, editId, body as BonusTriggerUpdate)
+      : this.programsApi.createTrigger(p.id, body as BonusTriggerCreate);
+
+    request$
+      .pipe(
+        catchError(err => {
+          const msg = err?.error?.detail ?? 'Не удалось сохранить кампанию';
+          this.notify.error(msg);
+          return of(null);
+        }),
+        finalize(() => this.campaignPending.set(false)),
+      )
+      .subscribe(result => {
+        if (result) {
+          if (editId) {
+            this.campaigns.update(cs =>
+              cs.map(c => (c.id === editId ? (result as BonusTriggerRead) : c)),
+            );
+            this.notify.success('Кампания обновлена');
+          } else {
+            this.campaigns.update(cs => [...cs, result as BonusTriggerRead]);
+            this.notify.success('Кампания создана');
+          }
+          this.closeCampaignModal();
+        }
+      });
+  }
+
+  deleteCampaign(c: BonusTriggerRead): void {
+    const p = this.program();
+    if (!p) return;
+
+    this.programsApi
+      .deleteTrigger(p.id, c.id)
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось удалить кампанию');
+          return of(null as unknown as void);
+        }),
+      )
+      .subscribe(() => {
+        this.campaigns.update(cs => cs.filter(x => x.id !== c.id));
+        this.notify.success(`Кампания «${c.name}» удалена`);
+      });
+  }
+
+  fireCampaign(c: BonusTriggerRead): void {
+    const p = this.program();
+    if (!p) return;
+
+    this.programsApi
+      .fireTrigger(p.id, c.id)
+      .pipe(
+        catchError(err => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось запустить кампанию');
+          return of(null);
+        }),
+      )
+      .subscribe(res => {
+        if (res != null) {
+          this.notify.success(
+            `Кампания «${c.name}» запущена: ${res.fired_count} начислений`,
+          );
+        }
+      });
+  }
+
   // ── Private ────────────────────────────────────────────────────────────────
 
   private transition(
@@ -460,6 +665,20 @@ export class ProgramDetailPage {
     return { name: '', threshold_points: 0, accrual_multiplier: 1.0 };
   }
 
+  private defaultCampaignDraft(): CampaignDraft {
+    return {
+      type: 'birthday',
+      name: '',
+      points: 100,
+      is_active: true,
+      days_before: 0,
+      fire_date: '',
+      repeat_yearly: false,
+      interval_days: 30,
+      repeat_interval: false,
+    };
+  }
+
   private formFromProgram(p: ProgramRead): ProgramForm {
     const rule = p.accrual_rule as Record<string, number>;
     return {
@@ -472,8 +691,6 @@ export class ProgramDetailPage {
       expire_warn_days: p.expire_warn_days,
       min_redemption: p.min_redemption,
       welcome_bonus_points: p.welcome_bonus_points,
-      birthday_bonus_points: p.birthday_bonus_points,
-      birthday_bonus_days: p.birthday_bonus_days ?? 0,
       referral_bonus_points: p.referral_bonus_points,
       min_purchase_rub:
         p.min_purchase_amount != null ? p.min_purchase_amount / 100 : null,

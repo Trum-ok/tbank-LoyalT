@@ -1,9 +1,21 @@
-from datetime import date
+import enum
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Date, Float, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -91,6 +103,13 @@ class Program(UUIDPKMixin, TimestampsMixin, Base):
         order_by="ProgramTier.threshold_points",
     )
 
+    triggers: Mapped[list["BonusTrigger"]] = relationship(
+        "BonusTrigger",
+        back_populates="program",
+        cascade="all, delete-orphan",
+        order_by="BonusTrigger.created_at",
+    )
+
 
 class ProgramTier(UUIDPKMixin, Base):
     """Уровень лояльности внутри программы (Бронза / Серебро / Золото и т.д.)."""
@@ -119,3 +138,64 @@ class ProgramTier(UUIDPKMixin, Base):
     )
 
     program: Mapped["Program"] = relationship("Program", back_populates="tiers")
+
+
+class TriggerType(enum.StrEnum):
+    BIRTHDAY = "birthday"
+    FIXED_DATE = "fixed_date"
+    INTERVAL = "interval"
+    INACTIVITY = "inactivity"
+    MANUAL = "manual"
+
+
+class BonusTrigger(UUIDPKMixin, TimestampsMixin, Base):
+    """Бонусная кампания — условие автоматического начисления баллов."""
+
+    __tablename__ = "bonus_trigger"
+    __table_args__ = (Index("ix_bonus_trigger_program_id", "program_id"),)
+
+    program_id: Mapped[UUID] = mapped_column(
+        ForeignKey("program.id", ondelete="CASCADE")
+    )
+    type: Mapped[str] = mapped_column(String(32), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    points: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true", nullable=False
+    )
+
+    # birthday
+    days_before: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # fixed_date
+    fire_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    repeat_yearly: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+
+    # interval / inactivity
+    interval_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    repeat_interval: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
+
+    program: Mapped["Program"] = relationship("Program", back_populates="triggers")
+
+
+class BonusTriggerLog(UUIDPKMixin, Base):
+    """Журнал срабатываний бонусных кампаний."""
+
+    __tablename__ = "bonus_trigger_log"
+    __table_args__ = (
+        Index("ix_bonus_trigger_log_trigger_enrollment", "trigger_id", "enrollment_id"),
+    )
+
+    trigger_id: Mapped[UUID] = mapped_column(
+        ForeignKey("bonus_trigger.id", ondelete="CASCADE"), nullable=False
+    )
+    enrollment_id: Mapped[UUID] = mapped_column(
+        ForeignKey("enrollment.id", ondelete="CASCADE"), nullable=False
+    )
+    fired_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), server_default=func.now(), nullable=False
+    )
