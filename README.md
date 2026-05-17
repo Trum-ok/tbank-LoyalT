@@ -3,7 +3,6 @@
 > Команда **LLM Chads**. Решение кейса LoyalT.
 
 <p align="center">
-  <a href="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/lint.yml"><img src="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/lint.yml/badge.svg" alt="lint"></a>
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/PostgreSQL-schema--per--service-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
@@ -75,6 +74,20 @@ TypeScript + Angular (standalone-компоненты, signals, esbuild) на **
 | `cashier` | Касса/официант: сканирование QR клиента, начисление и списание баллов | [frontend/cashier](frontend/cashier) |
 | `admin` | Т-Банк: очередь модерации, каталог, метрики платформы | [frontend/admin](frontend/admin) |
 | `shared` | Общий пакет (`@tbank-loyalt/shared`): UI, API-клиенты, типы | [frontend/shared](frontend/shared) |
+
+### CI/CD
+
+<p>
+  <a href="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/lint.yml"><img src="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/lint.yml/badge.svg" alt="lint"></a>
+  <a href="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/test.yml"><img src="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/test.yml/badge.svg" alt="test"></a>
+  <a href="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/docker-build.yml"><img src="https://github.com/Trum-ok/tbank-loyalt/actions/workflows/docker-build.yml/badge.svg" alt="docker-build"></a>
+</p>
+
+Три независимых workflow в GitHub Actions на каждый `push` и `pull_request`:
+
+- `lint` - black + isort + ruff + ty;
+- `test` - pytest по бэку с сервис-контейнером PostgreSQL;
+- `docker-build` - проверка, что Docker-образ собирается.
 
 ---
 
