@@ -120,8 +120,9 @@ async def search_catalog(
             )
         )
     if query:
-        like = f"%{query.lower()}%"
-        stmt = stmt.where(func.lower(Partner.name).like(like))
+        stmt = stmt.where(
+            func.lower(Partner.name).contains(query.lower(), autoescape=True)
+        )
     stmt = stmt.order_by(Partner.name.asc()).limit(limit).offset(offset)
     result = await session.execute(stmt)
     return [CatalogProgram.model_validate(row, from_attributes=True) for row in result]
