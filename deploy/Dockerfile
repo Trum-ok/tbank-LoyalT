@@ -9,6 +9,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.5 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/app/.venv \
+    UV_NO_SYNC=1 \
     PATH="/app/.venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1
 

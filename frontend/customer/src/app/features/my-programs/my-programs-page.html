@@ -28,12 +28,22 @@
                 [routerLink]="['/catalog', enrollment.program_id]"
               >
                 <div class="my-programs__card-main">
-                  <div tuiAvatar size="m" [round]="true">
-                    {{ initial(enrollment.display_name) }}
-                  </div>
+                  @if (enrollment.partner_logo_url) {
+                    <img
+                      tuiAvatar
+                      size="m"
+                      [round]="true"
+                      [src]="enrollment.partner_logo_url"
+                      alt=""
+                    />
+                  } @else {
+                    <div tuiAvatar size="m" [round]="true">
+                      {{ initials(enrollment) }}
+                    </div>
+                  }
                   <div class="my-programs__card-text">
                     <span class="my-programs__card-name">
-                      {{ enrollment.display_name ?? 'Программа' }}
+                      {{ cardName(enrollment) }}
                     </span>
                     <span class="my-programs__card-since">
                       с {{ formatDate(enrollment.created_at) }}
@@ -73,12 +83,22 @@
                   [routerLink]="['/catalog', enrollment.program_id]"
                 >
                   <div class="my-programs__card-main">
-                    <div tuiAvatar size="m" [round]="true">
-                      {{ initial(enrollment.display_name) }}
-                    </div>
+                    @if (enrollment.partner_logo_url) {
+                      <img
+                        tuiAvatar
+                        size="m"
+                        [round]="true"
+                        [src]="enrollment.partner_logo_url"
+                        alt=""
+                      />
+                    } @else {
+                      <div tuiAvatar size="m" [round]="true">
+                        {{ initials(enrollment) }}
+                      </div>
+                    }
                     <div class="my-programs__card-text">
                       <span class="my-programs__card-name">
-                        {{ enrollment.display_name ?? 'Программа' }}
+                        {{ cardName(enrollment) }}
                       </span>
                       <span class="my-programs__card-since">
                         в архиве с {{ formatDate(enrollment.updated_at) }}

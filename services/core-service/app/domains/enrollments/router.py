@@ -10,6 +10,7 @@ from app.domains.enrollments.schemas import (
     EnrollmentRead,
     EnrollmentUpdate,
 )
+from app.domains.partners.models import Partner
 from app.domains.programs.schemas import TierRead
 from app.domains.programs.service import get_current_tier, get_program
 
@@ -22,6 +23,12 @@ async def _enrollment_read(session, enrollment) -> EnrollmentRead:
     tier = get_current_tier(enrollment.points_balance, program.tiers)
     result = EnrollmentRead.model_validate(enrollment)
     result.current_tier = TierRead.model_validate(tier) if tier is not None else None
+    result.program_name = program.name
+    partner = await session.get(Partner, program.partner_id)
+    if partner is not None:
+        result.partner_name = partner.name
+        result.partner_logo_url = partner.logo_url
+        result.partner_brand_color = partner.brand_color
     return result
 
 

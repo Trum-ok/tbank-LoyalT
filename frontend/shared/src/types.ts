@@ -46,6 +46,10 @@ export interface EnrollmentRead {
   created_at: string;
   updated_at: string;
   current_tier: TierRead | null;
+  partner_name: string | null;
+  partner_logo_url: string | null;
+  partner_brand_color: string | null;
+  program_name: string | null;
 }
 
 export interface EnrollmentCreate {
