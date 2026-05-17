@@ -4,6 +4,8 @@ import {
   ProgramCreate,
   ProgramRead,
   ProgramUpdate,
+  TierCreate,
+  TierUpdate,
 } from '@tbank-loyalt/shared';
 import { Observable } from 'rxjs';
 
@@ -51,6 +53,30 @@ export class ProgramsApi {
     return this.http.post<ProgramRead>(
       `${this.base}/programs/${programId}/archive`,
       {},
+    );
+  }
+
+  addTier(programId: string, body: TierCreate): Observable<ProgramRead> {
+    return this.http.post<ProgramRead>(
+      `${this.base}/programs/${programId}/tiers`,
+      body,
+    );
+  }
+
+  updateTier(
+    programId: string,
+    tierId: string,
+    body: TierUpdate,
+  ): Observable<ProgramRead> {
+    return this.http.patch<ProgramRead>(
+      `${this.base}/programs/${programId}/tiers/${tierId}`,
+      body,
+    );
+  }
+
+  deleteTier(programId: string, tierId: string): Observable<ProgramRead> {
+    return this.http.delete<ProgramRead>(
+      `${this.base}/programs/${programId}/tiers/${tierId}`,
     );
   }
 }

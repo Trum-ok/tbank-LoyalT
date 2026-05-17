@@ -67,11 +67,15 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.20.0",
     "black>=26.5.0",
     "isort>=8.0.1",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
     "ruff>=0.15.13",
     "ty>=0.0.37",
 ]

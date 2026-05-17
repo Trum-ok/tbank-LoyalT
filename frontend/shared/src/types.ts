@@ -178,6 +178,26 @@ export interface PartnerUpdate {
 
 export type ProgramStatus = 'draft' | 'published' | 'paused' | 'archived';
 
+export interface TierRead {
+  id: UUID;
+  program_id: UUID;
+  name: string;
+  threshold_points: number;
+  accrual_multiplier: number;
+}
+
+export interface TierCreate {
+  name: string;
+  threshold_points?: number;
+  accrual_multiplier?: number;
+}
+
+export interface TierUpdate {
+  name?: string | null;
+  threshold_points?: number | null;
+  accrual_multiplier?: number | null;
+}
+
 export interface ProgramRead {
   id: UUID;
   partner_id: UUID;
@@ -190,6 +210,20 @@ export interface ProgramRead {
   status: ProgramStatus;
   created_at: string;
   updated_at: string;
+  // Бонусные механики
+  welcome_bonus_points: number | null;
+  birthday_bonus_points: number | null;
+  birthday_bonus_days: number;
+  referral_bonus_points: number | null;
+  // Ограничения начисления / списания
+  min_purchase_amount: number | null;
+  max_points_per_transaction: number | null;
+  max_redemption_percent: number | null;
+  // Период действия
+  valid_from: string | null;
+  valid_until: string | null;
+  // Уровни лояльности
+  tiers: TierRead[];
 }
 
 export interface ProgramCreate {
@@ -199,6 +233,15 @@ export interface ProgramCreate {
   accrual_rule: Record<string, unknown>;
   points_ttl_days?: number | null;
   min_redemption?: number;
+  welcome_bonus_points?: number | null;
+  birthday_bonus_points?: number | null;
+  birthday_bonus_days?: number;
+  referral_bonus_points?: number | null;
+  min_purchase_amount?: number | null;
+  max_points_per_transaction?: number | null;
+  max_redemption_percent?: number | null;
+  valid_from?: string | null;
+  valid_until?: string | null;
 }
 
 export interface ProgramUpdate {
@@ -207,6 +250,15 @@ export interface ProgramUpdate {
   accrual_rule?: Record<string, unknown> | null;
   points_ttl_days?: number | null;
   min_redemption?: number | null;
+  welcome_bonus_points?: number | null;
+  birthday_bonus_points?: number | null;
+  birthday_bonus_days?: number | null;
+  referral_bonus_points?: number | null;
+  min_purchase_amount?: number | null;
+  max_points_per_transaction?: number | null;
+  max_redemption_percent?: number | null;
+  valid_from?: string | null;
+  valid_until?: string | null;
 }
 
 export type RewardType =
