@@ -48,6 +48,7 @@ async def get_program(session: AsyncSession, program_id: UUID) -> Program:
         select(Program)
         .where(Program.id == program_id)
         .options(selectinload(Program.tiers))
+        .execution_options(populate_existing=True)
     )
     program = result.scalar_one_or_none()
     if program is None:
