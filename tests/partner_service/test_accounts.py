@@ -52,6 +52,4 @@ class TestUpdateAccount:
 
     async def test_update_missing_raises_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundError):
-            await service.update_account(
-                session, uuid4(), AccountUpdate(full_name="X")
-            )
+            await service.update_account(session, uuid4(), AccountUpdate(full_name="X"))

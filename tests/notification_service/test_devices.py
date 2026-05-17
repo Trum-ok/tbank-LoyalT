@@ -24,9 +24,7 @@ class TestRegisterDevice:
         assert d.is_active is True
         assert d.customer_id == customer_id
 
-    async def test_same_token_is_idempotent(
-        self, session: AsyncSession, customer_id
-    ):
+    async def test_same_token_is_idempotent(self, session: AsyncSession, customer_id):
         first = await service.register_device(
             session,
             customer_id,

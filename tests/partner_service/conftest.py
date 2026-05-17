@@ -64,10 +64,11 @@ async def session(test_engine) -> AsyncIterator[AsyncSession]:
     )
     async with factory() as sess:
         yield sess
+        # Тест мог оставить транзакцию в aborted-состоянии — сбрасываем,
+        # иначе TRUNCATE не выполнится и данные «протекут» в след. тест.
+        await sess.rollback()
         rows = await sess.execute(
-            text(
-                "SELECT tablename FROM pg_tables WHERE schemaname = :s"
-            ),
+            text("SELECT tablename FROM pg_tables WHERE schemaname = :s"),
             {"s": TEST_SCHEMA},
         )
         tables = [r[0] for r in rows]

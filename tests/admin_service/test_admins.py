@@ -22,9 +22,7 @@ class TestCreateAdmin:
         assert admin.is_active is True
 
     async def test_email_lowercased(self, session: AsyncSession):
-        admin = await service.create_admin(
-            session, AdminCreate(email="MOD@Tbank.RU")
-        )
+        admin = await service.create_admin(session, AdminCreate(email="MOD@Tbank.RU"))
         assert admin.email == "mod@tbank.ru"
 
     async def test_duplicate_email_conflicts(self, session: AsyncSession):

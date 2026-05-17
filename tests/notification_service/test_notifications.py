@@ -18,12 +18,12 @@ from app.errors import ForbiddenError, NotFoundError  # noqa: E402
 
 
 def _payload(customer_id, **kwargs) -> NotificationCreate:
-    base = dict(
-        customer_id=customer_id,
-        type=NotificationType.POINTS_ACCRUED,
-        title="+80 баллов",
-        body="Кофе Хауз",
-    )
+    base = {
+        "customer_id": customer_id,
+        "type": NotificationType.POINTS_ACCRUED,
+        "title": "+80 баллов",
+        "body": "Кофе Хауз",
+    }
     return NotificationCreate(**{**base, **kwargs})
 
 
@@ -33,9 +33,7 @@ class TestCreateAndDeliver:
         assert n.delivery_status == DeliveryStatus.SKIPPED
         assert n.delivery_error == "No active devices"
 
-    async def test_sent_with_active_device(
-        self, session: AsyncSession, active_device
-    ):
+    async def test_sent_with_active_device(self, session: AsyncSession, active_device):
         n = await service.create_and_deliver(
             session, _payload(active_device.customer_id)
         )
@@ -49,9 +47,7 @@ class TestListForCustomer:
         await service.create_and_deliver(session, _payload(customer_id))
         await service.mark_read(session, customer_id, n1.id)
 
-        unread = await service.list_for_customer(
-            session, customer_id, unread_only=True
-        )
+        unread = await service.list_for_customer(session, customer_id, unread_only=True)
         assert len(unread) == 1
         assert all(not n.is_read for n in unread)
 

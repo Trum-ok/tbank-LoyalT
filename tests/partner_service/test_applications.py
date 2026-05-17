@@ -26,12 +26,12 @@ from app.errors import (  # noqa: E402
 
 
 def _payload(**kwargs) -> ApplicationCreate:
-    base = dict(
-        business_name="Кофейня",
-        inn="7701234567",
-        categories=[PartnerCategory.FOOD],
-        contact_email="owner@coffee.ru",
-    )
+    base = {
+        "business_name": "Кофейня",
+        "inn": "7701234567",
+        "categories": [PartnerCategory.FOOD],
+        "contact_email": "owner@coffee.ru",
+    }
     return ApplicationCreate(**{**base, **kwargs})
 
 
