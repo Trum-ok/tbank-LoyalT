@@ -1,0 +1,27 @@
+name: docker-build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Только проверяем, что образ собирается. Без push в регистр —
+      # публикация появится отдельным шагом, когда будет реальный деплой.
+      # Кэш слоёв в GitHub Actions, иначе uv sync каждый раз с нуля.
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: false
+          load: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
