@@ -1,4 +1,4 @@
-.PHONY: all style ty lint deps docker-build
+.PHONY: all style ty lint deps docker-build test
 
 # Запускается из корня. Пути совпадают с .github/workflows/lint.yml,
 # чтобы `make lint` локально давал тот же результат, что CI.
@@ -28,3 +28,8 @@ deps:
 # Локальный аналог job docker-build из CI: проверяем, что образ собирается.
 docker-build:
 	docker build -f deploy/Dockerfile -t tbank-loyalt:local .
+
+# Локальный аналог job test из CI. Нужен Postgres на localhost:5433
+# (см. tests/core_service/conftest.py) — например, из local/.
+test:
+	uv run pytest
