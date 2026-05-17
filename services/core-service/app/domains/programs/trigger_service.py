@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.enrollments.models import Enrollment
+from app.domains.enrollments.service import add_points_balance
 from app.domains.programs.models import BonusTrigger, BonusTriggerLog, Program
 from app.domains.programs.trigger_schemas import (
     BonusTriggerCreate,
@@ -136,7 +137,7 @@ async def fire_trigger(
             description=f"Кампания: {trigger.name}",
         )
         session.add(tx)
-        enrollment.points_balance += trigger.points
+        await add_points_balance(session, enrollment.id, trigger.points)
 
         log = BonusTriggerLog(
             trigger_id=trigger.id,

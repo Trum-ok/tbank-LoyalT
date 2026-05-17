@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import BigInteger, cast, func, select
+from sqlalchemy import BigInteger, cast, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,6 +44,25 @@ async def generate_short_code(session: AsyncSession) -> str:
     return str(nxt)
 
 
+async def add_points_balance(
+    session: AsyncSession, enrollment_id: UUID, delta: int
+) -> None:
+    """Атомарно меняет баланс enrollment одним UPDATE на уровне БД.
+
+    `points_balance = points_balance + :delta` выполняется в БД, а не
+    через read-modify-write ORM-атрибута, поэтому конкурентные начисления
+    (касса под `SELECT ... FOR UPDATE`, welcome-бонус, триггеры, кампании)
+    не затирают друг друга (нет lost update). ORM-кэш сознательно не
+    трогаем: если вызывающему нужен свежий баланс — он делает
+    `session.refresh(enrollment)` после коммита.
+    """
+    await session.execute(
+        update(Enrollment)
+        .where(Enrollment.id == enrollment_id)
+        .values(points_balance=Enrollment.points_balance + delta)
+    )
+
+
 async def enroll(
     session: AsyncSession, customer_id: UUID, data: EnrollmentCreate
 ) -> Enrollment:
@@ -67,7 +86,9 @@ async def enroll(
     await session.refresh(enrollment)
 
     if program.welcome_bonus_points is not None:
-        enrollment.points_balance += program.welcome_bonus_points
+        await add_points_balance(
+            session, enrollment.id, program.welcome_bonus_points
+        )
         welcome_tx = Transaction(
             enrollment_id=enrollment.id,
             customer_id=customer_id,
