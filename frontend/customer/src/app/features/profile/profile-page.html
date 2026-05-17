@@ -2,22 +2,19 @@
   @if (loading()) {
     <div class="card">Загрузка профиля…</div>
   } @else {
-    @if (error()) {
-      <div class="error-box">{{ error() }}</div>
-    }
-
     <div class="card">
       <h2 class="card__title">Мой профиль</h2>
 
       <form (ngSubmit)="save(); $event.preventDefault()">
         <label class="field">
           <span class="field__label">Дата рождения</span>
-          <input
-            class="field__input"
-            type="date"
-            [value]="birthday()"
-            (input)="birthday.set($any($event.target).value)"
-          />
+          <tui-textfield>
+            <input
+              tuiInputDate
+              [formControl]="birthdayControl"
+              placeholder="дд.мм.гггг"
+            />
+          </tui-textfield>
           <span class="field__hint">
             Используется для начисления бонусов в день рождения
           </span>

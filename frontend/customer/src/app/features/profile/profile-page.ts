@@ -1,5 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { TuiDay } from '@taiga-ui/cdk';
+import { TuiInputDate } from '@taiga-ui/kit';
 import { catchError, finalize, of } from 'rxjs';
 
 import { ProfileApi } from '../../core/api/profile-api.service';
@@ -8,7 +10,7 @@ import { NotifyService } from '../../core/notify.service';
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [FormsModule],
+  imports: [ReactiveFormsModule, TuiInputDate],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',
 })
@@ -18,43 +20,43 @@ export class ProfilePage {
 
   readonly loading = signal(true);
   readonly saving = signal(false);
-  readonly birthday = signal<string>('');
-  readonly error = signal<string | null>(null);
+  readonly birthdayControl = new FormControl<TuiDay | null>(null);
 
   constructor() {
     this.profileApi
       .get()
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: profile => {
-          this.birthday.set(profile.birthday ?? '');
+        next: (profile: { birthday?: string | null }) => {
+          this.birthdayControl.setValue(
+            profile.birthday ? TuiDay.jsonParse(profile.birthday) : null,
+          );
         },
         error: () => {
-          this.birthday.set('');
+          this.birthdayControl.setValue(null);
         },
       });
   }
 
   save(): void {
     this.saving.set(true);
-    this.error.set(null);
 
-    const birthdayValue = this.birthday();
+    const birthday = this.birthdayControl.value?.toJSON() ?? null;
 
     this.profileApi
-      .update({ birthday: birthdayValue || null })
+      .update({ birthday })
       .pipe(
-        catchError(err => {
-          const msg = err?.error?.detail ?? 'Не удалось сохранить';
-          this.error.set(msg);
-          this.notify.error(msg);
+        catchError((err: { error?: { detail?: string } }) => {
+          this.notify.error(err?.error?.detail ?? 'Не удалось сохранить');
           return of(null);
         }),
         finalize(() => this.saving.set(false)),
       )
-      .subscribe(result => {
+      .subscribe((result: { birthday?: string | null } | null) => {
         if (result) {
-          this.birthday.set(result.birthday ?? '');
+          this.birthdayControl.setValue(
+            result.birthday ? TuiDay.jsonParse(result.birthday) : null,
+          );
           this.notify.success('Профиль сохранён');
         }
       });
