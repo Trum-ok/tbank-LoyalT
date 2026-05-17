@@ -69,5 +69,28 @@ async def get_current_partner_id(
     )
 
 
+async def get_idempotency_key(
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+) -> str:
+    """Обязательный заголовок Idempotency-Key для accrue/redeem.
+
+    Касса повторяет запрос при таймауте — ключ нужен, чтобы повтор не
+    начислил/не списал баллы дважды. Пустой/слишком длинный ключ — 400.
+    """
+    if idempotency_key is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Idempotency-Key header is required",
+        )
+    key = idempotency_key.strip()
+    if not key or len(key) > 255:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Idempotency-Key must be 1..255 non-blank characters",
+        )
+    return key
+
+
 CurrentCustomerId = Annotated[UUID, Depends(get_current_customer_id)]
 CurrentPartnerId = Annotated[UUID, Depends(get_current_partner_id)]
+IdempotencyKey = Annotated[str, Depends(get_idempotency_key)]

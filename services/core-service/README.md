@@ -35,7 +35,7 @@ app/
     points/            начисление/списание/отмена + баланс + expiration.py (сгорание)
     transactions/      история и выборки
     analytics/         read-модель дашборда партнёра (projection.py вместо models.py)
-alembic/               миграции (0001…0006)
+alembic/               миграции (0001…0007)
 ```
 
 Каждый домен оформлен vertical slice: `models.py`/`projection.py`, `schemas.py`, `service.py`, `router.py`.
@@ -224,6 +224,5 @@ curl localhost:8001/internal/events -H 'content-type: application/json' -d '{
 - Событие `reward.available`, когда баланс впервые достиг стоимости награды.
 - Реальная авторизация клиента (T-ID/JWT) вместо `X-Customer-Id`; JWT партнёра
   вместо легаси-fallback `X-Partner-Id`.
-- Идемпотентность операций начисления/списания (`Idempotency-Key`).
 - Полная геймификация (streak, день рождения, реферальная программа) — бонусные
   поля в `program` есть, но прикладная логика начисления реализована не для всех.

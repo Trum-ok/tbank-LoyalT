@@ -20,14 +20,14 @@ os.environ.setdefault(
 os.environ.setdefault("CORE_KAFKA_ENABLED", "false")
 
 from app.database import Base  # noqa: E402
-from app.domains.partners.models import (
+from app.domains.partners.models import (  # noqa: E402
     Partner,
     PartnerCategory,
     PartnerStatus,
-)  # noqa: E402
+)
 from app.domains.programs import service as program_service  # noqa: E402
-from app.domains.programs.schemas import ProgramCreate  # noqa: E402
 from app.domains.programs.models import ProgramType  # noqa: E402
+from app.domains.programs.schemas import ProgramCreate  # noqa: E402
 
 TEST_SCHEMA = "test_core"
 TEST_DB_URL = "postgresql+psycopg://postgres:postgres@localhost:5433/tbank_loyalt"

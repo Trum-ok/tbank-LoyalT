@@ -3,7 +3,12 @@ from uuid import UUID
 from fastapi import APIRouter, status
 from loyalt_common import error_responses
 
-from app.deps import CurrentCustomerId, CurrentPartnerId, SessionDep
+from app.deps import (
+    CurrentCustomerId,
+    CurrentPartnerId,
+    IdempotencyKey,
+    SessionDep,
+)
 from app.domains.points import service
 from app.domains.points.schemas import (
     AccrueRequest,
@@ -27,10 +32,13 @@ customer_router = APIRouter(prefix="/balance", tags=["balance"])
     response_model=PointsOperationResult,
     status_code=status.HTTP_201_CREATED,
     summary="Начислить баллы",
-    responses=error_responses(400, 403, 404),
+    responses=error_responses(400, 403, 404, 409),
 )
 async def accrue(
-    req: AccrueRequest, partner_id: CurrentPartnerId, session: SessionDep
+    req: AccrueRequest,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+    idempotency_key: IdempotencyKey,
 ) -> PointsOperationResult:
     """Начисляет баллы клиенту по программе.
 
@@ -38,9 +46,17 @@ async def accrue(
     (баллы считаются по правилу программы), фиксированное `points` или
     `visits` для программ со штампами. Возвращает созданную транзакцию и
     новый баланс. 404 — клиент не подключён к программе, 403 — программа
-    другого партнёра, 400 — программа неактивна / некорректное правило.
+    другого партнёра, 400 — программа неактивна / некорректное правило /
+    нет заголовка `Idempotency-Key`, 409 — `Idempotency-Key` уже
+    использован с другим телом запроса.
+
+    Заголовок `Idempotency-Key` обязателен: повтор запроса с тем же
+    ключом возвращает результат первой операции, не начисляя баллы
+    повторно.
     """
-    transaction, balance, tier = await service.accrue(session, partner_id, req)
+    transaction, balance, tier = await service.accrue(
+        session, partner_id, req, idempotency_key
+    )
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
         balance_after=balance,
@@ -117,15 +133,25 @@ async def lookup_by_code(
     responses=error_responses(400, 403, 404, 409),
 )
 async def redeem(
-    req: RedeemRequest, partner_id: CurrentPartnerId, session: SessionDep
+    req: RedeemRequest,
+    partner_id: CurrentPartnerId,
+    session: SessionDep,
+    idempotency_key: IdempotencyKey,
 ) -> PointsOperationResult:
     """Списывает баллы клиента в обмен на награду каталога.
 
-    409 — недостаточно баллов; 400 — награда не из этой программы / неактивна
-    / стоимость ниже порога `min_redemption`; 404 — клиент не подключён;
-    403 — программа другого партнёра.
+    409 — недостаточно баллов / `Idempotency-Key` уже использован с другим
+    телом; 400 — награда не из этой программы / неактивна / стоимость ниже
+    порога `min_redemption` / нет заголовка `Idempotency-Key`; 404 —
+    клиент не подключён; 403 — программа другого партнёра.
+
+    Заголовок `Idempotency-Key` обязателен: повтор запроса с тем же
+    ключом возвращает результат первой операции, не списывая баллы
+    повторно.
     """
-    transaction, balance, tier = await service.redeem(session, partner_id, req)
+    transaction, balance, tier = await service.redeem(
+        session, partner_id, req, idempotency_key
+    )
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
         balance_after=balance,

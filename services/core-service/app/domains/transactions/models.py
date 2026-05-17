@@ -43,6 +43,11 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
         # Частичный индекс ix_transaction_expires_at создаётся в миграции
         # (WHERE is_reversed = false AND type = 'accrual') — в metadata не
         # выражается, поэтому здесь его нет намеренно.
+        # Аналогично uq_transaction_idempotency — уникальный индекс
+        # (partner_id, idempotency_key) создаётся в миграции 0007. NULL в
+        # unique-индексе считается различным, поэтому строки без ключа
+        # (reverse/expiration) не конфликтуют (partial-unique на
+        # партиционированной таблице PostgreSQL не поддерживает).
     )
 
     enrollment_id: Mapped[UUID] = mapped_column(
@@ -89,3 +94,11 @@ class Transaction(UUIDPKMixin, TimestampsMixin, Base):
     )
 
     description: Mapped[str | None] = mapped_column(String(500))
+
+    # Идемпотентность операций accrue/redeem. Ключ задаёт касса/ЛК в
+    # заголовке Idempotency-Key; уникален в рамках партнёра (уникальный
+    # индекс, см. миграцию 0007). request_fingerprint —
+    # sha256 канонического тела запроса: повтор того же ключа с другим
+    # телом → 409 (см. domains.points.service).
+    idempotency_key: Mapped[str | None] = mapped_column(String(255))
+    request_fingerprint: Mapped[str | None] = mapped_column(String(64))

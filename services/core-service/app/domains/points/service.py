@@ -1,8 +1,11 @@
+import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_FLOOR, Decimal
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.enrollments.models import Enrollment
@@ -83,9 +86,65 @@ async def _lock_enrollment(
     return enrollment
 
 
-async def accrue(
-    session: AsyncSession, partner_id: UUID, req: AccrueRequest
+def _fingerprint(operation: str, req: AccrueRequest | RedeemRequest) -> str:
+    """sha256 канонического тела запроса (вместе с типом операции).
+
+    Тот же Idempotency-Key с другим телом → fingerprint не совпадёт →
+    409 (защита от случайного переиспользования ключа).
+    """
+    canonical = json.dumps(
+        {"op": operation, "body": req.model_dump(mode="json")},
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+async def _find_idempotent(
+    session: AsyncSession,
+    partner_id: UUID,
+    idempotency_key: str,
+    fingerprint: str,
+) -> Transaction | None:
+    """Ищет ранее проведённую операцию по ключу идемпотентности."""
+    existing = (
+        await session.execute(
+            select(Transaction).where(
+                Transaction.partner_id == partner_id,
+                Transaction.idempotency_key == idempotency_key,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is None:
+        return None
+    if existing.request_fingerprint != fingerprint:
+        raise ConflictError("Idempotency-Key was already used with a different request")
+    return existing
+
+
+async def _replay(
+    session: AsyncSession, tx: Transaction
 ) -> tuple[Transaction, int, ProgramTier | None]:
+    """Повтор: возвращаем сохранённую транзакцию и текущее состояние,
+    не меняя баланс и не публикуя событие повторно."""
+    enrollment = await get_enrollment_by_pair(session, tx.customer_id, tx.program_id)
+    program = await get_program(session, tx.program_id)
+    current_tier = get_current_tier(enrollment.points_balance, program.tiers)
+    return tx, enrollment.points_balance, current_tier
+
+
+async def accrue(
+    session: AsyncSession,
+    partner_id: UUID,
+    req: AccrueRequest,
+    idempotency_key: str,
+) -> tuple[Transaction, int, ProgramTier | None]:
+    fingerprint = _fingerprint("accrue", req)
+    existing = await _find_idempotent(session, partner_id, idempotency_key, fingerprint)
+    if existing is not None:
+        return await _replay(session, existing)
+
     program = await get_program(session, req.program_id)
     if program.partner_id != partner_id:
         raise ForbiddenError("Program belongs to another partner")
@@ -132,10 +191,22 @@ async def accrue(
         purchase_amount=req.purchase_amount,
         expires_at=expires_at,
         description=req.description,
+        idempotency_key=idempotency_key,
+        request_fingerprint=fingerprint,
     )
     session.add(transaction)
     enrollment.points_balance += points
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        # Гонка: параллельный запрос с тем же ключом успел закоммитить.
+        await session.rollback()
+        existing = await _find_idempotent(
+            session, partner_id, idempotency_key, fingerprint
+        )
+        if existing is None:
+            raise
+        return await _replay(session, existing)
     await session.refresh(transaction)
     await session.refresh(enrollment)
 
@@ -162,8 +233,16 @@ async def accrue(
 
 
 async def redeem(
-    session: AsyncSession, partner_id: UUID, req: RedeemRequest
+    session: AsyncSession,
+    partner_id: UUID,
+    req: RedeemRequest,
+    idempotency_key: str,
 ) -> tuple[Transaction, int, ProgramTier | None]:
+    fingerprint = _fingerprint("redeem", req)
+    existing = await _find_idempotent(session, partner_id, idempotency_key, fingerprint)
+    if existing is not None:
+        return await _replay(session, existing)
+
     program = await get_program(session, req.program_id)
     if program.partner_id != partner_id:
         raise ForbiddenError("Program belongs to another partner")
@@ -192,10 +271,22 @@ async def redeem(
         points=reward.cost_points,
         reward_id=reward.id,
         description=req.description or reward.title,
+        idempotency_key=idempotency_key,
+        request_fingerprint=fingerprint,
     )
     session.add(transaction)
     enrollment.points_balance -= reward.cost_points
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        # Гонка: параллельный запрос с тем же ключом успел закоммитить.
+        await session.rollback()
+        existing = await _find_idempotent(
+            session, partner_id, idempotency_key, fingerprint
+        )
+        if existing is None:
+            raise
+        return await _replay(session, existing)
     await session.refresh(transaction)
     await session.refresh(enrollment)
 
