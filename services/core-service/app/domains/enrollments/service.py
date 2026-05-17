@@ -86,9 +86,7 @@ async def enroll(
     await session.refresh(enrollment)
 
     if program.welcome_bonus_points is not None:
-        await add_points_balance(
-            session, enrollment.id, program.welcome_bonus_points
-        )
+        await add_points_balance(session, enrollment.id, program.welcome_bonus_points)
         welcome_tx = Transaction(
             enrollment_id=enrollment.id,
             customer_id=customer_id,
