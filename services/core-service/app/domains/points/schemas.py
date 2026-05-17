@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from app.domains.programs.models import ProgramStatus, ProgramType
+from app.domains.programs.schemas import TierRead
 from app.domains.transactions.schemas import TransactionRead
 
 
@@ -87,6 +88,7 @@ class BalanceRead(BaseModel):
 class PointsOperationResult(BaseModel):
     transaction: TransactionRead
     balance_after: int
+    current_tier: TierRead | None = None
 
 
 class RewardOption(BaseModel):
@@ -111,3 +113,4 @@ class EnrollmentLookup(BaseModel):
     min_redemption: int
     points_balance: int
     rewards: list[RewardOption]
+    current_tier: TierRead | None = None

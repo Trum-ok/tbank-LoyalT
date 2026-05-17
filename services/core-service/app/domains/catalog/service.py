@@ -10,6 +10,10 @@ from app.domains.catalog.schemas import (
 )
 from app.domains.partners.models import Partner, PartnerCategory, PartnerStatus
 from app.domains.programs.models import Program, ProgramStatus
+from app.domains.programs.schemas import TierRead
+from app.domains.programs.service import get_program
+from app.domains.rewards.schemas import RewardRead
+from app.domains.rewards.service import list_rewards
 
 _CATEGORY_LABELS: dict[PartnerCategory, str] = {
     PartnerCategory.FOOD: "Еда и напитки",
@@ -66,7 +70,16 @@ async def get_catalog_program(
     row = (await session.execute(stmt)).first()
     if row is None:
         return None
-    return CatalogProgramDetail.model_validate(row, from_attributes=True)
+    detail = CatalogProgramDetail.model_validate(row, from_attributes=True)
+
+    # Загружаем тиры и награды через репозитории программ и наград.
+    program = await get_program(session, program_id)
+    detail.tiers = [TierRead.model_validate(t) for t in program.tiers]
+
+    rewards = await list_rewards(session, program_id, only_active=True)
+    detail.rewards = [RewardRead.model_validate(r) for r in rewards]
+
+    return detail
 
 
 async def search_catalog(

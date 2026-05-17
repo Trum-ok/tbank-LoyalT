@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict
 
 from app.domains.partners.models import PartnerCategory
 from app.domains.programs.models import ProgramType
+from app.domains.programs.schemas import TierRead
+from app.domains.rewards.schemas import RewardRead
 
 
 class CatalogProgram(BaseModel):
@@ -25,6 +27,8 @@ class CatalogProgramDetail(CatalogProgram):
     accrual_rule: dict[str, Any]
     points_ttl_days: int | None
     min_redemption: int
+    tiers: list[TierRead] = []
+    rewards: list[RewardRead] = []
 
 
 class CatalogCategory(BaseModel):

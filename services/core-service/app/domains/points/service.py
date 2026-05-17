@@ -14,8 +14,8 @@ from app.domains.enrollments.service import (
 )
 from app.domains.partners.models import Partner
 from app.domains.points.schemas import AccrueRequest, RedeemRequest
-from app.domains.programs.models import Program, ProgramStatus, ProgramType
-from app.domains.programs.service import get_program
+from app.domains.programs.models import Program, ProgramStatus, ProgramTier, ProgramType
+from app.domains.programs.service import get_current_tier, get_program
 from app.domains.rewards.service import get_reward, list_rewards
 from app.domains.transactions.models import Transaction, TransactionType
 from app.errors import BadRequestError, ConflictError, ForbiddenError, NotFoundError
@@ -85,7 +85,7 @@ async def _lock_enrollment(
 
 async def accrue(
     session: AsyncSession, partner_id: UUID, req: AccrueRequest
-) -> tuple[Transaction, int]:
+) -> tuple[Transaction, int, ProgramTier | None]:
     program = await get_program(session, req.program_id)
     if program.partner_id != partner_id:
         raise ForbiddenError("Program belongs to another partner")
@@ -112,6 +112,11 @@ async def accrue(
         await session.flush()
 
     enrollment = await _lock_enrollment(session, req.customer_id, req.program_id)
+
+    # Применяем множитель текущего тира клиента.
+    tier = get_current_tier(enrollment.points_balance, program.tiers)
+    if tier is not None and tier.accrual_multiplier != 1.0:
+        points = round(points * tier.accrual_multiplier)
 
     expires_at: datetime | None = None
     if program.points_ttl_days:
@@ -152,12 +157,13 @@ async def accrue(
         },
         key=str(req.customer_id),
     )
-    return transaction, enrollment.points_balance
+    current_tier = get_current_tier(enrollment.points_balance, program.tiers)
+    return transaction, enrollment.points_balance, current_tier
 
 
 async def redeem(
     session: AsyncSession, partner_id: UUID, req: RedeemRequest
-) -> tuple[Transaction, int]:
+) -> tuple[Transaction, int, ProgramTier | None]:
     program = await get_program(session, req.program_id)
     if program.partner_id != partner_id:
         raise ForbiddenError("Program belongs to another partner")
@@ -209,7 +215,8 @@ async def redeem(
         },
         key=str(req.customer_id),
     )
-    return transaction, enrollment.points_balance
+    current_tier = get_current_tier(enrollment.points_balance, program.tiers)
+    return transaction, enrollment.points_balance, current_tier
 
 
 async def reverse(
@@ -217,7 +224,7 @@ async def reverse(
     partner_id: UUID,
     transaction_id: UUID,
     description: str | None = None,
-) -> tuple[Transaction, int]:
+) -> tuple[Transaction, int, ProgramTier | None]:
     # PK составной (id, partner_id) после партиционирования; id уникален.
     original = (
         await session.execute(
@@ -286,7 +293,9 @@ async def reverse(
         },
         key=str(original.customer_id),
     )
-    return reversal, enrollment.points_balance
+    program = await get_program(session, original.program_id)
+    current_tier = get_current_tier(enrollment.points_balance, program.tiers)
+    return reversal, enrollment.points_balance, current_tier
 
 
 async def lookup_enrollment(

@@ -25,6 +25,8 @@ export interface CatalogProgramDetail extends CatalogProgram {
   accrual_rule: Record<string, unknown>;
   points_ttl_days: number | null;
   min_redemption: number;
+  tiers: TierRead[];
+  rewards: RewardRead[];
 }
 
 export interface CatalogCategory {
@@ -43,6 +45,7 @@ export interface EnrollmentRead {
   points_balance: number;
   created_at: string;
   updated_at: string;
+  current_tier: TierRead | null;
 }
 
 export interface EnrollmentCreate {
@@ -358,6 +361,7 @@ export interface EnrollmentLookup {
   min_redemption: number;
   points_balance: number;
   rewards: RewardOption[];
+  current_tier: TierRead | null;
 }
 
 export interface AccruePayload {
@@ -379,6 +383,7 @@ export interface RedeemPayload {
 export interface PointsOperationResult {
   transaction: TransactionRead;
   balance_after: number;
+  current_tier: TierRead | null;
 }
 
 export type AnalyticsPeriod = '1d' | '7d' | '14d' | '30d' | '90d' | 'all';

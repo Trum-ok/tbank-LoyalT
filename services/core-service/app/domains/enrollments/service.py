@@ -8,6 +8,7 @@ from app.domains.enrollments.models import Customer, Enrollment
 from app.domains.enrollments.schemas import EnrollmentCreate, EnrollmentUpdate
 from app.domains.programs.models import ProgramStatus
 from app.domains.programs.service import get_program
+from app.domains.transactions.models import Transaction, TransactionType
 from app.errors import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 
 
@@ -64,6 +65,22 @@ async def enroll(
         await session.rollback()
         raise ConflictError("Customer is already enrolled in this program") from exc
     await session.refresh(enrollment)
+
+    if program.welcome_bonus_points is not None:
+        enrollment.points_balance += program.welcome_bonus_points
+        welcome_tx = Transaction(
+            enrollment_id=enrollment.id,
+            customer_id=customer_id,
+            program_id=data.program_id,
+            partner_id=program.partner_id,
+            type=TransactionType.ACCRUAL,
+            points=program.welcome_bonus_points,
+            description="Приветственный бонус",
+        )
+        session.add(welcome_tx)
+        await session.commit()
+        await session.refresh(enrollment)
+
     return enrollment
 
 

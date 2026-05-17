@@ -17,6 +17,14 @@ from app.domains.programs.schemas import (
 from app.errors import BadRequestError, ForbiddenError, NotFoundError
 
 
+def get_current_tier(
+    points_balance: int, tiers: list[ProgramTier]
+) -> ProgramTier | None:
+    """Возвращает наивысший тир, порог которого не превышает points_balance."""
+    eligible = [t for t in tiers if t.threshold_points <= points_balance]
+    return max(eligible, key=lambda t: t.threshold_points) if eligible else None
+
+
 async def create_program(
     session: AsyncSession, partner_id: UUID, data: ProgramCreate
 ) -> Program:
@@ -32,8 +40,7 @@ async def create_program(
     except IntegrityError as exc:
         await session.rollback()
         raise NotFoundError("Partner not found") from exc
-    await session.refresh(program, attribute_names=["tiers"])
-    return program
+    return await get_program(session, program.id)
 
 
 async def get_program(session: AsyncSession, program_id: UUID) -> Program:
@@ -84,8 +91,7 @@ async def update_program(
     except ValueError as exc:
         raise BadRequestError(str(exc)) from exc
     await session.commit()
-    await session.refresh(program, attribute_names=["tiers"])
-    return program
+    return await get_program(session, program.id)
 
 
 async def transition_status(
@@ -110,8 +116,7 @@ async def transition_status(
         )
     program.status = target
     await session.commit()
-    await session.refresh(program, attribute_names=["tiers"])
-    return program
+    return await get_program(session, program.id)
 
 
 # ---------------------------------------------------------------------------
@@ -145,8 +150,7 @@ async def add_tier(
         raise BadRequestError(
             "Tier with this name or threshold already exists in the program"
         ) from exc
-    await session.refresh(program, attribute_names=["tiers"])
-    return program
+    return await get_program(session, program.id)
 
 
 async def update_tier(
@@ -173,8 +177,7 @@ async def update_tier(
         raise BadRequestError(
             "Tier with this name or threshold already exists in the program"
         ) from exc
-    await session.refresh(program, attribute_names=["tiers"])
-    return program
+    return await get_program(session, program.id)
 
 
 async def delete_tier(
@@ -193,5 +196,4 @@ async def delete_tier(
 
     await session.delete(tier)
     await session.commit()
-    await session.refresh(program, attribute_names=["tiers"])
-    return program
+    return await get_program(session, program.id)

@@ -14,6 +14,8 @@ from app.domains.points.schemas import (
     ReverseRequest,
     RewardOption,
 )
+from app.domains.programs.schemas import TierRead
+from app.domains.programs.service import get_current_tier
 from app.domains.transactions.schemas import TransactionRead
 
 partner_router = APIRouter(prefix="/points", tags=["points"])
@@ -38,14 +40,16 @@ async def accrue(
     новый баланс. 404 — клиент не подключён к программе, 403 — программа
     другого партнёра, 400 — программа неактивна / некорректное правило.
     """
-    transaction, balance = await service.accrue(session, partner_id, req)
+    transaction, balance, tier = await service.accrue(session, partner_id, req)
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
         balance_after=balance,
+        current_tier=TierRead.model_validate(tier) if tier is not None else None,
     )
 
 
 def _build_lookup(enrollment, program, rewards) -> EnrollmentLookup:
+    tier = get_current_tier(enrollment.points_balance, program.tiers)
     return EnrollmentLookup(
         enrollment_id=enrollment.id,
         customer_id=enrollment.customer_id,
@@ -67,6 +71,7 @@ def _build_lookup(enrollment, program, rewards) -> EnrollmentLookup:
             )
             for r in rewards
         ],
+        current_tier=TierRead.model_validate(tier) if tier is not None else None,
     )
 
 
@@ -120,10 +125,11 @@ async def redeem(
     / стоимость ниже порога `min_redemption`; 404 — клиент не подключён;
     403 — программа другого партнёра.
     """
-    transaction, balance = await service.redeem(session, partner_id, req)
+    transaction, balance, tier = await service.redeem(session, partner_id, req)
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
         balance_after=balance,
+        current_tier=TierRead.model_validate(tier) if tier is not None else None,
     )
 
 
@@ -146,12 +152,13 @@ async def reverse(
     400 — нельзя отменить отмену / уже отменена; 409 — конфликт состояния
     баланса при откате.
     """
-    transaction, balance = await service.reverse(
+    transaction, balance, tier = await service.reverse(
         session, partner_id, transaction_id, req.description
     )
     return PointsOperationResult(
         transaction=TransactionRead.model_validate(transaction),
         balance_after=balance,
+        current_tier=TierRead.model_validate(tier) if tier is not None else None,
     )
 
 

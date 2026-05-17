@@ -58,6 +58,9 @@
         <span class="pos__program">
           {{ programTypeLabel(c.program_type) }} · баланс клиента
         </span>
+        @if (c.current_tier) {
+          <span class="pos__tier-badge">{{ c.current_tier.name }}</span>
+        }
       </div>
 
       <div class="card pos__section">
