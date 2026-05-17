@@ -11,6 +11,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "fastapi>=0.136.1",
     "greenlet>=3.5.0",
+    "loyalt-common",
     "httpx>=0.28.1",
     "psycopg[binary]>=3.3.4",
     "pydantic-settings>=2.14.1",
@@ -19,6 +20,12 @@ dependencies = [
     "sqlalchemy>=2.0.49",
     "uvicorn[standard]>=0.46.0",
 ]
+
+[tool.uv.workspace]
+members = ["libs/*"]
+
+[tool.uv.sources]
+loyalt-common = { workspace = true }
 
 [tool.black]
 extend-exclude = "env|.env|venv|.venv"

@@ -209,6 +209,7 @@ export interface ProgramRead {
   type: ProgramType;
   accrual_rule: Record<string, unknown>;
   points_ttl_days: number | null;
+  expire_warn_days: number | null;
   min_redemption: number;
   status: ProgramStatus;
   created_at: string;
@@ -235,6 +236,7 @@ export interface ProgramCreate {
   type: ProgramType;
   accrual_rule: Record<string, unknown>;
   points_ttl_days?: number | null;
+  expire_warn_days?: number | null;
   min_redemption?: number;
   welcome_bonus_points?: number | null;
   birthday_bonus_points?: number | null;
@@ -252,6 +254,7 @@ export interface ProgramUpdate {
   description?: string | null;
   accrual_rule?: Record<string, unknown> | null;
   points_ttl_days?: number | null;
+  expire_warn_days?: number | null;
   min_redemption?: number | null;
   welcome_bonus_points?: number | null;
   birthday_bonus_points?: number | null;

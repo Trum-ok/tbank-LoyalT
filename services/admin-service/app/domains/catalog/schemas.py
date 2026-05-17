@@ -29,6 +29,19 @@ class FeaturedPartnerCreate(BaseModel):
     starts_at: datetime | None = None
     ends_at: datetime | None = None
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "partner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "position": 1,
+                    "starts_at": "2026-05-17T00:00:00Z",
+                    "ends_at": "2026-06-17T00:00:00Z",
+                }
+            ]
+        }
+    )
+
 
 class FeaturedPartnerRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)

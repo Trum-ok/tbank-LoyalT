@@ -213,16 +213,28 @@
         }
       }
 
-      <div class="row row--2">
+      <div class="row row--3">
         <label class="field">
-          <span class="field__label">TTL баллов, дней</span>
+          <span class="field__label">Срок жизни баллов, дней</span>
           <input
             class="field__input"
             type="number"
-            min="0"
+            min="1"
             placeholder="пусто = бессрочно"
             [value]="draft().points_ttl_days ?? ''"
             (input)="patchDraft('points_ttl_days', $any($event.target).value ? +$any($event.target).value : null)"
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">Предупредить за, дней</span>
+          <input
+            class="field__input"
+            type="number"
+            min="1"
+            placeholder="не предупреждать"
+            [disabled]="!draft().points_ttl_days"
+            [value]="draft().expire_warn_days ?? ''"
+            (input)="patchDraft('expire_warn_days', $any($event.target).value ? +$any($event.target).value : null)"
           />
         </label>
         <label class="field">

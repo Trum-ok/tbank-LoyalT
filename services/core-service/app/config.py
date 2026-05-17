@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     app_name: str = "core-service"
     debug: bool = False
 
+    # Уровень логирования (CORE_LOG_LEVEL): DEBUG/INFO/WARNING/ERROR.
+    log_level: str = "INFO"
+
     database_url: str = Field(
         default="postgresql+psycopg://postgres:postgres@localhost:5432/tbank_loyalt"
     )
@@ -47,6 +50,11 @@ class Settings(BaseSettings):
     kafka_subscribe_topics: list[str] = Field(
         default_factory=lambda: ["partner.events", "core.events"]
     )
+
+    # Фоновый джоб сгорания баллов. Когда выключен — сгорание запускается
+    # только вручную через POST /internal/jobs/expire-points (cron/демо).
+    expire_job_enabled: bool = False
+    expire_job_interval_seconds: int = 3600
 
 
 @lru_cache

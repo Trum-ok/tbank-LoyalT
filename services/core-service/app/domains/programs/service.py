@@ -12,6 +12,7 @@ from app.domains.programs.schemas import (
     ProgramUpdate,
     TierCreate,
     TierUpdate,
+    _validate_expire_warn,
 )
 from app.errors import BadRequestError, ForbiddenError, NotFoundError
 
@@ -83,6 +84,12 @@ async def update_program(
         raise BadRequestError("Archived program cannot be updated")
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(program, field, value)
+    # Кросс-валидация против итогового состояния: патч мог изменить
+    # только одно из полей (TTL / предупреждение).
+    try:
+        _validate_expire_warn(program.points_ttl_days, program.expire_warn_days)
+    except ValueError as exc:
+        raise BadRequestError(str(exc)) from exc
     await session.commit()
     return await get_program(session, program.id)
 
