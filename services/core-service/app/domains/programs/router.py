@@ -81,15 +81,11 @@ async def archive_program(
     return ProgramRead.model_validate(program)
 
 
-# ---------------------------------------------------------------------------
-# Tier endpoints
-# ---------------------------------------------------------------------------
-
-
 @router.post(
     "/{program_id}/tiers",
     response_model=ProgramRead,
     status_code=status.HTTP_201_CREATED,
+    summary="Добавить уровень лояльности",
 )
 async def add_tier(
     program_id: UUID,
@@ -97,11 +93,17 @@ async def add_tier(
     partner_id: CurrentPartnerId,
     session: SessionDep,
 ) -> ProgramRead:
+    """Добавляет уровень к программе. Имя и порог баллов уникальны в рамках программы.
+    Нельзя добавлять уровни к архивированной программе."""
     program = await service.add_tier(session, program_id, partner_id, data)
     return ProgramRead.model_validate(program)
 
 
-@router.patch("/{program_id}/tiers/{tier_id}", response_model=ProgramRead)
+@router.patch(
+    "/{program_id}/tiers/{tier_id}",
+    response_model=ProgramRead,
+    summary="Обновить уровень лояльности",
+)
 async def update_tier(
     program_id: UUID,
     tier_id: UUID,
@@ -109,6 +111,8 @@ async def update_tier(
     partner_id: CurrentPartnerId,
     session: SessionDep,
 ) -> ProgramRead:
+    """Обновляет поля уровня. Все поля опциональны.
+    Нельзя обновлять уровни архивированной программы."""
     program = await service.update_tier(session, program_id, tier_id, partner_id, data)
     return ProgramRead.model_validate(program)
 
@@ -117,6 +121,7 @@ async def update_tier(
     "/{program_id}/tiers/{tier_id}",
     response_model=ProgramRead,
     status_code=status.HTTP_200_OK,
+    summary="Удалить уровень лояльности",
 )
 async def delete_tier(
     program_id: UUID,
@@ -124,5 +129,7 @@ async def delete_tier(
     partner_id: CurrentPartnerId,
     session: SessionDep,
 ) -> ProgramRead:
+    """Удаляет уровень и возвращает обновлённую программу.
+    Нельзя удалять уровни архивированной программы."""
     program = await service.delete_tier(session, program_id, tier_id, partner_id)
     return ProgramRead.model_validate(program)
