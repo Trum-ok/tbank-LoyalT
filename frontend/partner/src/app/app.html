@@ -79,7 +79,15 @@
         </a>
       } @else {
         <div class="layout__partner" [style.--brand]="partnerBrand() || '#ffdd2d'">
-          <span class="layout__partner-avatar">{{ partnerInitials() }}</span>
+          @if (partnerLogo()) {
+            <img
+              class="layout__partner-avatar layout__partner-avatar--img"
+              [src]="partnerLogo()"
+              [alt]="partnerName() ?? 'Партнёр'"
+            />
+          } @else {
+            <span class="layout__partner-avatar">{{ partnerInitials() }}</span>
+          }
           <span class="layout__partner-meta">
             <span class="layout__partner-name">{{ partnerName() ?? 'Партнёр' }}</span>
             <span class="layout__partner-id">id · {{ identity.partnerId()?.slice(0, 8) }}</span>

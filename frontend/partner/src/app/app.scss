@@ -147,6 +147,12 @@
     font-weight: 700;
     font-size: 12px;
     flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  &__partner-avatar--img {
+    object-fit: cover;
+    background: #fff;
   }
 
   &__partner-meta {

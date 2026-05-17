@@ -30,6 +30,7 @@ export class App {
 
   protected readonly partnerName = signal<string | null>(null);
   protected readonly partnerBrand = signal<string | null>(null);
+  protected readonly partnerLogo = signal<string | null>(null);
 
   protected readonly hasPartner = computed(() => this.identity.partnerId() !== null);
   protected readonly partnerInitials = computed(() => {
@@ -50,6 +51,7 @@ export class App {
     if (!this.identity.accountId()) {
       this.partnerName.set(null);
       this.partnerBrand.set(null);
+      this.partnerLogo.set(null);
       return;
     }
     this.partnerApi
@@ -58,6 +60,7 @@ export class App {
       .subscribe(p => {
         this.partnerName.set(p?.name ?? null);
         this.partnerBrand.set(p?.brand_color ?? null);
+        this.partnerLogo.set(p?.logo_url ?? null);
       });
   }
 }
