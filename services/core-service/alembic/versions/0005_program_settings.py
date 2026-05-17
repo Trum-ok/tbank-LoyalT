@@ -8,8 +8,8 @@ Create Date: 2026-05-17
 и добавление таблицы program_tier для уровней лояльности.
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0005_program_settings"
 down_revision = "0004_analytics_projection"
