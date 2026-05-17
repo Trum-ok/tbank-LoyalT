@@ -77,9 +77,7 @@ async def lifespan(_app: FastAPI):
     await consumer.start()
     expire_task: asyncio.Task[None] | None = None
     if settings.expire_job_enabled:
-        expire_task = asyncio.create_task(
-            _expiration_loop(), name="points-expiration"
-        )
+        expire_task = asyncio.create_task(_expiration_loop(), name="points-expiration")
     try:
         yield
     finally:

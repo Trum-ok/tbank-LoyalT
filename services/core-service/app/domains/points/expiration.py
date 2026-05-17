@@ -54,9 +54,7 @@ async def _partner_name(session: AsyncSession, partner_id: UUID) -> str | None:
     return partner.name if partner else None
 
 
-async def _candidate_enrollment_ids(
-    session: AsyncSession, now: datetime
-) -> list[UUID]:
+async def _candidate_enrollment_ids(session: AsyncSession, now: datetime) -> list[UUID]:
     """Enrollment'ы, где есть истёкший или скоро истекающий активный лот."""
     warn_horizon = now + timedelta(days=_MAX_WARN_DAYS)
     stmt = (
@@ -147,9 +145,7 @@ async def _process_enrollment(
             remaining[t.id] = t.points - consumed
 
     warn_days = program.expire_warn_days
-    warn_threshold = (
-        now + timedelta(days=warn_days) if warn_days is not None else None
-    )
+    warn_threshold = now + timedelta(days=warn_days) if warn_days is not None else None
 
     expire_amount = 0
     warn_amount = 0

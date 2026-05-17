@@ -29,9 +29,7 @@ def _validate_expire_warn(ttl_days: int | None, warn_days: int | None) -> None:
     if warn_days is None:
         return
     if ttl_days is None:
-        raise ValueError(
-            "expire_warn_days requires points_ttl_days to be set"
-        )
+        raise ValueError("expire_warn_days requires points_ttl_days to be set")
     if warn_days >= ttl_days:
         raise ValueError("expire_warn_days must be smaller than points_ttl_days")
 
